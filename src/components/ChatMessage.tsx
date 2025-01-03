@@ -1,8 +1,9 @@
 import React from 'react';
+import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown
 
 interface ChatMessageProps {
   isBot: boolean;
-  message: string;
+  message: string; // Message can be plain text or Markdown
 }
 
 export function ChatMessage({ isBot, message }: ChatMessageProps) {
@@ -11,11 +12,15 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
       <div
         className={`max-w-[80%] p-4 rounded-lg ${
           isBot
-            ? 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200'
-            : 'bg-blue-500 text-white'
+            ? 'bg-gray-700 text-gray-100'
+            : 'bg-blue-600 text-white'
         }`}
       >
-        {message}
+        {isBot ? (
+          <ReactMarkdown>{message}</ReactMarkdown> // Render Markdown for bot messages
+        ) : (
+          message // Render plain text for user messages
+        )}
       </div>
     </div>
   );
