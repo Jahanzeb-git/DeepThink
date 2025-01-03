@@ -10,43 +10,43 @@ interface ChatMessageProps {
 export function ChatMessage({ isBot, message }: ChatMessageProps) {
   const [displayedMessage, setDisplayedMessage] = useState(''); // State to hold the typed message
   const [typingComplete, setTypingComplete] = useState(false); // State to track typing completion
-  const [markdownHTML, setMarkdownHTML] = useState(''); // State to hold the full Markdown-rendered HTML
+  const [markdownContent, setMarkdownContent] = useState(''); // State to hold the Markdown-rendered content
 
-  // Pre-convert the entire message to Markdown HTML
+  // Convert the message to Markdown first
   useEffect(() => {
     if (isBot) {
+      // Use ReactMarkdown to render the message as HTML
       const markdownContainer = document.createElement('div');
-      markdownContainer.innerHTML = (
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-          {message}
-        </ReactMarkdown>
-      )?.props?.children?.toString() || '';
-      setMarkdownHTML(markdownContainer.innerHTML);
+      ReactMarkdown({
+        children: message,
+        remarkPlugins: [remarkGfm],
+      });
+      setMarkdownContent(message); // Store the raw Markdown for typing
     }
   }, [isBot, message]);
 
-  // Simulate typing effect on the pre-converted Markdown HTML
+  // Simulate typing effect on the Markdown-rendered content
   useEffect(() => {
-    if (isBot && markdownHTML && !typingComplete) {
+    if (isBot && !typingComplete && markdownContent) {
       // Reset the displayed message when a new message is received
       setDisplayedMessage('');
       setTypingComplete(false);
 
       let index = 0;
       const typingInterval = setInterval(() => {
-        if (index < markdownHTML.length) {
-          setDisplayedMessage((prev) => prev + markdownHTML[index]);
+        if (index < markdownContent.length) {
+          setDisplayedMessage((prev) => prev + markdownContent[index]);
           index++;
         } else {
           clearInterval(typingInterval);
           setTypingComplete(true);
         }
-      }, 50); // Adjust typing speed here (e.g., 50ms per character)
+      }, 30); // Adjust typing speed here (e.g., 50ms per character)
 
       // Cleanup interval when the component unmounts
       return () => clearInterval(typingInterval);
     }
-  }, [isBot, markdownHTML, typingComplete]);
+  }, [isBot, markdownContent, typingComplete]);
 
   return (
     <div className={`flex ${isBot ? 'justify-start' : 'justify-end'} mb-4`}>
@@ -59,19 +59,21 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
       >
         {isBot ? (
           <>
-            {!typingComplete ? (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: displayedMessage,
-                }}
-              />
-            ) : (
+            {/* Render the typing effect for the bot message */}
+            {!typingComplete && (
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {message}
+                {displayedMessage}
+              </ReactMarkdown>
+            )}
+            {/* Render the final message as Markdown after typing is complete */}
+            {typingComplete && (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {markdownContent}
               </ReactMarkdown>
             )}
           </>
         ) : (
+          // Render plain text for user messages
           message
         )}
       </div>
