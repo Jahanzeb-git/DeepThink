@@ -10,17 +10,32 @@ interface ChatMessageProps {
 export function ChatMessage({ isBot, message }: ChatMessageProps) {
   const [displayedMessage, setDisplayedMessage] = useState(''); // State to hold the typed message
   const [typingComplete, setTypingComplete] = useState(false); // State to track typing completion
+  const [markdownContent, setMarkdownContent] = useState(''); // State to hold the Markdown-rendered content
 
+  // Convert the message to Markdown first
   useEffect(() => {
-    if (isBot && !typingComplete) {
+    if (isBot) {
+      // Use ReactMarkdown to render the message as HTML
+      const markdownContainer = document.createElement('div');
+      ReactMarkdown({
+        children: message,
+        remarkPlugins: [remarkGfm],
+      });
+      setMarkdownContent(message); // Store the raw Markdown for typing
+    }
+  }, [isBot, message]);
+
+  // Simulate typing effect on the Markdown-rendered content
+  useEffect(() => {
+    if (isBot && !typingComplete && markdownContent) {
       // Reset the displayed message when a new message is received
       setDisplayedMessage('');
       setTypingComplete(false);
 
       let index = 0;
       const typingInterval = setInterval(() => {
-        if (index < message.length) {
-          setDisplayedMessage((prev) => prev + message[index]);
+        if (index < markdownContent.length) {
+          setDisplayedMessage((prev) => prev + markdownContent[index]);
           index++;
         } else {
           clearInterval(typingInterval);
@@ -31,7 +46,7 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
       // Cleanup interval when the component unmounts
       return () => clearInterval(typingInterval);
     }
-  }, [isBot, message, typingComplete]);
+  }, [isBot, markdownContent, typingComplete]);
 
   return (
     <div className={`flex ${isBot ? 'justify-start' : 'justify-end'} mb-4`}>
@@ -46,12 +61,14 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
           <>
             {/* Render the typing effect for the bot message */}
             {!typingComplete && (
-              <div style={{ whiteSpace: 'pre-wrap' }}>{displayedMessage}</div>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {displayedMessage}
+              </ReactMarkdown>
             )}
             {/* Render the final message as Markdown after typing is complete */}
             {typingComplete && (
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {message}
+                {markdownContent}
               </ReactMarkdown>
             )}
           </>
