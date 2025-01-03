@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -11,16 +11,11 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
   const [displayedMessage, setDisplayedMessage] = useState(''); // State to hold the typed message
   const [typingComplete, setTypingComplete] = useState(false); // State to track typing completion
   const [markdownContent, setMarkdownContent] = useState(''); // State to hold the Markdown-rendered content
+  const messageEndRef = useRef<HTMLDivElement>(null); // Ref for auto-scrolling
 
   // Convert the message to Markdown first
   useEffect(() => {
     if (isBot) {
-      // Use ReactMarkdown to render the message as HTML
-      const markdownContainer = document.createElement('div');
-      ReactMarkdown({
-        children: message,
-        remarkPlugins: [remarkGfm],
-      });
       setMarkdownContent(message); // Store the raw Markdown for typing
     }
   }, [isBot, message]);
@@ -41,20 +36,27 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
           clearInterval(typingInterval);
           setTypingComplete(true);
         }
-      }, 30); // Adjust typing speed here (e.g., 50ms per character)
+      }, 50); // Adjust typing speed here (e.g., 50ms per character)
 
       // Cleanup interval when the component unmounts
       return () => clearInterval(typingInterval);
     }
   }, [isBot, markdownContent, typingComplete]);
 
+  // Auto-scroll to the bottom when the bot types
+  useEffect(() => {
+    if (messageEndRef.current) {
+      messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [displayedMessage, typingComplete]);
+
   return (
     <div className={`flex ${isBot ? 'justify-start' : 'justify-end'} mb-4`}>
       <div
         className={`max-w-[80%] p-4 rounded-lg ${
           isBot
-            ? 'bg-gray-700 text-gray-100'
-            : 'bg-blue-600 text-white'
+            ? 'text-gray-100' // Remove background for bot messages
+            : 'bg-blue-600 text-white' // Keep background for user messages
         }`}
       >
         {isBot ? (
@@ -77,6 +79,8 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
           message
         )}
       </div>
+      {/* Ref for auto-scrolling */}
+      <div ref={messageEndRef} />
     </div>
   );
 }
