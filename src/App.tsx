@@ -30,7 +30,7 @@ function App() {
   const handleSendMessage = async (message: string) => {
     setMessages((prev) => [...prev, { text: message, isBot: false }]);
     setIsLoading(true);
-
+  
     try {
       const response = await fetch(
         'https://jahanzebahmed22.pythonanywhere.com/app_response',
@@ -39,21 +39,30 @@ function App() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             prompt: message,
-            system_prompt: 'You are an AI assistant...',
+            system_prompt: 'You are an AI assistant...', // Update this if needed
             tokens: 1000,
           }),
         }
       );
-
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+  
       const data = await response.json();
+      console.log('API response data:', data);
+  
+      // Use the `output` field from the API response
+      if (!data.output) {
+        throw new Error('No output from the API');
+      }
+  
       setMessages((prev) => [
         ...prev,
-        {
-          text: data.response || 'Sorry, I could not process your request.',
-          isBot: true,
-        },
+        { text: data.output, isBot: true }, // Use `data.output` instead of `data.response`
       ]);
     } catch (error) {
+      console.error('Error fetching response:', error);
       setMessages((prev) => [
         ...prev,
         { text: 'Sorry, an error occurred. Please try again.', isBot: true },
