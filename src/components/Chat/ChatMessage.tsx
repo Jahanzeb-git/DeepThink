@@ -1,10 +1,11 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { TypeAnimation } from 'react-type-animation';
 
 interface ChatMessageProps {
   isBot: boolean;
-  message: string;
+  message: string; // Message can be plain text or Markdown
 }
 
 export function ChatMessage({ isBot, message }: ChatMessageProps) {
@@ -18,11 +19,24 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
         }`}
       >
         {isBot ? (
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {message}
-          </ReactMarkdown>
+          <TypeAnimation
+            sequence={[
+              (el) => {
+                // Render the message as Markdown
+                return (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {message}
+                  </ReactMarkdown>
+                );
+              },
+            ]}
+            speed={50} // Typing speed (lower is faster)
+            cursor={false} // Hide the cursor after typing
+            wrapper="div"
+            style={{ whiteSpace: 'pre-wrap' }} // Preserve line breaks and formatting
+          />
         ) : (
-          message
+          message // Render plain text for user messages
         )}
       </div>
     </div>
