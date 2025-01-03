@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Brain } from 'lucide-react';
 import { ChatMessage } from './ChatMessage';
-import { ChatInput } from './ChatInput';
+import ChatInput from './ChatInput';
+import TagInput from './TagInput';
 
 interface Message {
   text: string;
@@ -20,10 +21,16 @@ export function ChatContainer({
   onSendMessage,
 }: ChatContainerProps) {
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const [inputValue, setInputValue] = useState(''); // State to manage ChatInput value
 
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Handle tag click: Insert tag text into ChatInput
+  const handleAddTag = (tag: string) => {
+    setInputValue(tag); // Update the ChatInput value
+  };
 
   return (
     <div className="flex-1 flex flex-col h-full bg-gray-800 dark:bg-gray-100">
@@ -36,7 +43,14 @@ export function ChatContainer({
             How can I help you today?
           </p>
           <div className="w-full max-w-3xl px-4">
-            <ChatInput onSendMessage={onSendMessage} />
+            <ChatInput
+              onSendMessage={onSendMessage}
+              value={inputValue} // Pass the current input value
+              onChange={setInputValue} // Pass the change handler
+            />
+            <div className="mt-4 flex justify-center">
+              <TagInput onAddTag={handleAddTag} />
+            </div>
           </div>
         </div>
       ) : (
@@ -57,12 +71,16 @@ export function ChatContainer({
           </div>
           <div className="p-4">
             <div className="max-w-3xl mx-auto">
-              <ChatInput onSendMessage={onSendMessage} />
+              <ChatInput
+                onSendMessage={onSendMessage}
+                value={inputValue} // Pass the current input value
+                onChange={setInputValue} // Pass the change handler
+              />
             </div>
           </div>
         </>
       )}
-      <p className="text-center text-gray-400 mb-2 text-sm">
+      <p className="text-center text-gray-400 mb-2 text-xs sm:text-sm">
         DeepThink can make mistakes. Check important info.
       </p>
     </div>
