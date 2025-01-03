@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { TypeAnimation } from 'react-type-animation';
 
 interface ChatMessageProps {
   isBot: boolean;
@@ -18,25 +17,21 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
       setDisplayedMessage('');
       setTypingComplete(false);
 
-      // Simulate typing effect
+      let index = 0;
       const typingInterval = setInterval(() => {
-        setDisplayedMessage((prev) => {
-          const nextChar = message[prev.length];
-          return prev + (nextChar || '');
-        });
-      }, 50); // Adjust typing speed here
+        if (index < message.length) {
+          setDisplayedMessage((prev) => prev + message[index]);
+          index++;
+        } else {
+          clearInterval(typingInterval);
+          setTypingComplete(true);
+        }
+      }, 50); // Adjust typing speed here (e.g., 50ms per character)
 
-      // Cleanup interval when typing is complete
+      // Cleanup interval when the component unmounts
       return () => clearInterval(typingInterval);
     }
   }, [isBot, message, typingComplete]);
-
-  useEffect(() => {
-    // Mark typing as complete when the full message is displayed
-    if (displayedMessage.length === message.length) {
-      setTypingComplete(true);
-    }
-  }, [displayedMessage, message]);
 
   return (
     <div className={`flex ${isBot ? 'justify-start' : 'justify-end'} mb-4`}>
@@ -51,13 +46,7 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
           <>
             {/* Render the typing effect for the bot message */}
             {!typingComplete && (
-              <TypeAnimation
-                sequence={[displayedMessage]}
-                speed={50} // Typing speed (lower is faster)
-                cursor={false} // Hide the cursor after typing
-                wrapper="div"
-                style={{ whiteSpace: 'pre-wrap' }} // Preserve line breaks and formatting
-              />
+              <div style={{ whiteSpace: 'pre-wrap' }}>{displayedMessage}</div>
             )}
             {/* Render the final message as Markdown after typing is complete */}
             {typingComplete && (
