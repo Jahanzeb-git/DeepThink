@@ -65,12 +65,6 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
                 {displayedMessage}
               </ReactMarkdown>
             )}
-            {/* Render the final message as Markdown after typing is complete */}
-            {typingComplete && (
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {markdownContent}
-              </ReactMarkdown>
-            )}
           </>
         ) : (
           // Render plain text for user messages
