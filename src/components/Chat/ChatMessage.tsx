@@ -1,4 +1,6 @@
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface ChatMessageProps {
   isBot: boolean;
@@ -15,7 +17,13 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
             : 'bg-blue-600 text-white'
         }`}
       >
-        {message}
+        {isBot ? (
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {message}
+          </ReactMarkdown>
+        ) : (
+          message
+        )}
       </div>
     </div>
   );
