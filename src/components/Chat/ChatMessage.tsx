@@ -11,16 +11,28 @@ interface ChatMessageProps {
 }
 
 const preprocessMessage = (message: string): string => {
-  const latexRegex = /\\\(.*?\\\)|\\\[.*?\\\]|\$\$(.*?)\$\$|\$(.*?)\$/g;
+  // Regex to match LaTeX equations (both block and inline)
+  const latexRegex = /\\\(.*?\\\)|\\\[.*?\\\]|\$\$(.*?)\$\$|\$(.*?)\$|\[(.*?)\]|\((.*?)\)/g;
 
   return message.replace(latexRegex, (match) => {
+    // If the equation is already enclosed in \( ... \) or \[ ... \], leave it as is
     if (match.startsWith('\\(') || match.startsWith('\\[')) {
       return match;
     }
+    // If the equation is enclosed in $$ ... $$, convert it to \[ ... \] (block equation)
     if (match.startsWith('$$')) {
       return `\\[${match.slice(2, -2)}\\]`;
     }
+    // If the equation is enclosed in $ ... $, convert it to \( ... \) (inline equation)
     if (match.startsWith('$')) {
+      return `\\(${match.slice(1, -1)}\\)`;
+    }
+    // If the equation is enclosed in [ ... ], convert it to \[ ... \] (block equation)
+    if (match.startsWith('[')) {
+      return `\\[${match.slice(1, -1)}\\]`;
+    }
+    // If the equation is enclosed in ( ... ), convert it to \( ... \) (inline equation)
+    if (match.startsWith('(')) {
       return `\\(${match.slice(1, -1)}\\)`;
     }
     return match;
