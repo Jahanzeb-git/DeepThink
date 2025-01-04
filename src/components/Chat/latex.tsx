@@ -3,7 +3,7 @@ import React from 'react';
 const markdownContent = `
 Here is a simple LaTeX equation:
 
-\\[ E = mc^2 \\]
+\( y_i = \beta_0 + \beta_1 x_i + \epsilon_i \)
 `;
 
 export default function App() {
