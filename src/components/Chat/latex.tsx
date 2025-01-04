@@ -1,22 +1,16 @@
 import React from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import 'katex/dist/katex.min.css'; // Import KaTeX CSS
 
 const markdownContent = `
-Here is a linear regression equation:
+Here is a simple LaTeX equation:
 
-\\[ I = \\beta_0 + \\beta_1 x + \\epsilon \\]
+\\[ E = mc^2 \\]
 `;
 
 export default function App() {
   return (
-    <ReactMarkdown
-      remarkPlugins={[remarkMath]}
-      rehypePlugins={[rehypeKatex]}
-    >
-      {markdownContent}
-    </ReactMarkdown>
+    <div>
+      <div id="math" dangerouslySetInnerHTML={{ __html: markdownContent.replace(/\\\[(.*?)\\\]/g, '<span class="math">$1</span>') }}></div>
+    </div>
   );
 }
+
