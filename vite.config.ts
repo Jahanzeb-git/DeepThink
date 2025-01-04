@@ -7,4 +7,12 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@import "katex/dist/katex.min.css";` // Ensure KaTeX CSS is imported
+      }
+    }
+  }
 });
+
