@@ -12,31 +12,20 @@ interface ChatMessageProps {
 
 const preprocessMessage = (message: string): string => {
   // Regex to match LaTeX equations (both block and inline)
-  const latexRegex = /\\\(.*?\\\)|\\\[.*?\\\]|\$\$(.*?)\$\$|\$(.*?)\$|\[(.*?)\]|\((.*?)\)/g;
+  const blockRegex = /\[(.*?)\]/g; // Matches [ ... ]
+  const inlineRegex = /\((.*?)\)/g; // Matches ( ... )
 
-  return message.replace(latexRegex, (match) => {
-    // If the equation is already enclosed in \( ... \) or \[ ... \], leave it as is
-    if (match.startsWith('\\(') || match.startsWith('\\[')) {
-      return match;
-    }
-    // If the equation is enclosed in $$ ... $$, convert it to \[ ... \] (block equation)
-    if (match.startsWith('$$')) {
-      return `\\[${match.slice(2, -2)}\\]`;
-    }
-    // If the equation is enclosed in $ ... $, convert it to \( ... \) (inline equation)
-    if (match.startsWith('$')) {
-      return `\\(${match.slice(1, -1)}\\)`;
-    }
-    // If the equation is enclosed in [ ... ], convert it to \[ ... \] (block equation)
-    if (match.startsWith('[')) {
-      return `\\[${match.slice(1, -1)}\\]`;
-    }
-    // If the equation is enclosed in ( ... ), convert it to \( ... \) (inline equation)
-    if (match.startsWith('(')) {
-      return `\\(${match.slice(1, -1)}\\)`;
-    }
-    return match;
+  // Replace [ ... ] with \[ ... \]
+  let processedMessage = message.replace(blockRegex, (match, content) => {
+    return `\\[${content}\\]`;
   });
+
+  // Replace ( ... ) with \( ... \)
+  processedMessage = processedMessage.replace(inlineRegex, (match, content) => {
+    return `\\(${content}\\)`;
+  });
+
+  return processedMessage;
 };
 
 export function ChatMessage({ isBot, message }: ChatMessageProps) {
