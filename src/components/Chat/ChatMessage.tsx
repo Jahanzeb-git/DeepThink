@@ -10,6 +10,23 @@ interface ChatMessageProps {
   message: string;
 }
 
+const preprocessMessage = (message: string): string => {
+  const latexRegex = /\\\(.*?\\\)|\\\[.*?\\\]|\$\$(.*?)\$\$|\$(.*?)\$/g;
+
+  return message.replace(latexRegex, (match) => {
+    if (match.startsWith('\\(') || match.startsWith('\\[')) {
+      return match;
+    }
+    if (match.startsWith('$$')) {
+      return `\\[${match.slice(2, -2)}\\]`;
+    }
+    if (match.startsWith('$')) {
+      return `\\(${match.slice(1, -1)}\\)`;
+    }
+    return match;
+  });
+};
+
 export function ChatMessage({ isBot, message }: ChatMessageProps) {
   const [displayedMessage, setDisplayedMessage] = useState('');
   const [typingComplete, setTypingComplete] = useState(false);
@@ -21,7 +38,8 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
 
   useEffect(() => {
     if (isBot) {
-      setMarkdownContent(message);
+      const processedMessage = preprocessMessage(message); // Preprocess the message
+      setMarkdownContent(processedMessage);
       setDisplayedMessage('');
       setTypingComplete(false);
     }
