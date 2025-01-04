@@ -3,6 +3,7 @@ import { Brain } from 'lucide-react';
 import { ChatMessage } from './ChatMessage';
 import ChatInput from './ChatInput';
 import TagInput from './TagInput';
+import Latex from './latex';
 
 interface Message {
   text: string;
@@ -80,6 +81,7 @@ export function ChatContainer({
           </div>
         </>
       )}
+      <Latex />
       <p className="text-center text-gray-400 mb-2 text-xs sm:text-sm">
         DeepThink can make mistakes. Check important info.
       </p>
