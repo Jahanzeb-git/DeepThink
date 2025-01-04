@@ -39,7 +39,7 @@ function App() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             prompt: message,
-            system_prompt: 'If user ask "Tell me your equation" then return this exact equation to user : \[ I = \beta_0 + \beta_1 x + \epsilon \]', // Update this if needed
+            system_prompt: 'If user ask "Tell me your equation" then return this exact equation to user : \[ I = \beta_0 + \beta_1 x + \epsilon \], make sure to return exact equation written here and should be enclosed in \[ ... \]', // Update this if needed
             tokens: 1000,
           }),
         }
