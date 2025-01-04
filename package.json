@@ -16,8 +16,8 @@
     "react-markdown": "^8.0.7",
     "remark-gfm": "^3.0.1",
     "react-type-animation": "^2.1.0",
-    "remark-math": "^6.0.1",
-    "rehype-katex": "^7.0.0",
+    "remark-math": "^5.1.1",
+    "rehype-katex": "^6.0.3",
     "katex": "^0.16.9"
   },
   "devDependencies": {
