@@ -4,110 +4,114 @@ import remarkGfm from 'remark-gfm';
 
 interface ChatMessageProps {
   isBot: boolean;
-  message: string; // Message can be plain text or Markdown
+  message: string;
 }
 
 export function ChatMessage({ isBot, message }: ChatMessageProps) {
-  const [displayedMessage, setDisplayedMessage] = useState(''); // State to hold the typed message
-  const [typingComplete, setTypingComplete] = useState(false); // State to track typing completion
-  const [markdownContent, setMarkdownContent] = useState(''); // State to hold the Markdown-rendered content
-  const [isUserScrolling, setIsUserScrolling] = useState(false); // State to track user scroll behavior
-  const messageEndRef = useRef<HTMLDivElement>(null); // Ref for auto-scrolling
-  const chatContainerRef = useRef<HTMLDivElement>(null); // Ref for the chat container
+  const [displayedMessage, setDisplayedMessage] = useState('');
+  const [typingComplete, setTypingComplete] = useState(false);
+  const [markdownContent, setMarkdownContent] = useState('');
+  const messageEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const typingSpeedRef = useRef(30); // Adjust typing speed (ms)
+  const autoScrollThreshold = 100; // Pixels from bottom to trigger auto-scroll
 
-  // Convert the message to Markdown first
+  // Initialize markdown content
   useEffect(() => {
     if (isBot) {
-      setMarkdownContent(message); // Store the raw Markdown for typing
+      setMarkdownContent(message);
+      setDisplayedMessage('');
+      setTypingComplete(false);
     }
   }, [isBot, message]);
 
-  // Simulate typing effect on the Markdown-rendered content
+  // Enhanced typing effect
   useEffect(() => {
-    if (isBot && !typingComplete && markdownContent) {
-      // Reset the displayed message when a new message is received
-      setDisplayedMessage('');
-      setTypingComplete(false);
+    if (!isBot || typingComplete || !markdownContent) return;
 
-      let index = 0;
-      const typingInterval = setInterval(() => {
-        if (index < markdownContent.length) {
-          setDisplayedMessage((prev) => prev + markdownContent[index]);
-          index++;
-        } else {
-          clearInterval(typingInterval);
-          setTypingComplete(true);
-        }
-      }, 50); // Adjust typing speed here (e.g., 50ms per character)
-
-      // Cleanup interval when the component unmounts
-      return () => clearInterval(typingInterval);
-    }
-  }, [isBot, markdownContent, typingComplete]);
-
-  // Auto-scroll to the bottom when the bot types
-  useEffect(() => {
-    if (messageEndRef.current && !isUserScrolling) {
-      messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [displayedMessage, typingComplete, isUserScrolling]);
-
-  // Track user scroll behavior
-  useEffect(() => {
-    const chatContainer = chatContainerRef.current;
-    if (!chatContainer) return;
-
-    const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = chatContainer;
-      const isNearBottom = scrollHeight - (scrollTop + clientHeight) < 50; // Threshold for "near bottom"
-
-      if (isNearBottom) {
-        setIsUserScrolling(false); // User is near the bottom, enable auto-scroll
+    let currentIndex = 0;
+    const content = markdownContent;
+    
+    const typeNextCharacter = () => {
+      if (currentIndex < content.length) {
+        // Batch characters for smoother typing
+        const batchSize = 3;
+        const nextBatch = content.slice(
+          currentIndex,
+          Math.min(currentIndex + batchSize, content.length)
+        );
+        
+        setDisplayedMessage(prev => prev + nextBatch);
+        currentIndex += batchSize;
+        
+        // Adjust speed based on punctuation
+        const nextChar = content[currentIndex];
+        const delay = /[.,!?]/.test(nextChar) ? typingSpeedRef.current * 3 : typingSpeedRef.current;
+        
+        setTimeout(typeNextCharacter, delay);
       } else {
-        setIsUserScrolling(true); // User is scrolling away, disable auto-scroll
+        setTypingComplete(true);
       }
     };
 
-    chatContainer.addEventListener('scroll', handleScroll);
-    return () => chatContainer.removeEventListener('scroll', handleScroll);
-  }, []);
+    typeNextCharacter();
+    
+    return () => {
+      currentIndex = content.length; // Stop typing on cleanup
+    };
+  }, [isBot, markdownContent, typingComplete]);
+
+  // Improved auto-scroll logic
+  useEffect(() => {
+    if (!chatContainerRef.current || !messageEndRef.current) return;
+
+    const container = chatContainerRef.current;
+    const shouldAutoScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
+      return distanceFromBottom <= autoScrollThreshold;
+    };
+
+    if (shouldAutoScroll()) {
+      messageEndRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'end',
+      });
+    }
+  }, [displayedMessage]);
 
   return (
-    <div
+    <div 
       ref={chatContainerRef}
-      className="flex-1 overflow-y-auto p-4" // Make the chat container scrollable
+      className="flex-1 overflow-y-auto p-4 space-y-4"
+      style={{
+        maskImage: 'linear-gradient(to bottom, transparent, black 20px, black calc(100% - 20px), transparent)',
+        WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 20px, black calc(100% - 20px), transparent)',
+      }}
     >
       <div className={`flex ${isBot ? 'justify-start' : 'justify-end'} mb-4`}>
         <div
           className={`max-w-[80%] p-4 rounded-lg ${
             isBot
-              ? 'text-gray-100' // Remove background for bot messages
-              : 'bg-blue-600 text-white' // Keep background for user messages
-          }`}
+              ? 'bg-gray-800 text-gray-100'
+              : 'bg-blue-600 text-white'
+          } shadow-md`}
         >
           {isBot ? (
-            <>
-              {/* Render the typing effect for the bot message */}
+            <div className="prose prose-invert max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {typingComplete ? markdownContent : displayedMessage}
+              </ReactMarkdown>
               {!typingComplete && (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {displayedMessage}
-                </ReactMarkdown>
+                <span className="inline-block w-2 h-4 ml-1 bg-gray-400 animate-pulse" />
               )}
-              {/* Render the final message as Markdown after typing is complete */}
-              {typingComplete && (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {markdownContent}
-                </ReactMarkdown>
-              )}
-            </>
+            </div>
           ) : (
-            // Render plain text for user messages
-            message
+            <div className="whitespace-pre-wrap">{message}</div>
           )}
         </div>
-        {/* Ref for auto-scrolling */}
-        <div ref={messageEndRef} />
       </div>
+      <div ref={messageEndRef} className="h-1" />
     </div>
   );
 }
