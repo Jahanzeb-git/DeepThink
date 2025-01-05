@@ -1,36 +1,43 @@
-import React, { useEffect, useRef } from 'react';
-import 'katex/dist/katex.min.css'; // Ensure Katex styles are included
+import React from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 
-const Latex: React.FC = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
+const markdownContent = `
+## Math Rendering Test
 
-  // Example equation for rendering
-  const equation = `
-    $$
-    J(\\theta_0, \\theta_1) = \\frac{1}{2m} \\sum_{i=1}^{m} (h_\\theta(x^{(i)}) - y^{(i)})^2
-    $$
-  `;
+Inline math: $E = mc^2$
 
-  useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.innerHTML = equation;
-    }
-  }, []);
+Block math:
 
+$$
+\\begin{equation}
+[\J(\\theta_0, \\theta_1) = \\frac{1}{2m} \\sum_{i=1}^{m} (h_\\theta(x^{(i)}) - y^{(i)})^2\]
+\\end{equation}
+$$
+
+Here's another example:
+
+$$
+\\begin{aligned}
+\\nabla \\times \\vec{\\mathbf{B}} -\\, \\frac1c\\, \\frac{\\partial\\vec{\\mathbf{E}}}{\\partial t} & = \\frac{4\\pi}{c}\\vec{\\mathbf{j}} \\\\
+\\nabla \\cdot \\vec{\\mathbf{E}} & = 4 \\pi \\rho \\\\
+\\nabla \\times \\vec{\\mathbf{E}}\\, +\\, \\frac1c\\, \\frac{\\partial\\vec{\\mathbf{B}}}{\\partial t} & = \\vec{\\mathbf{0}} \\\\
+\\nabla \\cdot \\vec{\\mathbf{B}} & = 0
+\\end{aligned}
+$$
+`;
+
+export const Markdown: React.FC = () => {
   return (
-    <div
-      ref={containerRef}
-      className="text-gray-900 dark:text-gray-100 p-4 bg-white dark:bg-gray-800 rounded shadow"
-    >
-      <h2 className="text-xl font-bold mb-4">LaTeX Rendering Test</h2>
+    <div className="prose prose-slate dark:prose-invert max-w-none">
+      <ReactMarkdown
+        remarkPlugins={[remarkMath]}
+        rehypePlugins={[rehypeKatex]}
+      >
+        {markdownContent}
+      </ReactMarkdown>
     </div>
   );
 };
-
-export default Latex;
-
-
-
-
-
-
