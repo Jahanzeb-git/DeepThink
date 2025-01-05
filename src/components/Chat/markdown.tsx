@@ -11,11 +11,7 @@ Inline math: $E = mc^2$
 
 Block math:
 
-$$
-\\begin{equation}
-J(\\theta_0, \\theta_1) = \\frac{1}{2m} \\sum_{i=1}^{m} (h_\\theta(x^{(i)}) - y^{(i)})^2
-\\end{equation}
-$$
+$$J(\\theta_0, \\theta_1) = \\frac{1}{2m} \\sum_{i=1}^{m} (h_\\theta(x^{(i)}) - y^{(i)})^2$$
 
 Here's another example:
 
