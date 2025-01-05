@@ -11,21 +11,14 @@ interface ChatMessageProps {
 }
 
 const preprocessMessage = (message: string): string => {
-  // Regex to match block equations: [ ... ]
-  const blockRegex = /\[(.*?)\]/g;
+  // Replace all [ ... ] with $$ ... $$
+  let processedMessage = message.replace(/\[(.*?)\]/g, '$$$1$$');
 
-  // Regex to match inline equations: ( ... )
-  const inlineRegex = /\((.*?)\)/g;
+  // Replace all ( ... ) with $ ... $
+  processedMessage = processedMessage.replace(/\((.*?)\)/g, '$$$1$');
 
-  // Replace [ ... ] with $$ ... $$ and add an extra backslash
-  let processedMessage = message.replace(blockRegex, (match, content) => {
-    return `$$${content.replace(/\\/g, '\\\\')}$$`;
-  });
-
-  // Replace ( ... ) with $ ... $ and add an extra backslash
-  processedMessage = processedMessage.replace(inlineRegex, (match, content) => {
-    return `\$${content.replace(/\\/g, '\\\\')}\$`;
-  });
+  // Replace all single backslashes with double backslashes
+  processedMessage = processedMessage.replace(/\\/g, '\\\\');
 
   return processedMessage;
 };
