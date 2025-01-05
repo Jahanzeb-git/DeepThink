@@ -11,18 +11,20 @@ interface ChatMessageProps {
 }
 
 const preprocessMessage = (message: string): string => {
-  // Regex to match LaTeX equations (both block and inline)
-  const blockRegex = /\[(.*?)\]/g; // Matches [ ... ]
-  const inlineRegex = /\((.*?)\)/g; // Matches ( ... )
+  // Regex to match block equations: [ ... ]
+  const blockRegex = /\[(.*?)\]/g;
 
-  // Replace [ ... ] with \[ ... \]
+  // Regex to match inline equations: ( ... )
+  const inlineRegex = /\((.*?)\)/g;
+
+  // Replace [ ... ] with $$ ... $$ and add an extra backslash
   let processedMessage = message.replace(blockRegex, (match, content) => {
-    return `\\[${content}\\]`;
+    return `$$${content.replace(/\\/g, '\\\\')}$$`;
   });
 
-  // Replace ( ... ) with \( ... \)
+  // Replace ( ... ) with $ ... $ and add an extra backslash
   processedMessage = processedMessage.replace(inlineRegex, (match, content) => {
-    return `\\(${content}\\)`;
+    return `$$${content.replace(/\\/g, '\\\\')}$$`;
   });
 
   return processedMessage;
