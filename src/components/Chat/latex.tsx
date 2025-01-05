@@ -1,38 +1,34 @@
-import React from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import 'katex/dist/katex.min.css'; // Import KaTeX CSS
+import React, { useEffect, useRef } from 'react';
+import 'katex/dist/katex.min.css'; // Ensure Katex styles are included
 
-const markdownContent = `
-## Markdown with Math and GFM
+const Latex: React.FC = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
 
-Here is an inline math expression: 
+  // Example equation for rendering
+  const equation = `
+    $$
+    J(\\theta_0, \\theta_1) = \\frac{1}{2m} \\sum_{i=1}^{m} (h_\\theta(x^{(i)}) - y^{(i)})^2
+    $$
+  `;
 
-Here is a block math expression:
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.innerHTML = equation;
+    }
+  }, []);
 
-$$
-J(\theta_0, \theta_1) = \frac{1}{2m} \sum_{i=1}^{m} (h_\theta(x^{(i)}) - y^{(i)})^2
-$$
-
-- [x] This is a completed task
-- [ ] This is an incomplete task
-`;
-
-const MarkdownRenderer: React.FC = () => {
   return (
-    <div className="text-gray-900 dark:text-gray-100 p-4 bg-white dark:bg-gray-800 rounded shadow">
-      <ReactMarkdown
-        children={markdownContent}
-        remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex]}
-      />
+    <div
+      ref={containerRef}
+      className="text-gray-900 dark:text-gray-100 p-4 bg-white dark:bg-gray-800 rounded shadow"
+    >
+      <h2 className="text-xl font-bold mb-4">LaTeX Rendering Test</h2>
     </div>
   );
 };
 
-export default MarkdownRenderer;
+export default Latex;
+
 
 
 
