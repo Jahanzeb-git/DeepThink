@@ -1,39 +1,39 @@
-import React, { useEffect, useRef } from 'react';
-import katex from 'katex';
-import 'katex/dist/katex.min.css'; // Import KaTeX CSS for styling
+import React from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css'; // Import KaTeX CSS
 
-const Latex: React.FC = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
+const markdownContent = `
+## Markdown with Math and GFM
 
-  // Example equation for rendering
-  const equation = `
-    [ y = \theta_0 + \theta_1 x_1 + \theta_2 x_2 + \dots + \theta_n x_n ]
-  `;
+Here is an inline math expression: $E = mc^2$
 
-  useEffect(() => {
-    if (containerRef.current) {
-      try {
-        // Render KaTeX content
-        katex.render(equation, containerRef.current, {
-          throwOnError: false, // Handle errors gracefully
-        });
-      } catch (err) {
-        console.error('KaTeX rendering failed:', err);
-      }
-    }
-  }, []);
+Here is a block math expression:
 
+$$
+a^2 + b^2 = c^2
+$$
+
+- [x] This is a completed task
+- [ ] This is an incomplete task
+`;
+
+const MarkdownRenderer: React.FC = () => {
   return (
-    <div
-      ref={containerRef}
-      className="text-gray-900 dark:text-gray-100 p-4 bg-white dark:bg-gray-800 rounded shadow"
-    >
-      <h2 className="text-xl font-bold mb-4">KaTeX Rendering Test</h2>
+    <div className="text-gray-900 dark:text-gray-100 p-4 bg-white dark:bg-gray-800 rounded shadow">
+      <ReactMarkdown
+        children={markdownContent}
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeKatex]}
+      />
     </div>
   );
 };
 
-export default Latex;
+export default MarkdownRenderer;
+
 
 
 
