@@ -7,7 +7,7 @@ const Latex: React.FC = () => {
 
   // Example equation for rendering
   const equation = `
-    \[ y = \theta_0 + \theta_1 x_1 + \theta_2 x_2 + \dots + \theta_n x_n \]
+    [ y = \theta_0 + \theta_1 x_1 + \theta_2 x_2 + \dots + \theta_n x_n ]
   `;
 
   useEffect(() => {
