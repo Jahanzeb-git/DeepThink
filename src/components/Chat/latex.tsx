@@ -8,7 +8,7 @@ import 'katex/dist/katex.min.css'; // Import KaTeX CSS
 const markdownContent = `
 ## Markdown with Math and GFM
 
-Here is an inline math expression: \[ J(\theta_0, \theta_1) = \frac{1}{2m} \sum_{i=1}^{m} (h_\theta(x^{(i)}) - y^{(i)})^2 \]
+Here is an inline math expression: [ J(\theta_0, \theta_1) = \frac{1}{2m} \sum_{i=1}^{m} (h_\theta(x^{(i)}) - y^{(i)})^2 ]
 
 Here is a block math expression:
 
