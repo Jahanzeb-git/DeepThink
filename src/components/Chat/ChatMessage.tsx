@@ -1,28 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import 'katex/dist/katex.min.css';
 
 interface ChatMessageProps {
   isBot: boolean;
   message: string;
 }
-
-const preprocessMessage = (message: string): string => {
-  // Replace all [ ... ] with $$ ... $$
-  let processedMessage = message.replace(/\[(.*?)\]/g, '$$$1$$');
-
-  // Replace all ( ... ) with $ ... $
-  processedMessage = processedMessage.replace(/\((.*?)\)/g, '$$$1$');
-
-  // Replace all single backslashes with double backslashes
-  processedMessage = processedMessage.replace(/\\/g, '\\\\');
-
-  return processedMessage;
-};
-
 
 export function ChatMessage({ isBot, message }: ChatMessageProps) {
   const [displayedMessage, setDisplayedMessage] = useState('');
@@ -30,18 +13,19 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
   const [markdownContent, setMarkdownContent] = useState('');
   const messageEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const typingSpeedRef = useRef(30);
-  const autoScrollThreshold = 100;
+  const typingSpeedRef = useRef(30); // Adjust typing speed (ms)
+  const autoScrollThreshold = 100; // Pixels from bottom to trigger auto-scroll
 
+  // Initialize markdown content
   useEffect(() => {
     if (isBot) {
-      const processedMessage = preprocessMessage(message); // Preprocess the message
-      setMarkdownContent(processedMessage);
+      setMarkdownContent(message);
       setDisplayedMessage('');
       setTypingComplete(false);
     }
   }, [isBot, message]);
 
+  // Enhanced typing effect
   useEffect(() => {
     if (!isBot || typingComplete || !markdownContent) return;
 
@@ -50,6 +34,7 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
     
     const typeNextCharacter = () => {
       if (currentIndex < content.length) {
+        // Batch characters for smoother typing
         const batchSize = 3;
         const nextBatch = content.slice(
           currentIndex,
@@ -59,6 +44,7 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
         setDisplayedMessage(prev => prev + nextBatch);
         currentIndex += batchSize;
         
+        // Adjust speed based on punctuation
         const nextChar = content[currentIndex];
         const delay = /[.,!?]/.test(nextChar) ? typingSpeedRef.current * 3 : typingSpeedRef.current;
         
@@ -71,10 +57,11 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
     typeNextCharacter();
     
     return () => {
-      currentIndex = content.length;
+      currentIndex = content.length; // Stop typing on cleanup
     };
   }, [isBot, markdownContent, typingComplete]);
 
+  // Improved auto-scroll logic
   useEffect(() => {
     if (!chatContainerRef.current || !messageEndRef.current) return;
 
@@ -106,23 +93,19 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
         <div
           className={`max-w-[80%] p-4 rounded-lg ${
             isBot
-              ? 'text-gray-100' // Bot messages without background
-              : 'bg-blue-600 text-white shadow-md' // User messages with background
-          }`}
+              ? 'bg-gray-800 text-gray-100'
+              : 'bg-blue-600 text-white'
+          } shadow-md`}
         >
           {isBot ? (
-            <>
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={[rehypeKatex]}
-                className="prose prose-invert max-w-none"
-              >
+            <div className="prose prose-invert max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {typingComplete ? markdownContent : displayedMessage}
               </ReactMarkdown>
               {!typingComplete && (
                 <span className="inline-block w-2 h-4 ml-1 bg-gray-400 animate-pulse" />
               )}
-            </>
+            </div>
           ) : (
             <div className="whitespace-pre-wrap">{message}</div>
           )}
