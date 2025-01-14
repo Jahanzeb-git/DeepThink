@@ -33,14 +33,13 @@ function App() {
   
     try {
       const response = await fetch(
-        'https://jahanzebahmed22.pythonanywhere.com/app_response',
+        'https://jahanzebahmed25.pythonanywhere.com/chat',
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json',
+                     'Authorization': ' Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqYWhhbnplYmFobWVkMjAwMkBnbWFpbC5jb20iLCJleHAiOjE3MzY4NzIyODd9.UCUjopL2r5WXXaHUcWTbG2OLWHh0YWt5bFrdhUqpSyg' },
           body: JSON.stringify({
             prompt: message,
-            system_prompt: 'You are Intelligent Chat Assistant Called, DeepThink. Always Reason like Professional Humans for responding to any request of user.', // Update this if needed
-            tokens: 1000,
           }),
         }
       );
