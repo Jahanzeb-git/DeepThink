@@ -33,11 +33,10 @@ function App() {
   
     try {
       const response = await fetch(
-        'https://jahanzebahmed25.pythonanywhere.com/chat',
+        'https://jahanzebahmed22.pythonanywhere.com/app_response',
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json',
-                     'Authorization': ' Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqYWhhbnplYmFobWVkMjAwMkBnbWFpbC5jb20iLCJleHAiOjE3MzY4NzIyODd9.UCUjopL2r5WXXaHUcWTbG2OLWHh0YWt5bFrdhUqpSyg' },
+          headers: { 'Content-Type': 'application/json'},
           body: JSON.stringify({
             prompt: message,
           }),
