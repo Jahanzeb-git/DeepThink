@@ -83,53 +83,62 @@ function App() {
     document.documentElement.classList.toggle('dark', !isDark);
   };
 
+  const MainLayout = () => (
+    <div className="flex h-screen bg-gray-900">
+      <MobileNav onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+      <div
+        className={`fixed inset-0 bg-black/50 md:hidden transition-opacity z-40 ${
+          isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setIsSidebarOpen(false)}
+      />
+      <div
+        className={`fixed md:static w-64 h-full bg-gray-900 transition-transform duration-300 ease-in-out z-50 ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
+      >
+        <Sidebar
+          histories={SAMPLE_HISTORIES}
+          activeChat={activeChat}
+          onNewChat={handleNewChat}
+          onSelectChat={(id) => {
+            setActiveChat(id);
+            setIsSidebarOpen(false);
+          }}
+          isDark={isDark}
+          toggleTheme={toggleTheme}
+        />
+      </div>
+      <ChatContainer
+        messages={messages}
+        isLoading={isLoading}
+        onSendMessage={handleSendMessage}
+      />
+    </div>
+  );
+
   return (
     <Router>
-      <div className="flex h-screen bg-gray-900">
-        <MobileNav onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-        <div
-          className={`fixed inset-0 bg-black/50 md:hidden transition-opacity z-40 ${
-            isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}
-          onClick={() => setIsSidebarOpen(false)}
-        />
-        <div
-          className={`fixed md:static w-64 h-full bg-gray-900 transition-transform duration-300 ease-in-out z-50 ${
-            isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-          }`}
-        >
-          <Sidebar
-            histories={SAMPLE_HISTORIES}
-            activeChat={activeChat}
-            onNewChat={handleNewChat}
-            onSelectChat={(id) => {
-              setActiveChat(id);
-              setIsSidebarOpen(false);
-            }}
-            isDark={isDark}
-            toggleTheme={toggleTheme}
-          />
-        </div>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <ChatContainer
-                messages={messages}
-                isLoading={isLoading}
-                onSendMessage={handleSendMessage}
-              />
-            }
-          />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
+      <Routes>
+        {/* Main App Route */}
+        <Route path="/" element={<MainLayout />} />
+
+        {/* Login Page */}
+        <Route path="/login" element={<Login />} />
+
+        {/* Signup Page */}
+        <Route path="/signup" element={<Signup />} />
+
+        {/* Terms Page */}
+        <Route path="/terms" element={<Terms />} />
+
+        {/* Redirect any unknown route to the main page */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </Router>
   );
 }
 
 export default App;
+
 
