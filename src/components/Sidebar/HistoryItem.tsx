@@ -1,5 +1,6 @@
 import React from 'react';
 
+// HistoryItem.tsx
 interface HistoryItemProps {
   title: string;
   isActive?: boolean;
@@ -16,7 +17,9 @@ export function HistoryItem({ title, isActive, onClick }: HistoryItemProps) {
           : 'text-gray-300 hover:bg-gray-700/50'
       }`}
     >
-      {title}
+      <div className="truncate">
+        {title}
+      </div>
     </button>
   );
 }
