@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
-import { MessageCircle, Loader2, CheckCircle2 } from 'lucide-react';
+import { MessageCircle, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+interface LoginResponse {
+  access_token: string;
+  token_type: string;
+}
 
 const LoginPage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -45,14 +52,18 @@ const LoginPage = () => {
       const [data] = await Promise.all([
         response.json(),
         loadingPromise // Ensure minimum 4 second loading time
-      ]);
+      ]) as [LoginResponse, void];
 
       if (!response.ok) {
         throw new Error(data.message || 'Login failed');
       }
 
-      // Handle successful login (e.g., store token, redirect)
-      console.log('Login successful:', data);
+      // Store token in localStorage
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('token_type', data.token_type);
+      
+      // Redirect to chat page
+      navigate('/chat');
     } catch (err) {
       setError(err.message || 'Failed to login. Please try again.');
     } finally {
