@@ -22,7 +22,7 @@ interface ChatSession {
 
 interface SidebarProps {
   onSelectChat: (sessionNumber: number) => void;
-  onNewChat: () => void;  // Keep original onNewChat for parent component notification
+  onNewChat: () => void; // Keep original onNewChat for parent component notification
   isDark: boolean;
   toggleTheme: () => void;
 }
@@ -46,15 +46,19 @@ export function Sidebar({
       }
       const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/history', {
         headers: {
-          'Authorization': Bearer ${token},
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
-      const data: HistoryResponse = await response.json();
-      if (data.prompt && data.session_number) {
-        setSessions(prev => [
-          { prompt: data.prompt, session_number: data.session_number },
-          ...prev
+      const data: HistoryResponse[] = await response.json(); // Assume the API returns an array of history items
+      if (Array.isArray(data)) {
+        // Append new history data to the existing sessions
+        setSessions((prev) => [
+          ...data.map((item) => ({
+            prompt: item.prompt,
+            session_number: item.session_number,
+          })),
+          ...prev, // Keep existing sessions
         ]);
       }
     } catch (error) {
@@ -63,35 +67,35 @@ export function Sidebar({
   };
 
   const handleNewChat = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.log('User not authenticated');
-      return;
-    }
-
-    // First increment the session
-    const incResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/session_inc', {
-      headers: {
-        'Authorization': Bearer ${token},
-        'Content-Type': 'application/json'
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.log('User not authenticated');
+        return;
       }
-    });
-    const incData: SessionResponse = await incResponse.json();
-    
-    // Wait for 500ms
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Then fetch the new history
-    await fetchHistory();
-    
-    // Clear active session
-    setActiveSession(null);
-    onNewChat();
-  } catch (error) {
-    console.error('Error starting new chat:', error);
-  }
-};
+
+      // First increment the session
+      const incResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/session_inc', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const incData: SessionResponse = await incResponse.json();
+
+      // Wait for 500ms
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Then fetch the new history
+      await fetchHistory();
+
+      // Clear active session
+      setActiveSession(null);
+      onNewChat();
+    } catch (error) {
+      console.error('Error starting new chat:', error);
+    }
+  };
 
   // Fetch initial history when component mounts
   useEffect(() => {
@@ -103,7 +107,7 @@ export function Sidebar({
     const handleBeforeUnload = () => {
       fetch('https://jahanzebahmed25.pythonanywhere.com/session_inc')
         .then(() => fetchHistory())
-        .catch(error => console.error('Error handling page unload:', error));
+        .catch((error) => console.error('Error handling page unload:', error));
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -141,7 +145,7 @@ export function Sidebar({
           sessions.map((session) => (
             <HistoryItem
               key={session.session_number}
-              title={session.prompt || Chat ${session.session_number}}
+              title={session.prompt || `Chat ${session.session_number}`}
               isActive={session.session_number === activeSession}
               onClick={() => handleSelectChat(session.session_number)}
             />
@@ -156,5 +160,3 @@ export function Sidebar({
     </div>
   );
 }
-
-
