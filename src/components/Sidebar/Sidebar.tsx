@@ -182,3 +182,4 @@ export function HistoryItem({ title, isActive, onClick }: HistoryItemProps) {
     </button>
   );
 }
+
