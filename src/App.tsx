@@ -68,13 +68,13 @@ function App() {
 
       const data = await response.json();
 
-      if (!data.output) {
+      if (!data.response) {
         throw new Error('No output from the API');
       }
 
       setMessages((prev) => [
         ...prev,
-        { text: data.output, isBot: true },
+        { text: data.response, isBot: true },
       ]);
     } catch (error) {
       console.error('Error fetching response:', error);
@@ -155,3 +155,4 @@ function App() {
 }
 
 export default App;
+
