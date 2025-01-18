@@ -23,12 +23,14 @@ interface ChatSession {
 
 interface SidebarProps {
   onSelectChat: (sessionNumber: number) => void;
+  onNewChat: () => void;  // Keep original onNewChat for parent component notification
   isDark: boolean;
   toggleTheme: () => void;
 }
 
 export function Sidebar({
   onSelectChat,
+  onNewChat,
   isDark,
   toggleTheme,
 }: SidebarProps) {
@@ -40,7 +42,6 @@ export function Sidebar({
       const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/history');
       const data: HistoryResponse = await response.json();
       if (data.prompt && data.session_number) {
-        // Add new session to the beginning of the array
         setSessions(prev => [
           { prompt: data.prompt, session_number: data.session_number },
           ...prev
@@ -65,6 +66,9 @@ export function Sidebar({
       
       // Clear active session
       setActiveSession(null);
+
+      // Notify parent component
+      onNewChat();
     } catch (error) {
       console.error('Error starting new chat:', error);
     }
@@ -114,14 +118,21 @@ export function Sidebar({
 
       {/* History List */}
       <div className="flex-1 overflow-y-auto px-2 space-y-2">
-        {sessions.map((session) => (
-          <HistoryItem
-            key={session.session_number}
-            title={session.prompt || `Chat ${session.session_number}`}
-            isActive={session.session_number === activeSession}
-            onClick={() => handleSelectChat(session.session_number)}
-          />
-        ))}
+        {sessions.length > 0 ? (
+          sessions.map((session) => (
+            <HistoryItem
+              key={session.session_number}
+              title={session.prompt || `Chat ${session.session_number}`}
+              isActive={session.session_number === activeSession}
+              onClick={() => handleSelectChat(session.session_number)}
+            />
+          ))
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-gray-400 text-sm">
+            <p>No chat history found</p>
+            <p className="mt-2">Start a new chat to begin!</p>
+          </div>
+        )}
       </div>
     </div>
   );
