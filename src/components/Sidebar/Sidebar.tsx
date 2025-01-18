@@ -3,6 +3,7 @@ import { RotateCw } from 'lucide-react';
 import { ThemeToggle } from '../ThemeToggle';
 import { HistoryItem } from './HistoryItem';
 
+// Define interfaces at the top of the file
 interface HistoryResponse {
   prompt: string;
   session_number: number;
@@ -21,7 +22,7 @@ interface ChatSession {
 
 interface SidebarProps {
   onSelectChat: (sessionNumber: number) => void;
-  onNewChat: () => void;
+  onNewChat: () => void;  // Keep original onNewChat for parent component notification
   isDark: boolean;
   toggleTheme: () => void;
 }
@@ -35,55 +36,26 @@ export function Sidebar({
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSession, setActiveSession] = useState<number | null>(null);
 
-  // Load sessions from localStorage on initial mount
-  useEffect(() => {
-    const savedSessions = localStorage.getItem('chatSessions');
-    if (savedSessions) {
-      setSessions(JSON.parse(savedSessions));
-    }
-  }, []);
-
-  // Save sessions to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('chatSessions', JSON.stringify(sessions));
-  }, [sessions]);
-
   const fetchHistory = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token'); // Get token from localStorage
       if (!token) {
+        // Handle case when user is not logged in
         console.log('User not authenticated');
         return;
       }
       const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/history', {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': Bearer ${token},
           'Content-Type': 'application/json'
         }
       });
       const data: HistoryResponse = await response.json();
-      
       if (data.prompt && data.session_number) {
-        // Check if session already exists
-        setSessions(prev => {
-          const sessionExists = prev.some(
-            session => session.session_number === data.session_number
-          );
-          
-          if (sessionExists) {
-            return prev;
-          }
-          
-          // Add new session to the beginning of the list
-          return [
-            {
-              prompt: data.prompt,
-              session_number: data.session_number,
-              timestamp: new Date().toISOString()
-            },
-            ...prev
-          ];
-        });
+        setSessions(prev => [
+          { prompt: data.prompt, session_number: data.session_number },
+          ...prev
+        ]);
       }
     } catch (error) {
       console.error('Error fetching history:', error);
@@ -91,48 +63,47 @@ export function Sidebar({
   };
 
   const handleNewChat = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.log('User not authenticated');
-        return;
-      }
-
-      const incResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/session_inc', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      const incData: SessionResponse = await incResponse.json();
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      await fetchHistory();
-      
-      setActiveSession(null);
-      onNewChat();
-    } catch (error) {
-      console.error('Error starting new chat:', error);
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.log('User not authenticated');
+      return;
     }
-  };
+
+    // First increment the session
+    const incResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/session_inc', {
+      headers: {
+        'Authorization': Bearer ${token},
+        'Content-Type': 'application/json'
+      }
+    });
+    const incData: SessionResponse = await incResponse.json();
+    
+    // Wait for 500ms
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Then fetch the new history
+    await fetchHistory();
+    
+    // Clear active session
+    setActiveSession(null);
+    onNewChat();
+  } catch (error) {
+    console.error('Error starting new chat:', error);
+  }
+};
+
+  // Fetch initial history when component mounts
+  useEffect(() => {
+    fetchHistory();
+  }, []);
 
   // Handle page leave/unload
   useEffect(() => {
-    const handleBeforeUnload = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
-        await fetch('https://jahanzebahmed25.pythonanywhere.com/session_inc', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        await fetchHistory();
-      } catch (error) {
-        console.error('Error handling page unload:', error);
-      }
+    const handleBeforeUnload = () => {
+      fetch('https://jahanzebahmed25.pythonanywhere.com/session_inc')
+        .then(() => fetchHistory())
+        .catch(error => console.error('Error handling page unload:', error));
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -146,13 +117,9 @@ export function Sidebar({
     onSelectChat(sessionNumber);
   };
 
-  const clearHistory = () => {
-    setSessions([]);
-    localStorage.removeItem('chatSessions');
-  };
-
   return (
     <div className="w-64 h-full bg-gray-900 text-white flex flex-col">
+      {/* New Chat Button */}
       <div className="p-4">
         <button
           onClick={handleNewChat}
@@ -163,26 +130,18 @@ export function Sidebar({
         </button>
       </div>
 
+      {/* Theme Toggle Button */}
       <div className="p-4">
         <ThemeToggle isDark={isDark} toggleTheme={toggleTheme} />
       </div>
 
-      {/* Added clear history button */}
-      <div className="px-4 mb-2">
-        <button
-          onClick={clearHistory}
-          className="w-full px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-        >
-          Clear History
-        </button>
-      </div>
-
+      {/* History List */}
       <div className="flex-1 overflow-y-auto px-2 space-y-2">
         {sessions.length > 0 ? (
           sessions.map((session) => (
             <HistoryItem
               key={session.session_number}
-              title={session.prompt || `Chat ${session.session_number}`}
+              title={session.prompt || Chat ${session.session_number}}
               isActive={session.session_number === activeSession}
               onClick={() => handleSelectChat(session.session_number)}
             />
@@ -195,5 +154,31 @@ export function Sidebar({
         )}
       </div>
     </div>
+  );
+}
+HistoryItem.tsx as: 
+import React from 'react';
+
+// HistoryItem.tsx
+interface HistoryItemProps {
+  title: string;
+  isActive?: boolean;
+  onClick: () => void;
+}
+
+export function HistoryItem({ title, isActive, onClick }: HistoryItemProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={w-full text-left px-4 py-2 rounded-lg transition-colors ${
+        isActive 
+          ? 'bg-gray-700 text-white' 
+          : 'text-gray-300 hover:bg-gray-700/50'
+      }}
+    >
+      <div className="truncate">
+        {title}
+      </div>
+    </button>
   );
 }
