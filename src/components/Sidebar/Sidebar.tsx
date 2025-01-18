@@ -1,36 +1,105 @@
-import React from 'react';
+// Sidebar.tsx
+import React, { useEffect, useState } from 'react';
 import { RotateCw } from 'lucide-react';
 import { ThemeToggle } from '../ThemeToggle';
 import { HistoryItem } from './HistoryItem';
 
-interface ChatHistory {
-  id: string;
-  title: string;
+// Define interfaces at the top of the file
+interface HistoryResponse {
+  prompt: string;
+  session_number: number;
+}
+
+interface SessionResponse {
+  message: string;
+  session_number: number;
+}
+
+interface ChatSession {
+  prompt: string;
+  session_number: number;
+  timestamp?: string;
 }
 
 interface SidebarProps {
-  histories: ChatHistory[];
-  activeChat?: string;
-  onNewChat: () => void;
-  onSelectChat: (id: string) => void;
-  isDark: boolean; // Use global theme state
-  toggleTheme: () => void; // Use global toggle function
+  onSelectChat: (sessionNumber: number) => void;
+  isDark: boolean;
+  toggleTheme: () => void;
 }
 
 export function Sidebar({
-  histories,
-  activeChat,
-  onNewChat,
   onSelectChat,
   isDark,
   toggleTheme,
 }: SidebarProps) {
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [activeSession, setActiveSession] = useState<number | null>(null);
+
+  const fetchHistory = async () => {
+    try {
+      const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/history');
+      const data: HistoryResponse = await response.json();
+      if (data.prompt && data.session_number) {
+        // Add new session to the beginning of the array
+        setSessions(prev => [
+          { prompt: data.prompt, session_number: data.session_number },
+          ...prev
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching history:', error);
+    }
+  };
+
+  const handleNewChat = async () => {
+    try {
+      // First increment the session
+      const incResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/session_inc');
+      const incData: SessionResponse = await incResponse.json();
+      
+      // Wait for 500ms
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Then fetch the new history
+      await fetchHistory();
+      
+      // Clear active session
+      setActiveSession(null);
+    } catch (error) {
+      console.error('Error starting new chat:', error);
+    }
+  };
+
+  // Fetch initial history when component mounts
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  // Handle page leave/unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      fetch('https://jahanzebahmed25.pythonanywhere.com/session_inc')
+        .then(() => fetchHistory())
+        .catch(error => console.error('Error handling page unload:', error));
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
+  const handleSelectChat = (sessionNumber: number) => {
+    setActiveSession(sessionNumber);
+    onSelectChat(sessionNumber);
+  };
+
   return (
     <div className="w-64 h-full bg-gray-900 text-white flex flex-col">
       {/* New Chat Button */}
       <div className="p-4">
         <button
-          onClick={onNewChat}
+          onClick={handleNewChat}
           className="w-full flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
         >
           <RotateCw className="w-4 h-4" />
@@ -43,43 +112,16 @@ export function Sidebar({
         <ThemeToggle isDark={isDark} toggleTheme={toggleTheme} />
       </div>
 
-      {/* History Groups */}
-      <div className="flex-1 overflow-y-auto px-2 space-y-6">
-        <div>
-          <h2 className="px-4 text-xs font-semibold text-gray-400 uppercase mb-2">
-            Today
-          </h2>
-          <div className="space-y-1">
-            {histories
-              .filter((h) => h.id.startsWith('today'))
-              .map((history) => (
-                <HistoryItem
-                  key={history.id}
-                  title={history.title}
-                  isActive={history.id === activeChat}
-                  onClick={() => onSelectChat(history.id)}
-                />
-              ))}
-          </div>
-        </div>
-
-        <div>
-          <h2 className="px-4 text-xs font-semibold text-gray-400 uppercase mb-2">
-            Yesterday
-          </h2>
-          <div className="space-y-1">
-            {histories
-              .filter((h) => h.id.startsWith('yesterday'))
-              .map((history) => (
-                <HistoryItem
-                  key={history.id}
-                  title={history.title}
-                  isActive={history.id === activeChat}
-                  onClick={() => onSelectChat(history.id)}
-                />
-              ))}
-          </div>
-        </div>
+      {/* History List */}
+      <div className="flex-1 overflow-y-auto px-2 space-y-2">
+        {sessions.map((session) => (
+          <HistoryItem
+            key={session.session_number}
+            title={session.prompt || `Chat ${session.session_number}`}
+            isActive={session.session_number === activeSession}
+            onClick={() => handleSelectChat(session.session_number)}
+          />
+        ))}
       </div>
     </div>
   );
