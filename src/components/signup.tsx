@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { MessageCircle, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { MessageCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const SignupPage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -24,7 +26,7 @@ const SignupPage = () => {
     setError('');
 
     try {
-      const response = await fetch('/api/signup', {
+      const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -32,15 +34,15 @@ const SignupPage = () => {
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) {
-        throw new Error('Signup failed');
+      if (response.status === 201) {
+        // Successful signup, redirect to login
+        navigate('/login');
+      } else {
+        const data = await response.json();
+        throw new Error(data.message || 'Signup failed');
       }
-
-      const data = await response.json();
-      // Handle successful signup (e.g., store token, redirect)
-      console.log('Signup successful:', data);
     } catch (err) {
-      setError('Failed to create account. Please try again.');
+      setError(err.message || 'Failed to create account. Please try again.');
     } finally {
       setLoading(false);
     }
