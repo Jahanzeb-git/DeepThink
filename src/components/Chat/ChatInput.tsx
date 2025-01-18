@@ -1,10 +1,11 @@
 import React, { useRef, useEffect } from 'react';
 import { Brain, Search, Send, Mic } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => Promise<void>;
-  value: string; // Controlled input value
-  onChange: (value: string) => void; // Change handler
+  value: string;
+  onChange: (value: string) => void;
   className?: string;
 }
 
@@ -30,7 +31,7 @@ export default function ChatInput({
     e.preventDefault();
     if (value.trim()) {
       await onSendMessage(value);
-      onChange(''); // Clear input after sending
+      onChange('');
     }
   };
 
@@ -42,9 +43,12 @@ export default function ChatInput({
   };
 
   return (
-    <form
+    <motion.form
       onSubmit={handleSubmit}
       className="relative bg-gray-700 dark:bg-gray-300 rounded-3xl border border-gray-700 dark:border-gray-300 p-4"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
     >
       <div className="relative">
         <textarea
@@ -59,45 +63,48 @@ export default function ChatInput({
             border-none
             focus:outline-none focus:ring-0
             whitespace-pre-wrap
-            scrollbar-thin scrollbar-thumb-gray-600 dark:scrollbar-thumb-gray-400"
+            scrollbar-thin scrollbar-thumb-gray-600 dark:scrollbar-thumb-gray-400
+            transition-all duration-200"
         />
-        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-2 py-2 bg-gray-700 dark:bg-gray-300 rounded-b-xl">
+        <motion.div
+          className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-2 py-2 bg-gray-700 dark:bg-gray-300 rounded-b-xl"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="p-2 rounded-lg hover:bg-gray-600 dark:hover:bg-gray-400 
-                     text-gray-100 dark:text-gray-800 transition-colors"
-              title="DeepThink"
-            >
-              <Brain className="w-5 h-5" />
-            </button>
-            <button
-              type="button"
-              className="p-2 rounded-lg hover:bg-gray-600 dark:hover:bg-gray-400 
-                     text-gray-100 dark:text-gray-800 transition-colors"
-              title="Search"
-            >
-              <Search className="w-5 h-5" />
-            </button>
-            <button
-              type="button"
-              className="p-2 rounded-lg hover:bg-gray-600 dark:hover:bg-gray-400 
-                     text-gray-100 dark:text-gray-800 transition-colors"
-              title="Voice input"
-            >
-              <Mic className="w-5 h-5" />
-            </button>
+            {['brain', 'search', 'mic'].map((icon, index) => (
+              <motion.button
+                key={icon}
+                type="button"
+                className="p-2 rounded-lg hover:bg-gray-600 dark:hover:bg-gray-400 
+                       text-gray-100 dark:text-gray-800 transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 * (index + 1) }}
+              >
+                {icon === 'brain' && <Brain className="w-5 h-5" />}
+                {icon === 'search' && <Search className="w-5 h-5" />}
+                {icon === 'mic' && <Mic className="w-5 h-5" />}
+              </motion.button>
+            ))}
           </div>
-          <button
+          <motion.button
             type="submit"
             className="p-2 rounded-lg hover:bg-gray-600 dark:hover:bg-gray-400 
-                   text-gray-100 dark:text-gray-800 transition-colors"
-            title="Send message"
+                     text-gray-100 dark:text-gray-800 transition-colors"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
           >
             <Send className="w-5 h-5 text-blue-500" />
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
-    </form>
+    </motion.form>
   );
 }
