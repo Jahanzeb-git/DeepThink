@@ -30,22 +30,37 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeChat, setActiveChat] = useState<string>();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [promptCount, setPromptCount] = useState(0);
+  const MAX_PROMPTS = 5;
 
   const handleSendMessage = async (message: string) => {
     setMessages((prev) => [...prev, { text: message, isBot: false }]);
     setIsLoading(true);
 
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      if (promptCount >= MAX_PROMPTS) {
+        setMessages((prev) => [
+          ...prev,
+          { text: 'To continue, please login.', isBot: true },
+        ]);
+        setIsLoading(false);
+        return;
+      }
+
+      setPromptCount((prev) => prev + 1);
+    }
+
     try {
-      const response = await fetch(
-        'https://jahanzebahmed22.pythonanywhere.com/app_response',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            prompt: message,
-          }),
-        }
-      );
+      const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({ prompt: message }),
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -140,5 +155,3 @@ function App() {
 }
 
 export default App;
-
-
