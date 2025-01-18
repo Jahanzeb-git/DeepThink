@@ -3,7 +3,6 @@ import { RotateCw } from 'lucide-react';
 import { ThemeToggle } from '../ThemeToggle';
 import { HistoryItem } from './HistoryItem';
 
-// Define interfaces at the top of the file
 interface HistoryResponse {
   prompt: string;
   session_number: number;
@@ -17,15 +16,17 @@ interface SessionResponse {
 interface ChatSession {
   prompt: string;
   session_number: number;
-  timestamp?: string;
+  timestamp: string;
 }
 
 interface SidebarProps {
   onSelectChat: (sessionNumber: number) => void;
-  onNewChat: () => void; // Keep original onNewChat for parent component notification
+  onNewChat: () => void;
   isDark: boolean;
   toggleTheme: () => void;
 }
+
+const LOCAL_STORAGE_KEY = 'chat_history';
 
 export function Sidebar({
   onSelectChat,
@@ -33,14 +34,22 @@ export function Sidebar({
   isDark,
   toggleTheme,
 }: SidebarProps) {
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [sessions, setSessions] = useState<ChatSession[]>(() => {
+    // Initialize from local storage
+    const storedSessions = localStorage.getItem(LOCAL_STORAGE_KEY);
+    return storedSessions ? JSON.parse(storedSessions) : [];
+  });
   const [activeSession, setActiveSession] = useState<number | null>(null);
+
+  // Save to local storage whenever sessions change
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sessions));
+  }, [sessions]);
 
   const fetchHistory = async () => {
     try {
-      const token = localStorage.getItem('token'); // Get token from localStorage
+      const token = localStorage.getItem('token');
       if (!token) {
-        // Handle case when user is not logged in
         console.log('User not authenticated');
         return;
       }
@@ -50,16 +59,26 @@ export function Sidebar({
           'Content-Type': 'application/json',
         },
       });
-      const data: HistoryResponse[] = await response.json(); // Assume the API returns an array of history items
+      const data: HistoryResponse[] = await response.json();
+      
       if (Array.isArray(data)) {
-        // Append new history data to the existing sessions
-        setSessions((prev) => [
-          ...data.map((item) => ({
-            prompt: item.prompt,
-            session_number: item.session_number,
-          })),
-          ...prev, // Keep existing sessions
-        ]);
+        // Process new history items
+        const newSessions = data.map((item) => ({
+          prompt: item.prompt,
+          session_number: item.session_number,
+          timestamp: new Date().toISOString(), // Add timestamp for sorting
+        }));
+
+        // Merge new sessions with existing ones, avoiding duplicates
+        setSessions((prevSessions) => {
+          const existingSessionNumbers = new Set(prevSessions.map(s => s.session_number));
+          const uniqueNewSessions = newSessions.filter(
+            session => !existingSessionNumbers.has(session.session_number)
+          );
+          
+          return [...uniqueNewSessions, ...prevSessions]
+            .sort((a, b) => b.session_number - a.session_number); // Sort by session number descending
+        });
       }
     } catch (error) {
       console.error('Error fetching history:', error);
@@ -74,7 +93,7 @@ export function Sidebar({
         return;
       }
 
-      // First increment the session
+      // Increment session
       const incResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/session_inc', {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -83,13 +102,13 @@ export function Sidebar({
       });
       const incData: SessionResponse = await incResponse.json();
 
-      // Wait for 500ms
+      // Wait for backend to process
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Then fetch the new history
+      // Fetch updated history
       await fetchHistory();
 
-      // Clear active session
+      // Clear active session and notify parent
       setActiveSession(null);
       onNewChat();
     } catch (error) {
@@ -97,17 +116,25 @@ export function Sidebar({
     }
   };
 
-  // Fetch initial history when component mounts
+  // Initial fetch and page leave handling
   useEffect(() => {
     fetchHistory();
-  }, []);
 
-  // Handle page leave/unload
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      fetch('https://jahanzebahmed25.pythonanywhere.com/session_inc')
-        .then(() => fetchHistory())
-        .catch((error) => console.error('Error handling page unload:', error));
+    const handleBeforeUnload = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          await fetch('https://jahanzebahmed25.pythonanywhere.com/session_inc', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          await fetchHistory();
+        } catch (error) {
+          console.error('Error handling page unload:', error);
+        }
+      }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -121,9 +148,30 @@ export function Sidebar({
     onSelectChat(sessionNumber);
   };
 
+  const formatSessionTitle = (session: ChatSession) => {
+    const date = new Date(session.timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Format date based on when the chat occurred
+    let dateStr = '';
+    if (date.toDateString() === today.toDateString()) {
+      dateStr = 'Today, ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      dateStr = 'Yesterday, ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else {
+      dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    return {
+      title: session.prompt || `Chat ${session.session_number}`,
+      subtitle: dateStr
+    };
+  };
+
   return (
     <div className="w-64 h-full bg-gray-900 text-white flex flex-col">
-      {/* New Chat Button */}
       <div className="p-4">
         <button
           onClick={handleNewChat}
@@ -134,22 +182,24 @@ export function Sidebar({
         </button>
       </div>
 
-      {/* Theme Toggle Button */}
       <div className="p-4">
         <ThemeToggle isDark={isDark} toggleTheme={toggleTheme} />
       </div>
 
-      {/* History List */}
       <div className="flex-1 overflow-y-auto px-2 space-y-2">
         {sessions.length > 0 ? (
-          sessions.map((session) => (
-            <HistoryItem
-              key={session.session_number}
-              title={session.prompt || `Chat ${session.session_number}`}
-              isActive={session.session_number === activeSession}
-              onClick={() => handleSelectChat(session.session_number)}
-            />
-          ))
+          sessions.map((session) => {
+            const { title, subtitle } = formatSessionTitle(session);
+            return (
+              <HistoryItem
+                key={session.session_number}
+                title={title}
+                subtitle={subtitle}
+                isActive={session.session_number === activeSession}
+                onClick={() => handleSelectChat(session.session_number)}
+              />
+            );
+          })
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-gray-400 text-sm">
             <p>No chat history found</p>
