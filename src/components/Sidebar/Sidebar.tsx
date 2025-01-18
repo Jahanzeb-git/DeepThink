@@ -39,7 +39,18 @@ export function Sidebar({
 
   const fetchHistory = async () => {
     try {
-      const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/history');
+      const token = localStorage.getItem('token'); // Get token from localStorage
+      if (!token) {
+        // Handle case when user is not logged in
+        console.log('User not authenticated');
+        return;
+      }
+      const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/history', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
       const data: HistoryResponse = await response.json();
       if (data.prompt && data.session_number) {
         setSessions(prev => [
@@ -53,26 +64,35 @@ export function Sidebar({
   };
 
   const handleNewChat = async () => {
-    try {
-      // First increment the session
-      const incResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/session_inc');
-      const incData: SessionResponse = await incResponse.json();
-      
-      // Wait for 500ms
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Then fetch the new history
-      await fetchHistory();
-      
-      // Clear active session
-      setActiveSession(null);
-
-      // Notify parent component
-      onNewChat();
-    } catch (error) {
-      console.error('Error starting new chat:', error);
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.log('User not authenticated');
+      return;
     }
-  };
+
+    // First increment the session
+    const incResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/session_inc', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    const incData: SessionResponse = await incResponse.json();
+    
+    // Wait for 500ms
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Then fetch the new history
+    await fetchHistory();
+    
+    // Clear active session
+    setActiveSession(null);
+    onNewChat();
+  } catch (error) {
+    console.error('Error starting new chat:', error);
+  }
+};
 
   // Fetch initial history when component mounts
   useEffect(() => {
