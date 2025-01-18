@@ -1,20 +1,9 @@
-// Sidebar.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useReducer, useCallback } from 'react';
 import { RotateCw } from 'lucide-react';
 import { ThemeToggle } from '../ThemeToggle';
 import { HistoryItem } from './HistoryItem';
 
-// Define interfaces at the top of the file
-interface HistoryResponse {
-  prompt: string;
-  session_number: number;
-}
-
-interface SessionResponse {
-  message: string;
-  session_number: number;
-}
-
+// Interfaces
 interface ChatSession {
   prompt: string;
   session_number: number;
@@ -23,10 +12,29 @@ interface ChatSession {
 
 interface SidebarProps {
   onSelectChat: (sessionNumber: number) => void;
-  onNewChat: () => void;  // Keep original onNewChat for parent component notification
+  onNewChat: () => void;
   isDark: boolean;
   toggleTheme: () => void;
 }
+
+// Reducer for managing sessions
+type Action =
+  | { type: 'SET_SESSIONS'; payload: ChatSession[] }
+  | { type: 'ADD_SESSION'; payload: ChatSession }
+  | { type: 'CLEAR_SESSIONS' };
+
+const sessionReducer = (state: ChatSession[], action: Action) => {
+  switch (action.type) {
+    case 'SET_SESSIONS':
+      return action.payload;
+    case 'ADD_SESSION':
+      return [action.payload, ...state];
+    case 'CLEAR_SESSIONS':
+      return [];
+    default:
+      return state;
+  }
+};
 
 export function Sidebar({
   onSelectChat,
@@ -34,84 +42,81 @@ export function Sidebar({
   isDark,
   toggleTheme,
 }: SidebarProps) {
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [activeSession, setActiveSession] = useState<number | null>(null);
+  const [sessions, dispatch] = useReducer(sessionReducer, []);
+  const [activeSession, setActiveSession] = React.useState<number | null>(null);
 
-  const fetchHistory = async () => {
+  // Save sessions to local storage
+  const saveSessionsToLocalStorage = (sessions: ChatSession[]) => {
+    localStorage.setItem('chat_sessions', JSON.stringify(sessions));
+  };
+
+  // Load sessions from local storage
+  const loadSessionsFromLocalStorage = () => {
+    const storedSessions = localStorage.getItem('chat_sessions');
+    return storedSessions ? JSON.parse(storedSessions) : [];
+  };
+
+  // Fetch history from server
+  const fetchHistory = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token'); // Get token from localStorage
+      const token = localStorage.getItem('token');
       if (!token) {
-        // Handle case when user is not logged in
         console.log('User not authenticated');
         return;
       }
       const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/history', {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
-      const data: HistoryResponse = await response.json();
-      if (data.prompt && data.session_number) {
-        setSessions(prev => [
-          { prompt: data.prompt, session_number: data.session_number },
-          ...prev
-        ]);
-      }
+      const data: ChatSession[] = await response.json();
+      dispatch({ type: 'SET_SESSIONS', payload: data });
+      saveSessionsToLocalStorage(data);
     } catch (error) {
       console.error('Error fetching history:', error);
     }
+  }, []);
+
+  // Handle new chat creation
+  const handleNewChat = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.log('User not authenticated');
+        return;
+      }
+
+      // Increment session
+      const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/session_inc', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const data: ChatSession = await response.json();
+
+      // Add new session to state
+      dispatch({ type: 'ADD_SESSION', payload: data });
+      saveSessionsToLocalStorage([...sessions, data]);
+
+      // Clear active session
+      setActiveSession(null);
+      onNewChat();
+    } catch (error) {
+      console.error('Error starting new chat:', error);
+    }
   };
 
-  const handleNewChat = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.log('User not authenticated');
-      return;
+  // Load history on mount
+  useEffect(() => {
+    const storedSessions = loadSessionsFromLocalStorage();
+    if (storedSessions.length > 0) {
+      dispatch({ type: 'SET_SESSIONS', payload: storedSessions });
+    } else {
+      fetchHistory();
     }
-
-    // First increment the session
-    const incResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/session_inc', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    const incData: SessionResponse = await incResponse.json();
-    
-    // Wait for 500ms
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Then fetch the new history
-    await fetchHistory();
-    
-    // Clear active session
-    setActiveSession(null);
-    onNewChat();
-  } catch (error) {
-    console.error('Error starting new chat:', error);
-  }
-};
-
-  // Fetch initial history when component mounts
-  useEffect(() => {
-    fetchHistory();
-  }, []);
-
-  // Handle page leave/unload
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      fetch('https://jahanzebahmed25.pythonanywhere.com/session_inc')
-        .then(() => fetchHistory())
-        .catch(error => console.error('Error handling page unload:', error));
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, []);
+  }, [fetchHistory]);
 
   const handleSelectChat = (sessionNumber: number) => {
     setActiveSession(sessionNumber);
@@ -127,7 +132,7 @@ export function Sidebar({
           className="w-full flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
         >
           <RotateCw className="w-4 h-4" />
-          New chat
+          New Chat
         </button>
       </div>
 
@@ -157,3 +162,4 @@ export function Sidebar({
     </div>
   );
 }
+
