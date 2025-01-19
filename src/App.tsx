@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { Sidebar } from './components/Sidebar/Sidebar';
+import HistorySidebar from './components/Sidebar/Sidebar'; // Updated import
 import { ChatContainer } from './components/Chat/ChatContainer';
 import { MobileNav } from './components/Layout/MobileNav';
 import Login from './components/login';
@@ -12,23 +12,10 @@ interface Message {
   isBot: boolean;
 }
 
-interface ChatHistory {
-  id: string;
-  title: string;
-}
-
-const SAMPLE_HISTORIES: ChatHistory[] = [
-  { id: 'today-1', title: 'Greeting and Offer of Assistance' },
-  { id: 'today-2', title: 'JavaScript Error Analysis and Planning' },
-  { id: 'yesterday-1', title: 'Professional Chatbot UI Code Conversion' },
-  { id: 'yesterday-2', title: 'Exploring Crypto for Earning Solutions' },
-];
-
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isDark, setIsDark] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeChat, setActiveChat] = useState<string>();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [promptCount, setPromptCount] = useState(0);
   const MAX_PROMPTS = 5;
@@ -89,7 +76,6 @@ function App() {
 
   const handleNewChat = () => {
     setMessages([]);
-    setActiveChat(undefined);
     setIsSidebarOpen(false);
   };
 
@@ -112,17 +98,8 @@ function App() {
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
-        <Sidebar
-          histories={SAMPLE_HISTORIES}
-          activeChat={activeChat}
-          onNewChat={handleNewChat}
-          onSelectChat={(id) => {
-            setActiveChat(id);
-            setIsSidebarOpen(false);
-          }}
-          isDark={isDark}
-          toggleTheme={toggleTheme}
-        />
+        {/* Replace Sidebar with HistorySidebar */}
+        <HistorySidebar />
       </div>
       <ChatContainer
         messages={messages}
@@ -155,4 +132,5 @@ function App() {
 }
 
 export default App;
+
 
