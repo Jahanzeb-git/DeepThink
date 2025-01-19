@@ -1,29 +1,30 @@
-// Import React, useEffect, useState, and Lucide React icons
 import React, { useEffect, useState } from 'react';
-import { Trash, Loader2 } from 'lucide-react';
+import { MoreHorizontal, Loader2, Check, X } from 'lucide-react';
 
 const HistorySidebar = () => {
-    const [history, setHistory] = useState([]); // Store history state
-    const [loading, setLoading] = useState(false); // Loading state for button
+    const [history, setHistory] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [activeDropdown, setActiveDropdown] = useState(null);
+    const [editingIndex, setEditingIndex] = useState(null);
+    const [editValue, setEditValue] = useState('');
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        // On component mount, fetch local storage data
         const storedHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
         setHistory(storedHistory);
+        // Delay mounted state to trigger animations
+        setTimeout(() => setMounted(true), 100);
     }, []);
 
     const handleNewChat = async () => {
         try {
-            setLoading(true); // Start loading
-
-            // Fetch bearer token from localStorage
+            setLoading(true);
             const token = localStorage.getItem('token');
             if (!token) {
                 setLoading(false);
                 return;
             }
 
-            // Step 1: Increment the session
             const sessionIncResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/session_inc', {
                 method: 'GET',
                 headers: { Authorization: `Bearer ${token}` },
@@ -34,35 +35,25 @@ const HistorySidebar = () => {
                 return;
             }
 
-            // Step 2: Wait for 500ms
             await new Promise((resolve) => setTimeout(resolve, 500));
 
-            // Step 3: Fetch history
             const historyResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/history', {
                 method: 'GET',
                 headers: { Authorization: `Bearer ${token}` },
             });
 
-            setLoading(false); // Stop loading
+            setLoading(false);
 
             if (!historyResponse.ok) {
-                if (historyResponse.status === 404) {
-                    // Do nothing for 404, handle gracefully
-                    return;
-                }
+                if (historyResponse.status === 404) return;
                 return;
             }
 
             const historyData = await historyResponse.json();
-
-            // Step 4: Update local storage and UI
             const newHistory = [{ session_number: historyData.session_number, prompt: historyData.prompt }, ...history];
-            const truncatedHistory = newHistory.slice(0, 7); // Truncate to latest 7 sessions
+            const truncatedHistory = newHistory.slice(0, 7);
 
-            // Update local storage
             localStorage.setItem('chatHistory', JSON.stringify(truncatedHistory));
-
-            // Update state
             setHistory(truncatedHistory);
         } catch (error) {
             console.error('Error handling new chat:', error);
@@ -74,20 +65,35 @@ const HistorySidebar = () => {
         const updatedHistory = history.filter((_, index) => index !== indexToDelete);
         setHistory(updatedHistory);
         localStorage.setItem('chatHistory', JSON.stringify(updatedHistory));
+        setActiveDropdown(null);
+    };
+
+    const startRename = (index) => {
+        setEditingIndex(index);
+        setEditValue(history[index].prompt);
+        setActiveDropdown(null);
+    };
+
+    const handleRename = (index) => {
+        if (editValue.trim()) {
+            const updatedHistory = [...history];
+            updatedHistory[index] = { ...updatedHistory[index], prompt: editValue.trim() };
+            setHistory(updatedHistory);
+            localStorage.setItem('chatHistory', JSON.stringify(updatedHistory));
+        }
+        setEditingIndex(null);
     };
 
     return (
         <div className="p-4 bg-gray-900 h-full text-white flex flex-col">
-            {/* New Chat Button */}
             <button
                 onClick={handleNewChat}
-                className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md flex items-center justify-center mb-4"
+                className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md flex items-center justify-center mb-4 transition-colors duration-200"
             >
                 {loading ? <Loader2 className="animate-spin mr-2" /> : null}
                 {loading ? 'Loading...' : 'New Chat'}
             </button>
 
-            {/* History Sidebar */}
             <div className="flex-1 overflow-y-auto">
                 {history.length === 0 ? (
                     <p className="text-center text-gray-400">No History Found. Chat to continue.</p>
@@ -95,18 +101,66 @@ const HistorySidebar = () => {
                     history.map((item, index) => (
                         <div
                             key={index}
-                            className="bg-gray-800 hover:bg-gray-700 p-3 rounded-md mb-2 flex items-center justify-between group"
+                            className={`group relative p-3 rounded-md mb-2 hover:bg-gray-800 transition-all duration-200 
+                                     ${mounted ? 'translate-x-0 opacity-100' : '-translate-x-4 opacity-0'}`}
+                            style={{ transitionDelay: `${index * 100}ms` }}
                         >
-                            <button
-                                className="text-left flex-1 text-white font-medium text-sm"
-                                onClick={() => console.log(`Clicked session ${item.session_number}`)}
-                            >
-                                {item.prompt}
-                            </button>
-                            <Trash
-                                onClick={() => handleDeletePrompt(index)}
-                                className="text-gray-400 hover:text-red-500 cursor-pointer ml-2 group-hover:opacity-100 opacity-0 transition-opacity"
-                            />
+                            {editingIndex === index ? (
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="text"
+                                        value={editValue}
+                                        onChange={(e) => setEditValue(e.target.value)}
+                                        className="flex-1 bg-gray-700 text-white px-2 py-1 rounded-md outline-none focus:ring-2 focus:ring-blue-500"
+                                        autoFocus
+                                    />
+                                    <button
+                                        onClick={() => handleRename(index)}
+                                        className="p-1 hover:bg-gray-700 rounded-md transition-colors"
+                                    >
+                                        <Check className="w-4 h-4 text-green-500" />
+                                    </button>
+                                    <button
+                                        onClick={() => setEditingIndex(null)}
+                                        className="p-1 hover:bg-gray-700 rounded-md transition-colors"
+                                    >
+                                        <X className="w-4 h-4 text-red-500" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <button
+                                        className="text-left flex-1 text-white font-medium text-sm"
+                                        onClick={() => console.log(`Clicked session ${item.session_number}`)}
+                                    >
+                                        {item.prompt}
+                                    </button>
+                                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                        <button
+                                            onClick={() => setActiveDropdown(activeDropdown === index ? null : index)}
+                                            className="p-1 rounded-md hover:bg-gray-700 transition-colors opacity-0 group-hover:opacity-100"
+                                        >
+                                            <MoreHorizontal className="w-4 h-4 text-gray-400" />
+                                        </button>
+                                        {activeDropdown === index && (
+                                            <div className="absolute right-0 mt-1 py-1 w-32 bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10">
+                                                <button
+                                                    onClick={() => startRename(index)}
+                                                    className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+                                                >
+                                                    Rename
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeletePrompt(index)}
+                                                    className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 transition-colors"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     ))
                 )}
