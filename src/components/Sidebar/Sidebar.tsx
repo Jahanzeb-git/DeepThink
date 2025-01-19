@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { MoreHorizontal, Loader2, Check, X } from 'lucide-react';
+import { MoreHorizontal, Loader2 } from 'lucide-react';
 
 const HistorySidebar = () => {
     const [history, setHistory] = useState([]);
@@ -9,6 +9,7 @@ const HistorySidebar = () => {
     const [editValue, setEditValue] = useState('');
     const [mounted, setMounted] = useState(false);
     const dropdownRef = useRef(null);
+    const inputRef = useRef(null);
     const sidebarRef = useRef(null);
 
     useEffect(() => {
@@ -16,16 +17,20 @@ const HistorySidebar = () => {
         setHistory(storedHistory);
         setTimeout(() => setMounted(true), 100);
 
-        // Add click outside listener
         const handleClickOutside = (event) => {
+            // Handle dropdown close
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setActiveDropdown(null);
+            }
+            // Handle rename save on click away
+            if (editingIndex !== null && inputRef.current && !inputRef.current.contains(event.target)) {
+                handleRename(editingIndex);
             }
         };
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    }, [editingIndex]);
 
     const handleNewChat = async () => {
         try {
@@ -86,7 +91,7 @@ const HistorySidebar = () => {
     };
 
     const handleRename = (index) => {
-        if (editValue.trim()) {
+        if (editValue.trim() && editValue !== history[index].prompt) {
             const updatedHistory = [...history];
             updatedHistory[index] = { ...updatedHistory[index], prompt: editValue.trim() };
             setHistory(updatedHistory);
@@ -96,63 +101,50 @@ const HistorySidebar = () => {
     };
 
     return (
-        <div className="p-4 bg-gray-900 h-full text-white flex flex-col" ref={sidebarRef}>
-            {/* New Chat Button with increased bottom margin */}
+        <div className="p-4 bg-gray-900 h-full text-white flex flex-col relative" ref={sidebarRef}>
+            {/* New Chat Button */}
             <button
                 onClick={handleNewChat}
-                className="bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-md flex items-center justify-center mb-6 transition-all duration-200 shadow-lg hover:shadow-blue-500/20"
+                className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-md flex items-center justify-center mb-8 transition-all duration-200 shadow-lg hover:shadow-blue-500/20"
             >
                 {loading ? (
                     <Loader2 className="animate-spin mr-2 w-4 h-4" />
                 ) : (
                     <span className="mr-2">+</span>
                 )}
-                {loading ? 'Loading...' : 'New Chat'}
+                <span className="text-base">{loading ? 'Loading...' : 'New Chat'}</span>
             </button>
 
-            {/* History List with Increased Spacing */}
-            <div className="flex-1 overflow-y-auto space-y-3 relative">
+            {/* History List */}
+            <div className="flex-1 overflow-y-auto space-y-1 relative">
                 {history.length === 0 ? (
-                    <p className="text-center text-gray-400 mt-4">No History Found. Chat to continue.</p>
+                    <p className="text-center text-gray-400 mt-4 text-base">No History Found. Chat to continue.</p>
                 ) : (
                     history.map((item, index) => (
                         <div
                             key={index}
-                            className={`group relative p-3 rounded-md hover:bg-gray-800 transition-all duration-200 
+                            className={`group relative p-2.5 rounded-md hover:bg-gray-800 transition-all duration-200 
                                      ${mounted ? 'translate-x-0 opacity-100' : '-translate-x-4 opacity-0'}`}
                             style={{ transitionDelay: `${index * 100}ms` }}
                         >
                             {editingIndex === index ? (
-                                <div className="flex items-center gap-2">
-                                    <input
-                                        type="text"
-                                        value={editValue}
-                                        onChange={(e) => setEditValue(e.target.value)}
-                                        className="flex-1 bg-gray-700 text-white px-3 py-1.5 rounded-md outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
-                                        autoFocus
-                                    />
-                                    <button
-                                        onClick={() => handleRename(index)}
-                                        className="p-1.5 hover:bg-gray-700 rounded-md transition-colors"
-                                    >
-                                        <Check className="w-4 h-4 text-green-500" />
-                                    </button>
-                                    <button
-                                        onClick={() => setEditingIndex(null)}
-                                        className="p-1.5 hover:bg-gray-700 rounded-md transition-colors"
-                                    >
-                                        <X className="w-4 h-4 text-red-500" />
-                                    </button>
-                                </div>
+                                <input
+                                    ref={inputRef}
+                                    type="text"
+                                    value={editValue}
+                                    onChange={(e) => setEditValue(e.target.value)}
+                                    className="w-full bg-gray-700 text-white px-3 py-1.5 rounded-md outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-base"
+                                    autoFocus
+                                />
                             ) : (
                                 <>
                                     <button
-                                        className="text-left flex-1 text-white font-medium text-sm w-full pr-8"
+                                        className="text-left flex-1 text-white font-medium text-base w-full pr-8"
                                         onClick={() => console.log(`Clicked session ${item.session_number}`)}
                                     >
                                         {item.prompt}
                                     </button>
-                                    <div className="absolute right-2 top-1/2 -translate-y-1/2" ref={dropdownRef}>
+                                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -162,39 +154,38 @@ const HistorySidebar = () => {
                                         >
                                             <MoreHorizontal className="w-4 h-4 text-gray-400" />
                                         </button>
-                                        {activeDropdown === index && (
-                                            <div 
-                                                className="fixed transform translate-x-full -translate-y-full mt-2 py-1.5 w-36 bg-gray-800 rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 z-50"
-                                                style={{
-                                                    top: '50%',
-                                                    right: '2rem'
-                                                }}
-                                            >
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        startRename(index);
-                                                    }}
-                                                    className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
-                                                >
-                                                    Rename
-                                                </button>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleDeletePrompt(index);
-                                                    }}
-                                                    className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 transition-colors"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        )}
                                     </div>
                                 </>
                             )}
                         </div>
                     ))
+                )}
+
+                {/* Floating Dropdown Menu */}
+                {activeDropdown !== null && (
+                    <div 
+                        ref={dropdownRef}
+                        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 py-1.5 w-36 bg-gray-800 rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 z-50"
+                    >
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                startRename(activeDropdown);
+                            }}
+                            className="block w-full text-left px-4 py-2 text-base text-gray-300 hover:bg-gray-700 transition-colors"
+                        >
+                            Rename
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeletePrompt(activeDropdown);
+                            }}
+                            className="block w-full text-left px-4 py-2 text-base text-red-400 hover:bg-gray-700 transition-colors"
+                        >
+                            Delete
+                        </button>
+                    </div>
                 )}
             </div>
         </div>
