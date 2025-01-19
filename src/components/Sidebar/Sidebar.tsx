@@ -13,7 +13,7 @@ const HistorySidebar = () => {
     const handleNewChat = async () => {
         try {
             // Fetch bearer token from localStorage
-            const token = localStorage.getItem('bearerToken');
+            const token = localStorage.getItem('token');
             if (!token) {
                 alert('No Chat found.'); // Message if token is missing
                 return;
