@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { MoreHorizontal, Loader2, Check, X } from 'lucide-react';
 
 const HistorySidebar = () => {
@@ -8,12 +8,23 @@ const HistorySidebar = () => {
     const [editingIndex, setEditingIndex] = useState(null);
     const [editValue, setEditValue] = useState('');
     const [mounted, setMounted] = useState(false);
+    const dropdownRef = useRef(null);
+    const sidebarRef = useRef(null);
 
     useEffect(() => {
         const storedHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
         setHistory(storedHistory);
-        // Delay mounted state to trigger animations
         setTimeout(() => setMounted(true), 100);
+
+        // Add click outside listener
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setActiveDropdown(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     const handleNewChat = async () => {
@@ -85,23 +96,29 @@ const HistorySidebar = () => {
     };
 
     return (
-        <div className="p-4 bg-gray-900 h-full text-white flex flex-col">
+        <div className="p-4 bg-gray-900 h-full text-white flex flex-col" ref={sidebarRef}>
+            {/* New Chat Button with increased bottom margin */}
             <button
                 onClick={handleNewChat}
-                className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md flex items-center justify-center mb-4 transition-colors duration-200"
+                className="bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-md flex items-center justify-center mb-6 transition-all duration-200 shadow-lg hover:shadow-blue-500/20"
             >
-                {loading ? <Loader2 className="animate-spin mr-2" /> : null}
+                {loading ? (
+                    <Loader2 className="animate-spin mr-2 w-4 h-4" />
+                ) : (
+                    <span className="mr-2">+</span>
+                )}
                 {loading ? 'Loading...' : 'New Chat'}
             </button>
 
-            <div className="flex-1 overflow-y-auto">
+            {/* History List with Increased Spacing */}
+            <div className="flex-1 overflow-y-auto space-y-3 relative">
                 {history.length === 0 ? (
-                    <p className="text-center text-gray-400">No History Found. Chat to continue.</p>
+                    <p className="text-center text-gray-400 mt-4">No History Found. Chat to continue.</p>
                 ) : (
                     history.map((item, index) => (
                         <div
                             key={index}
-                            className={`group relative p-3 rounded-md mb-2 hover:bg-gray-800 transition-all duration-200 
+                            className={`group relative p-3 rounded-md hover:bg-gray-800 transition-all duration-200 
                                      ${mounted ? 'translate-x-0 opacity-100' : '-translate-x-4 opacity-0'}`}
                             style={{ transitionDelay: `${index * 100}ms` }}
                         >
@@ -111,18 +128,18 @@ const HistorySidebar = () => {
                                         type="text"
                                         value={editValue}
                                         onChange={(e) => setEditValue(e.target.value)}
-                                        className="flex-1 bg-gray-700 text-white px-2 py-1 rounded-md outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="flex-1 bg-gray-700 text-white px-3 py-1.5 rounded-md outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                                         autoFocus
                                     />
                                     <button
                                         onClick={() => handleRename(index)}
-                                        className="p-1 hover:bg-gray-700 rounded-md transition-colors"
+                                        className="p-1.5 hover:bg-gray-700 rounded-md transition-colors"
                                     >
                                         <Check className="w-4 h-4 text-green-500" />
                                     </button>
                                     <button
                                         onClick={() => setEditingIndex(null)}
-                                        className="p-1 hover:bg-gray-700 rounded-md transition-colors"
+                                        className="p-1.5 hover:bg-gray-700 rounded-md transition-colors"
                                     >
                                         <X className="w-4 h-4 text-red-500" />
                                     </button>
@@ -130,28 +147,43 @@ const HistorySidebar = () => {
                             ) : (
                                 <>
                                     <button
-                                        className="text-left flex-1 text-white font-medium text-sm"
+                                        className="text-left flex-1 text-white font-medium text-sm w-full pr-8"
                                         onClick={() => console.log(`Clicked session ${item.session_number}`)}
                                     >
                                         {item.prompt}
                                     </button>
-                                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                    <div className="absolute right-2 top-1/2 -translate-y-1/2" ref={dropdownRef}>
                                         <button
-                                            onClick={() => setActiveDropdown(activeDropdown === index ? null : index)}
-                                            className="p-1 rounded-md hover:bg-gray-700 transition-colors opacity-0 group-hover:opacity-100"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActiveDropdown(activeDropdown === index ? null : index);
+                                            }}
+                                            className="p-1.5 rounded-md hover:bg-gray-700 transition-all duration-200 opacity-0 group-hover:opacity-100"
                                         >
                                             <MoreHorizontal className="w-4 h-4 text-gray-400" />
                                         </button>
                                         {activeDropdown === index && (
-                                            <div className="absolute right-0 mt-1 py-1 w-32 bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10">
+                                            <div 
+                                                className="fixed transform translate-x-full -translate-y-full mt-2 py-1.5 w-36 bg-gray-800 rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 z-50"
+                                                style={{
+                                                    top: '50%',
+                                                    right: '2rem'
+                                                }}
+                                            >
                                                 <button
-                                                    onClick={() => startRename(index)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        startRename(index);
+                                                    }}
                                                     className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
                                                 >
                                                     Rename
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDeletePrompt(index)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDeletePrompt(index);
+                                                    }}
                                                     className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 transition-colors"
                                                 >
                                                     Delete
