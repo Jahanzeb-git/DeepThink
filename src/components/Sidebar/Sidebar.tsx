@@ -14,7 +14,6 @@ const HistorySidebar = () => {
 
     useEffect(() => {
         const storedHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
-        // Add timestamps if not present
         const historyWithDates = storedHistory.map(item => ({
             ...item,
             timestamp: item.timestamp || new Date().toISOString()
@@ -38,7 +37,12 @@ const HistorySidebar = () => {
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         const now = new Date();
-        const diffTime = Math.abs(now - date);
+        
+        // Reset time portion for accurate day comparison
+        const dateWithoutTime = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const nowWithoutTime = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        
+        const diffTime = nowWithoutTime - dateWithoutTime;
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         
         if (diffDays === 0) {
@@ -52,23 +56,31 @@ const HistorySidebar = () => {
         }
     };
 
-    const getTimeAgo = (dateString) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffTime = Math.abs(now - date);
-        const diffMinutes = Math.floor(diffTime / (1000 * 60));
-        const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const startRename = (index) => {
+        setEditingIndex(index);
+        setEditValue(history[index].prompt);
+        setActiveDropdown(null);
+    };
 
-        if (diffMinutes < 60) {
-            return `${diffMinutes}m ago`;
-        } else if (diffHours < 24) {
-            return `${diffHours}h ago`;
-        } else if (diffDays === 1) {
-            return 'Yesterday';
-        } else {
-            return `${diffDays}d ago`;
+    const handleRename = (index) => {
+        if (editingIndex !== null && editValue.trim() !== '') {
+            const updatedHistory = [...history];
+            updatedHistory[index] = {
+                ...updatedHistory[index],
+                prompt: editValue.trim()
+            };
+            setHistory(updatedHistory);
+            localStorage.setItem('chatHistory', JSON.stringify(updatedHistory));
         }
+        setEditingIndex(null);
+        setEditValue('');
+    };
+
+    const handleDeletePrompt = (index) => {
+        const updatedHistory = history.filter((_, idx) => idx !== index);
+        setHistory(updatedHistory);
+        localStorage.setItem('chatHistory', JSON.stringify(updatedHistory));
+        setActiveDropdown(null);
     };
 
     const handleOpenDropdown = (index, event) => {
@@ -142,14 +154,12 @@ const HistorySidebar = () => {
 
     return (
         <div className="p-4 bg-gray-900 h-full text-white flex flex-col relative">
-            {/* Logo */}
             <div className="mb-6">
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent">
                     Deepthink
                 </h1>
             </div>
 
-            {/* New Chat Button */}
             <button
                 onClick={handleNewChat}
                 className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-md flex items-center justify-center mb-10 transition-all duration-200 shadow-lg hover:shadow-blue-500/20 hover:scale-[1.02]"
@@ -162,7 +172,6 @@ const HistorySidebar = () => {
                 <span className="text-base">{loading ? 'Loading...' : 'New Chat'}</span>
             </button>
 
-            {/* History List Grouped by Date */}
             <div className="flex-1 overflow-y-auto space-y-6">
                 {Object.entries(groupedHistory).map(([date, items]) => (
                     <div key={date} className="space-y-1">
@@ -180,6 +189,11 @@ const HistorySidebar = () => {
                                         type="text"
                                         value={editValue}
                                         onChange={(e) => setEditValue(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                handleRename(index);
+                                            }
+                                        }}
                                         className="w-full bg-gray-700 text-white px-3 py-1.5 rounded-md outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-base"
                                         autoFocus
                                     />
@@ -191,7 +205,6 @@ const HistorySidebar = () => {
                                         >
                                             {item.prompt}
                                         </button>
-                                        <span className="text-xs text-gray-400">{getTimeAgo(item.timestamp)}</span>
                                     </div>
                                 )}
                                 
@@ -209,7 +222,6 @@ const HistorySidebar = () => {
                 ))}
             </div>
 
-            {/* Floating Dropdown Menu */}
             {activeDropdown !== null && (
                 <div 
                     ref={dropdownRef}
