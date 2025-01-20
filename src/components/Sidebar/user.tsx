@@ -54,7 +54,7 @@ const User = () => {
             const sToken = localStorage.getItem('Stoken');
             const userEmail = localStorage.getItem('userEmail');
 
-            if (token && sToken && userEmail) {
+            if (token || (token && sToken)) {
                 setAuthState('authenticated');
             } else if (sToken) {
                 setAuthState('registered');
