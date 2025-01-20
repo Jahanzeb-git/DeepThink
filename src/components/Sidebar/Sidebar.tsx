@@ -173,7 +173,12 @@ const HistorySidebar = () => {
             </button>
 
             <div className="flex-1 overflow-y-auto space-y-6">
-                {Object.entries(groupedHistory).map(([date, items]) => (
+                {history.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                        <p className="text-gray-400 text-base">No History Found. Chat to Continue</p>
+                    </div>
+                ) : (
+                    Object.entries(groupedHistory).map(([date, items]) => (
                     <div key={date} className="space-y-1">
                         <h3 className="text-xs text-gray-400 font-medium mb-2 px-2">{date}</h3>
                         {items.map((item, index) => (
@@ -219,7 +224,8 @@ const HistorySidebar = () => {
                             </div>
                         ))}
                     </div>
-                ))}
+                    ))
+                )}
             </div>
 
             {activeDropdown !== null && (
