@@ -254,7 +254,6 @@ const HistorySidebar = () => {
                     </button>
                 </div>
             )}
-            // In HistorySidebar.tsx, at the bottom of the main container:
             <div className="p-4 bg-gray-900 h-full text-white flex flex-col relative">
                 <div className="mt-auto pt-4">
                     <User />
