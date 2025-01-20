@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     UserCircle, LogIn, UserPlus, Settings, Globe, 
-    Moon, Sun, User as UserIcon, Shield, Trash2, X 
+    Moon, Sun, User as UserIcon, Shield, Trash2, X,
+    HelpCircle
 } from 'lucide-react';
 import { ThemeToggle } from '../ThemeToggle';
 
@@ -15,10 +16,10 @@ interface TabProps {
 const Tab: React.FC<TabProps> = ({ isActive, onClick, children }) => (
     <button
         onClick={onClick}
-        className={`px-4 py-2 font-medium rounded-lg transition-all duration-200
+        className={`px-6 py-3 font-medium rounded-xl transition-all duration-300 text-sm
                    ${isActive 
-                     ? 'bg-blue-600/20 text-blue-400' 
-                     : 'hover:bg-gray-800 text-gray-400'}`}
+                     ? 'bg-blue-600/20 text-blue-400 shadow-lg shadow-blue-500/10' 
+                     : 'hover:bg-gray-800/80 text-gray-400 hover:text-gray-300'}`}
     >
         {children}
     </button>
@@ -78,110 +79,131 @@ const User = () => {
     };
 
     const handleDeleteAccount = () => {
-        // Clear all localStorage
         localStorage.clear();
         navigate('/signup');
     };
 
-    const ProfileModal = () => (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-gray-900 rounded-xl w-full max-w-md p-6 shadow-2xl relative">
-                <button
-                    onClick={() => setShowProfile(false)}
-                    className="absolute right-4 top-4 text-gray-400 hover:text-white transition-colors"
-                >
-                    <X className="w-5 h-5" />
-                </button>
+    const ProfileModal = () => {
+        const [isVisible, setIsVisible] = useState(false);
+        
+        useEffect(() => {
+            setIsVisible(true);
+            return () => setIsVisible(false);
+        }, []);
 
-                <div className="mb-6">
-                    <h2 className="text-xl font-bold text-white">Settings</h2>
-                </div>
-
-                <div className="flex space-x-2 mb-6">
-                    <Tab 
-                        isActive={activeTab === 'general'}
-                        onClick={() => setActiveTab('general')}
+        return (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50
+                            transition-opacity duration-300 ease-in-out"
+                 style={{ opacity: isVisible ? 1 : 0 }}>
+                <div className={`bg-gray-900/90 backdrop-blur-xl rounded-2xl w-full max-w-md p-8 shadow-2xl relative
+                               transition-all duration-500 ease-out transform
+                               ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+                    <button
+                        onClick={() => setShowProfile(false)}
+                        className="absolute right-6 top-6 text-gray-400 hover:text-white 
+                                 transition-colors duration-300 rounded-full hover:bg-gray-800/50 p-2"
                     >
-                        General
-                    </Tab>
-                    <Tab 
-                        isActive={activeTab === 'profile'}
-                        onClick={() => setActiveTab('profile')}
-                    >
-                        Profile
-                    </Tab>
+                        <X className="w-5 h-5" />
+                    </button>
+
+                    <div className="mb-8">
+                        <h2 className="text-2xl font-bold text-white tracking-tight">Settings</h2>
+                        <p className="text-gray-400 mt-1 text-sm">Manage your preferences and account settings</p>
+                    </div>
+
+                    <div className="flex space-x-3 mb-8">
+                        <Tab 
+                            isActive={activeTab === 'general'}
+                            onClick={() => setActiveTab('general')}
+                        >
+                            General
+                        </Tab>
+                        <Tab 
+                            isActive={activeTab === 'profile'}
+                            onClick={() => setActiveTab('profile')}
+                        >
+                            Profile
+                        </Tab>
+                    </div>
+
+                    {activeTab === 'general' ? (
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between p-4 rounded-xl bg-gray-800/50 backdrop-blur-sm">
+                                <div className="flex items-center space-x-3">
+                                    <Globe className="w-5 h-5 text-gray-400" />
+                                    <span className="text-white text-sm">Language</span>
+                                </div>
+                                <select className="bg-gray-700/50 text-white rounded-lg px-4 py-2 outline-none text-sm
+                                               border border-gray-600/50 focus:border-blue-500/50 transition-colors">
+                                    <option value="en">English</option>
+                                    <option value="es">Español</option>
+                                </select>
+                            </div>
+
+                            <div className="flex items-center justify-between p-4 rounded-xl bg-gray-800/50 backdrop-blur-sm">
+                                <div className="flex items-center space-x-3">
+                                    {isDark ? 
+                                        <Moon className="w-5 h-5 text-gray-400" /> : 
+                                        <Sun className="w-5 h-5 text-gray-400" />
+                                    }
+                                    <span className="text-white text-sm">Theme</span>
+                                </div>
+                                <ThemeToggle isDark={isDark} toggleTheme={toggleTheme} />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-sm text-gray-400">Username</label>
+                                <input
+                                    type="text"
+                                    value={localStorage.getItem('username') || ''}
+                                    readOnly
+                                    className="w-full bg-gray-800/50 text-white px-4 py-3 rounded-xl
+                                             border border-gray-700/50 focus:border-blue-500/50 transition-colors"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm text-gray-400">Email</label>
+                                <input
+                                    type="email"
+                                    value={localStorage.getItem('userEmail') || ''}
+                                    readOnly
+                                    className="w-full bg-gray-800/50 text-white px-4 py-3 rounded-xl
+                                             border border-gray-700/50 focus:border-blue-500/50 transition-colors"
+                                />
+                            </div>
+
+                            <div className="space-y-4 pt-4">
+                                <button className="w-full flex items-center justify-between px-4 py-3 rounded-xl 
+                                               bg-gray-800/50 hover:bg-gray-700/50 transition-colors">
+                                    <span className="text-white text-sm">Terms of Use</span>
+                                    <Shield className="w-5 h-5 text-gray-400" />
+                                </button>
+
+                                <button className="w-full flex items-center justify-between px-4 py-3 rounded-xl 
+                                               bg-gray-800/50 hover:bg-gray-700/50 transition-colors">
+                                    <span className="text-white text-sm">Help Center</span>
+                                    <HelpCircle className="w-5 h-5 text-gray-400" />
+                                </button>
+
+                                <button
+                                    onClick={handleDeleteAccount}
+                                    className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl 
+                                             bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors
+                                             border border-red-500/20 hover:border-red-500/30"
+                                >
+                                    <Trash2 className="w-5 h-5" />
+                                    <span className="text-sm">Delete Account</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
-
-                {activeTab === 'general' ? (
-                    <div className="space-y-6">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                                <Globe className="w-5 h-5 text-gray-400" />
-                                <span className="text-white">Language</span>
-                            </div>
-                            <select className="bg-gray-800 text-white rounded-lg px-3 py-2 outline-none">
-                                <option value="en">English</option>
-                                <option value="es">Español</option>
-                            </select>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                                {isDark ? 
-                                    <Moon className="w-5 h-5 text-gray-400" /> : 
-                                    <Sun className="w-5 h-5 text-gray-400" />
-                                }
-                                <span className="text-white">Theme</span>
-                            </div>
-                            <ThemeToggle isDark={isDark} toggleTheme={toggleTheme} />
-                        </div>
-                    </div>
-                ) : (
-                    <div className="space-y-6">
-                        <div className="space-y-2">
-                            <label className="text-sm text-gray-400">Username</label>
-                            <input
-                                type="text"
-                                value={localStorage.getItem('username') || ''}
-                                readOnly
-                                className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-sm text-gray-400">Email</label>
-                            <input
-                                type="email"
-                                value={localStorage.getItem('userEmail') || ''}
-                                readOnly
-                                className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg"
-                            />
-                        </div>
-
-                        <div className="space-y-4">
-                            <button className="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors">
-                                <span className="text-white">Terms of Use</span>
-                                <Shield className="w-5 h-5 text-gray-400" />
-                            </button>
-
-                            <button className="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors" onClick={() => navigate("/terms")}>
-                                <span className="text-white">Privacy Policy</span>
-                                <Shield className="w-5 h-5 text-gray-400" />
-                            </button>
-
-                            <button
-                                onClick={handleDeleteAccount}
-                                className="w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors"
-                            >
-                                <Trash2 className="w-5 h-5" />
-                                <span>Delete Account</span>
-                            </button>
-                        </div>
-                    </div>
-                )}
             </div>
-        </div>
-    );
+        );
+    };
 
     const getButton = () => {
         switch (authState) {
