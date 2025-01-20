@@ -25,28 +25,34 @@ const SignupPage = () => {
     setLoading(true);
     setError('');
 
-    try {
-      const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+  try {
+    const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    });
 
-      if (response.status === 201) {
-        // Successful signup, redirect to login
-        navigate('/login');
-      } else {
-        const data = await response.json();
-        throw new Error(data.message || 'Signup failed');
-      }
-    } catch (err) {
-      setError(err.message || 'Failed to create account. Please try again.');
-    } finally {
-      setLoading(false);
+    if (response.status === 201) {
+      // Parse the JSON response to get the token
+      const data = await response.json();
+
+      // Store the access token in local storage
+      localStorage.setItem('Stoken', data.access_token);
+
+      // Successful signup, redirect to login
+      navigate('/login');
+    } else {
+      const data = await response.json();
+      throw new Error(data.message || 'Signup failed');
     }
-  };
+  } catch (err) {
+    setError(err.message || 'Failed to create account. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
