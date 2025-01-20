@@ -255,10 +255,10 @@ const HistorySidebar = () => {
                     </button>
                 </div>
             )}
-        </div>
-        <div className="p-4 bg-gray-900 h-full text-white flex flex-col relative">
-            <div className="mt-auto pt-4">
-                <User />
+            <div className="p-4 bg-gray-900 h-full text-white flex flex-col relative">
+                <div className="mt-auto pt-4">
+                    <User />
+                </div>
             </div>
         </div>
     );
