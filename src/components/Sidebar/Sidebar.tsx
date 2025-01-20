@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { MoreHorizontal, Loader2 } from 'lucide-react';
+import User from './user'
 
 const HistorySidebar = () => {
     const [history, setHistory] = useState([]);
@@ -253,6 +254,12 @@ const HistorySidebar = () => {
                     </button>
                 </div>
             )}
+            // In HistorySidebar.tsx, at the bottom of the main container:
+            <div className="p-4 bg-gray-900 h-full text-white flex flex-col relative">
+                <div className="mt-auto pt-4">
+                    <User />
+                </div>
+            </div>
         </div>
     );
 };
