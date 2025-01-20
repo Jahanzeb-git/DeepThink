@@ -12,47 +12,51 @@ const SignupPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-  try {
-    const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/signup', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData),
-    });
+    try {
+      const response = await fetch(
+        'https://jahanzebahmed25.pythonanywhere.com/signup',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
-    if (response.status === 201) {
-      // Parse the JSON response to get the token
-      const data = await response.json();
+      if (response.status === 201) {
+        const data = await response.json();
 
-      // Store the access token in local storage
-      localStorage.setItem('Stoken', data.access_token);
+        // Store the access token, username, and userEmail in localStorage
+        localStorage.setItem('Stoken', data.access_token);
+        localStorage.setItem('username', formData.username);
+        localStorage.setItem('userEmail', formData.email);
 
-      // Successful signup, redirect to login
-      navigate('/login');
-    } else {
-      const data = await response.json();
-      throw new Error(data.message || 'Signup failed');
+        // Redirect to login page
+        navigate('/login');
+      } else {
+        const data = await response.json();
+        throw new Error(data.message || 'Signup failed');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to create account. Please try again.');
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    setError(err.message || 'Failed to create account. Please try again.');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
@@ -62,7 +66,9 @@ const SignupPage = () => {
             <MessageCircle className="h-12 w-12 text-blue-600" />
           </div>
           <h2 className="mt-4 text-3xl font-bold text-gray-900">Deepthinks</h2>
-          <p className="mt-2 text-gray-600">Your AI companion for deeper conversations</p>
+          <p className="mt-2 text-gray-600">
+            Your AI companion for deeper conversations
+          </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -116,9 +122,7 @@ const SignupPage = () => {
             </div>
           </div>
 
-          {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
-          )}
+          {error && <div className="text-red-500 text-sm text-center">{error}</div>}
 
           <button
             type="submit"
@@ -141,3 +145,4 @@ const SignupPage = () => {
 };
 
 export default SignupPage;
+
