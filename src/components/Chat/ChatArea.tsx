@@ -6,7 +6,7 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Loader2 } from 'lucide-react';
 import Typewriter from 'typewriter-effect';
 import  ChatInput  from './ChatInput';
-import { TagInput } from './TagInput';
+import  TagInput  from './TagInput';
 
 interface Message {
   text: string;
