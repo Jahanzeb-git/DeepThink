@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
     UserCircle, LogIn, UserPlus, Settings, Globe, 
     Moon, Sun, User as UserIcon, Shield, Trash2, X,
-    HelpCircle, LogOut
+    HelpCircle
 } from 'lucide-react';
 import { ThemeToggle } from '../ThemeToggle';
 
@@ -41,7 +41,7 @@ const Switch: React.FC<{ enabled: boolean; onChange: () => void }> = ({ enabled,
 const User = () => {
     const [authState, setAuthState] = useState<'new' | 'registered' | 'authenticated'>('new');
     const [showProfile, setShowProfile] = useState(false);
-    const [activeTab, setActiveTab] = useState<'general' | 'profile'>('profile');
+    const [activeTab, setActiveTab] = useState<'general' | 'profile'>('general');
     const [isDark, setIsDark] = useState(() => 
         localStorage.getItem('theme') === 'dark' || 
         (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)
@@ -71,13 +71,6 @@ const User = () => {
     const handleSignup = () => navigate('/signup');
     const handleLogin = () => navigate('/login');
     const handleProfile = () => setShowProfile(true);
-    
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        setAuthState('registered');
-        setShowProfile(false);
-        navigate('/login');
-    };
 
     const toggleTheme = () => {
         setIsDark(!isDark);
@@ -92,36 +85,30 @@ const User = () => {
 
     const ProfileModal = () => {
         const [isVisible, setIsVisible] = useState(false);
-        const [showProfileContent, setShowProfileContent] = useState(false);
         
         useEffect(() => {
             setIsVisible(true);
-            // Delay showing profile content for smooth animation
-            const timer = setTimeout(() => setShowProfileContent(true), 300);
-            return () => {
-                setIsVisible(false);
-                clearTimeout(timer);
-            };
+            return () => setIsVisible(false);
         }, []);
 
         return (
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50
-                            transition-opacity duration-300 ease-in-out dark:bg-black/80"
+                            transition-opacity duration-300 ease-in-out"
                  style={{ opacity: isVisible ? 1 : 0 }}>
-                <div className={`bg-white dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl w-full max-w-md p-8 
-                               shadow-2xl relative transition-all duration-500 ease-out transform
+                <div className={`bg-gray-900/90 backdrop-blur-xl rounded-2xl w-full max-w-md p-8 shadow-2xl relative
+                               transition-all duration-500 ease-out transform
                                ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
                     <button
                         onClick={() => setShowProfile(false)}
-                        className="absolute right-6 top-6 text-gray-400 hover:text-gray-600 dark:hover:text-white 
-                                 transition-colors duration-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800/50 p-2"
+                        className="absolute right-6 top-6 text-gray-400 hover:text-white 
+                                 transition-colors duration-300 rounded-full hover:bg-gray-800/50 p-2"
                     >
                         <X className="w-5 h-5" />
                     </button>
 
                     <div className="mb-8">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Settings</h2>
-                        <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Manage your preferences and account settings</p>
+                        <h2 className="text-2xl font-bold text-white tracking-tight">Settings</h2>
+                        <p className="text-gray-400 mt-1 text-sm">Manage your preferences and account settings</p>
                     </div>
 
                     <div className="flex space-x-3 mb-8">
@@ -139,82 +126,66 @@ const User = () => {
                         </Tab>
                     </div>
 
-                    <div className="relative overflow-hidden" style={{ minHeight: '300px' }}>
-                        <div className={`space-y-6 absolute w-full transition-all duration-500 transform
-                                    ${showProfileContent ? 'translate-x-0 opacity-100' : 
-                                      activeTab === 'general' ? 'translate-x-full opacity-0' : '-translate-x-full opacity-0'}`}
-                             style={{ left: activeTab === 'general' ? '100%' : '-100%' }}>
-                            <div className="flex items-center justify-between p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 backdrop-blur-sm">
+                    {activeTab === 'general' ? (
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between p-4 rounded-xl bg-gray-800/50 backdrop-blur-sm">
                                 <div className="flex items-center space-x-3">
-                                    <Globe className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                                    <span className="text-gray-900 dark:text-white text-sm">Language</span>
+                                    <Globe className="w-5 h-5 text-gray-400" />
+                                    <span className="text-white text-sm">Language</span>
                                 </div>
-                                <select className="bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white rounded-lg px-4 py-2 outline-none text-sm
-                                               border border-gray-200 dark:border-gray-600/50 focus:border-blue-500/50 transition-colors">
+                                <select className="bg-gray-700/50 text-white rounded-lg px-4 py-2 outline-none text-sm
+                                               border border-gray-600/50 focus:border-blue-500/50 transition-colors">
                                     <option value="en">English</option>
                                     <option value="es">Español</option>
                                 </select>
                             </div>
 
-                            <div className="flex items-center justify-between p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 backdrop-blur-sm">
+                            <div className="flex items-center justify-between p-4 rounded-xl bg-gray-800/50 backdrop-blur-sm">
                                 <div className="flex items-center space-x-3">
                                     {isDark ? 
-                                        <Moon className="w-5 h-5 text-gray-500 dark:text-gray-400" /> : 
-                                        <Sun className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                                        <Moon className="w-5 h-5 text-gray-400" /> : 
+                                        <Sun className="w-5 h-5 text-gray-400" />
                                     }
-                                    <span className="text-gray-900 dark:text-white text-sm">Theme</span>
+                                    <span className="text-white text-sm">Theme</span>
                                 </div>
                                 <ThemeToggle isDark={isDark} toggleTheme={toggleTheme} />
                             </div>
                         </div>
-
-                        <div className={`space-y-6 absolute w-full transition-all duration-500 transform
-                                    ${showProfileContent ? 'translate-x-0 opacity-100' : 
-                                      activeTab === 'profile' ? '-translate-x-full opacity-0' : 'translate-x-full opacity-0'}`}
-                             style={{ left: activeTab === 'profile' ? '0' : '100%' }}>
+                    ) : (
+                        <div className="space-y-6">
                             <div className="space-y-2">
-                                <label className="text-sm text-gray-500 dark:text-gray-400">Username</label>
+                                <label className="text-sm text-gray-400">Username</label>
                                 <input
                                     type="text"
                                     value={localStorage.getItem('username') || ''}
                                     readOnly
-                                    className="w-full bg-gray-100 dark:bg-gray-800/50 text-gray-900 dark:text-white px-4 py-3 rounded-xl
-                                             border border-gray-200 dark:border-gray-700/50 focus:border-blue-500/50 transition-colors"
+                                    className="w-full bg-gray-800/50 text-white px-4 py-3 rounded-xl
+                                             border border-gray-700/50 focus:border-blue-500/50 transition-colors"
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm text-gray-500 dark:text-gray-400">Email</label>
+                                <label className="text-sm text-gray-400">Email</label>
                                 <input
                                     type="email"
                                     value={localStorage.getItem('userEmail') || ''}
                                     readOnly
-                                    className="w-full bg-gray-100 dark:bg-gray-800/50 text-gray-900 dark:text-white px-4 py-3 rounded-xl
-                                             border border-gray-200 dark:border-gray-700/50 focus:border-blue-500/50 transition-colors"
+                                    className="w-full bg-gray-800/50 text-white px-4 py-3 rounded-xl
+                                             border border-gray-700/50 focus:border-blue-500/50 transition-colors"
                                 />
                             </div>
 
                             <div className="space-y-4 pt-4">
                                 <button className="w-full flex items-center justify-between px-4 py-3 rounded-xl 
-                                               bg-gray-100 dark:bg-gray-800/50 hover:bg-gray-200 dark:hover:bg-gray-700/50 transition-colors">
-                                    <span className="text-gray-900 dark:text-white text-sm">Terms of Use</span>
-                                    <Shield className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                                               bg-gray-800/50 hover:bg-gray-700/50 transition-colors">
+                                    <span className="text-white text-sm">Terms of Use</span>
+                                    <Shield className="w-5 h-5 text-gray-400" />
                                 </button>
 
                                 <button className="w-full flex items-center justify-between px-4 py-3 rounded-xl 
-                                               bg-gray-100 dark:bg-gray-800/50 hover:bg-gray-200 dark:hover:bg-gray-700/50 transition-colors">
-                                    <span className="text-gray-900 dark:text-white text-sm">Help Center</span>
-                                    <HelpCircle className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                                </button>
-
-                                <button
-                                    onClick={handleLogout}
-                                    className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl 
-                                             bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 transition-colors
-                                             border border-orange-500/20 hover:border-orange-500/30"
-                                >
-                                    <LogOut className="w-5 h-5" />
-                                    <span className="text-sm">Log Out</span>
+                                               bg-gray-800/50 hover:bg-gray-700/50 transition-colors">
+                                    <span className="text-white text-sm">Help Center</span>
+                                    <HelpCircle className="w-5 h-5 text-gray-400" />
                                 </button>
 
                                 <button
@@ -228,7 +199,7 @@ const User = () => {
                                 </button>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
         );
