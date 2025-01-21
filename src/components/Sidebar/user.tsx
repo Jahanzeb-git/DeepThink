@@ -104,7 +104,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
         <div className="fixed inset-0 bg-black/80 backdrop-blur-lg flex items-center justify-center z-[9999]
                         transition-opacity duration-300 ease-in-out"
              style={{ opacity: isVisible ? 1 : 0 }}>
-            <div className={`bg-gray-900/95 backdrop-blur-xl w-full max-w-4xl md:max-w-none md:h-full h-[85vh] rounded-2xl shadow-2xl relative
+            <div className={`bg-gray-900/95 backdrop-blur-xl w-full max-w-4xl md:max-w-4xl h-screen md:h-[85vh] rounded-2xl shadow-2xl relative
                            transition-all duration-500 ease-out transform overflow-hidden
                            ${isVisible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-8 opacity-0 scale-95'}`}>
                 
