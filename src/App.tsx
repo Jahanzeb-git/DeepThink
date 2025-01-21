@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import HistorySidebar from './components/Sidebar/Sidebar'; // Updated import
 import { ChatContainer } from './components/Chat/ChatContainer';
@@ -20,12 +20,12 @@ function App() {
   const [promptCount, setPromptCount] = useState(0);
   const MAX_PROMPTS = 5;
 
-  const handleSendMessage = async (message: string) => {
+  // Memoized function for sending messages
+  const handleSendMessage = useCallback(async (message: string) => {
     setMessages((prev) => [...prev, { text: message, isBot: false }]);
     setIsLoading(true);
 
     const token = localStorage.getItem('token');
-
     if (!token) {
       if (promptCount >= MAX_PROMPTS) {
         setMessages((prev) => [
@@ -35,7 +35,6 @@ function App() {
         setIsLoading(false);
         return;
       }
-
       setPromptCount((prev) => prev + 1);
     }
 
@@ -72,21 +71,29 @@ function App() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [promptCount]);
 
-  const handleNewChat = () => {
+  // Memoized function for starting a new chat
+  const handleNewChat = useCallback(() => {
     setMessages([]);
     setIsSidebarOpen(false);
-  };
+  }, []);
 
-  const toggleTheme = () => {
-    setIsDark(!isDark);
+  // Memoized theme toggler
+  const toggleTheme = useCallback(() => {
+    setIsDark((prev) => !prev);
     document.documentElement.classList.toggle('dark', !isDark);
-  };
+  }, [isDark]);
 
-  const MainLayout = () => (
+  // Memoized sidebar toggle function
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen((prev) => !prev);
+  }, []);
+
+  // Memoized MainLayout component
+  const MainLayout = useMemo(() => () => (
     <div className="flex h-screen bg-gray-900">
-      <MobileNav onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+      <MobileNav onToggleSidebar={toggleSidebar} />
       <div
         className={`fixed inset-0 bg-black/50 md:hidden transition-opacity z-40 ${
           isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -107,7 +114,7 @@ function App() {
         onSendMessage={handleSendMessage}
       />
     </div>
-  );
+  ), [isSidebarOpen, messages, isLoading, handleSendMessage]);
 
   return (
     <Router>
@@ -132,5 +139,6 @@ function App() {
 }
 
 export default App;
+
 
 
