@@ -13,8 +13,13 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
   const typingSpeedRef = useRef(30); // Typing speed in milliseconds
   const hasTypedMessage = useRef(false); // Tracks if this message has already been typed
 
-  // Typing effect logic
   useEffect(() => {
+    console.log('ChatMessage useEffect - Start');
+    console.log(`isBot: ${isBot}`);
+    console.log(`message: ${message}`);
+    console.log(`typingComplete: ${typingComplete}`);
+    console.log(`hasTypedMessage.current: ${hasTypedMessage.current}`);
+
     // Reset the typing state and flag when the message changes
     setDisplayedMessage('');
     setTypingComplete(false);
@@ -25,6 +30,7 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
     // 2. Typing is already complete
     // 3. The message has already been typed before
     if (!isBot || typingComplete || hasTypedMessage.current) {
+      console.log('Skipping typing');
       setDisplayedMessage(message);
       setTypingComplete(true);
       return;
@@ -42,24 +48,27 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
         const delay = /[.,!?]/.test(nextChar) ? typingSpeedRef.current * 3 : typingSpeedRef.current;
         setTimeout(typeMessage, delay);
       } else {
+        console.log('Typing complete');
         setTypingComplete(true);
         hasTypedMessage.current = true; // Mark the message as fully typed
       }
     };
 
+    console.log('Starting typing effect');
     typeMessage();
 
     return () => {
       // Cleanup: Stop typing when dependencies change or component unmounts
+      console.log('Cleaning up typing effect');
       currentIndex = message.length;
       setTypingComplete(false);
       setDisplayedMessage('');
     };
   }, [isBot, message]);
 
-  // Scroll to the bottom of the chat when the message updates
   useEffect(() => {
     if (messageEndRef.current) {
+      console.log('Scrolling to the bottom');
       messageEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, [displayedMessage]);
@@ -88,3 +97,4 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
     </div>
   );
 }
+
