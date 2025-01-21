@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import HistorySidebar from './components/Sidebar/Sidebar';
-import { ChatContainer } from './components/Chat/ChatArea';
+import HistorySidebar from './components/Sidebar/Sidebar'; // Updated import
+import { ChatContainer } from './components/Chat/ChatContainer';
 import { MobileNav } from './components/Layout/MobileNav';
+import { Chat } from './components/Chat/ChatArea';
 import Login from './components/login';
 import Signup from './components/signup';
 import Terms from './components/terms';
@@ -105,15 +106,14 @@ function App() {
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
+        {/* Replace Sidebar with HistorySidebar */}
         <HistorySidebar />
       </div>
-      <div className="flex-1">
-        <ChatContainer
-          messages={messages}
-          isLoading={isLoading}
-          onSendMessage={handleSendMessage}
-        />
-      </div>
+      <ChatContainer
+        messages={messages}
+        isLoading={isLoading}
+        onSendMessage={handleSendMessage}
+      />
     </div>
   ), [isSidebarOpen, messages, isLoading, handleSendMessage]);
 
@@ -140,3 +140,7 @@ function App() {
 }
 
 export default App;
+
+
+
+
