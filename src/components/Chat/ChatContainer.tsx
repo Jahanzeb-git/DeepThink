@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Brain } from 'lucide-react';
 import { ChatMessage } from './ChatMessage';
 import ChatInput from './ChatInput';
 import TagInput from './TagInput';
 
 interface Message {
+  id: string; // Unique ID for each message
   text: string;
   isBot: boolean;
 }
@@ -20,10 +21,11 @@ export function ChatContainer({
   isLoading,
   onSendMessage,
 }: ChatContainerProps) {
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState(''); // State to manage ChatInput value
 
-  React.useEffect(() => {
+  // Auto-scroll to the bottom when messages are updated
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
@@ -56,8 +58,9 @@ export function ChatContainer({
       ) : (
         <>
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map((msg, idx) => (
-              <ChatMessage key={idx} isBot={msg.isBot} message={msg.text} />
+            {messages.map((msg) => (
+              // Use a unique key for each message
+              <ChatMessage key={msg.id} isBot={msg.isBot} message={msg.text} />
             ))}
             {isLoading && (
               <div className="flex items-center space-x-2 text-gray-400">
@@ -86,3 +89,4 @@ export function ChatContainer({
     </div>
   );
 }
+
