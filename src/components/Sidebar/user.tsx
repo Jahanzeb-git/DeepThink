@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { ThemeToggle } from '../ThemeToggle';
 import LoadingModal from './loading';
-import LadingModal2 from './loading2'
+import LoadingModal2 from './loading2'
 
 interface TabProps {
     isActive: boolean;
