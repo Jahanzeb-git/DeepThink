@@ -5,7 +5,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Loader2 } from 'lucide-react';
 import Typewriter from 'typewriter-effect';
-import { ChatInput } from './ChatInput';
+import  ChatInput  from './ChatInput';
 import { TagInput } from './TagInput';
 
 interface Message {
