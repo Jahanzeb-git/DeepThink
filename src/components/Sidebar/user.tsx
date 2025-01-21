@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { 
     UserCircle, LogIn, UserPlus, Settings, Globe, 
@@ -22,19 +23,6 @@ const Tab: React.FC<TabProps> = ({ isActive, onClick, children }) => (
                      : 'hover:bg-gray-800/80 text-gray-400 hover:text-gray-300'}`}
     >
         {children}
-    </button>
-);
-
-const Switch: React.FC<{ enabled: boolean; onChange: () => void }> = ({ enabled, onChange }) => (
-    <button
-        onClick={onChange}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200
-                   ${enabled ? 'bg-blue-600' : 'bg-gray-600'}`}
-    >
-        <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200
-                       ${enabled ? 'translate-x-6' : 'translate-x-1'}`}
-        />
     </button>
 );
 
@@ -68,8 +56,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
         navigate('/signup');
     };
 
-    return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-lg flex items-center justify-center z-50
+    const modalContent = (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-lg flex items-center justify-center z-[9999]
                         transition-opacity duration-300 ease-in-out"
              style={{ opacity: isVisible ? 1 : 0 }}>
             <div className={`bg-gray-900/95 backdrop-blur-xl w-full max-w-4xl h-[85vh] rounded-2xl shadow-2xl relative
@@ -227,9 +215,28 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
             </div>
         </div>
     );
+
+    return createPortal(modalContent, document.body);
 };
 
-const User = () => {
+const SettingsPortal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    isDark: boolean;
+    toggleTheme: () => void;
+}> = ({ isOpen, onClose, isDark, toggleTheme }) => {
+    if (!isOpen) return null;
+
+    return (
+        <ProfileModal 
+            setShowProfile={onClose}
+            isDark={isDark}
+            toggleTheme={toggleTheme}
+        />
+    );
+};
+
+const User: React.FC = () => {
     const [authState, setAuthState] = useState<'new' | 'registered' | 'authenticated'>('new');
     const [showProfile, setShowProfile] = useState(false);
     const [isDark, setIsDark] = useState(() => 
@@ -242,7 +249,6 @@ const User = () => {
         const checkAuthStatus = () => {
             const token = localStorage.getItem('token');
             const sToken = localStorage.getItem('Stoken');
-            const userEmail = localStorage.getItem('userEmail');
 
             if (token || (token && sToken)) {
                 setAuthState('authenticated');
@@ -341,19 +347,21 @@ const User = () => {
                 );
         }
     };
-
+    
     return (
-        <div className="w-full">
-            {getButton()}
-            {showProfile && (
-                <ProfileModal 
-                    setShowProfile={setShowProfile}
-                    isDark={isDark}
-                    toggleTheme={toggleTheme}
-                />
-            )}
-        </div>
+        <>
+            <div className="w-full">
+                {getButton()}
+            </div>
+            <SettingsPortal
+                isOpen={showProfile}
+                onClose={() => setShowProfile(false)}
+                isDark={isDark}
+                toggleTheme={toggleTheme}
+            />
+        </>
     );
 };
 
 export default User;
+
