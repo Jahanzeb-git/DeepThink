@@ -11,15 +11,22 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
   const [typingComplete, setTypingComplete] = useState(false);
   const messageEndRef = useRef<HTMLDivElement>(null);
   const typingSpeedRef = useRef(30); // Typing speed in milliseconds
+  const hasTypedMessage = useRef(false); // Tracks if this message has already been typed
 
   // Typing effect logic
   useEffect(() => {
-    if (!isBot || typingComplete || message === displayedMessage) {
-      setTypingComplete(true); // Ensure typing is marked complete if unnecessary
+    // Skip typing if:
+    // 1. Not a bot message
+    // 2. Typing is already complete
+    // 3. The message has already been typed before
+    if (!isBot || typingComplete || hasTypedMessage.current) {
+      setDisplayedMessage(message);
+      setTypingComplete(true);
       return;
     }
 
     let currentIndex = 0;
+
     const typeMessage = () => {
       if (currentIndex < message.length) {
         const nextChar = message[currentIndex];
@@ -31,13 +38,14 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
         setTimeout(typeMessage, delay);
       } else {
         setTypingComplete(true);
+        hasTypedMessage.current = true; // Mark the message as fully typed
       }
     };
 
     typeMessage();
 
     return () => {
-      // Cleanup: Reset state when the component unmounts or dependencies change
+      // Cleanup: Stop typing when dependencies change or component unmounts
       currentIndex = message.length;
       setTypingComplete(false);
       setDisplayedMessage('');
@@ -75,5 +83,6 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
     </div>
   );
 }
+
 
 
