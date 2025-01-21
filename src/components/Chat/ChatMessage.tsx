@@ -15,6 +15,11 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
 
   // Typing effect logic
   useEffect(() => {
+    // Reset the typing state and flag when the message changes
+    setDisplayedMessage('');
+    setTypingComplete(false);
+    hasTypedMessage.current = false;
+
     // Skip typing if:
     // 1. Not a bot message
     // 2. Typing is already complete
@@ -83,6 +88,3 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
     </div>
   );
 }
-
-
-
