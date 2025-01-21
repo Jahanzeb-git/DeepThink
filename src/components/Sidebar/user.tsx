@@ -7,6 +7,7 @@ import {
     HelpCircle, LogOut
 } from 'lucide-react';
 import { ThemeToggle } from '../ThemeToggle';
+import LoadingModal from './loading';
 
 interface TabProps {
     isActive: boolean;
@@ -51,7 +52,16 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
         navigate('/login');
     };
 
+    const ParentComponent = () => {
+          const [isModalOpen, setIsModalOpen] = useState(false);
+          const navigate = useNavigate();
+
     const handleDeleteAccount = () => {
+        setIsModalOpen(true); // Open the modal
+    };
+
+    const handleModalClose = () => {
+    // Navigate to the signup page after the modal closes
         localStorage.clear();
         navigate('/signup');
     };
@@ -208,6 +218,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                                     <Trash2 className="w-5 h-5" />
                                     <span className="text-sm">Delete Account</span>
                                 </button>
+                                <LoadingModal isOpen={isModalOpen} onClose={handleModalClose} />
                             </div>
                         </div>
                     )}
