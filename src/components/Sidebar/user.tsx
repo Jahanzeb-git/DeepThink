@@ -58,10 +58,40 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
         setIsModalOpen(true); // Open the modal
     };
 
-    const handleModalClose = () => {
-    // Navigate to the signup page after the modal closes
-        localStorage.clear();
-        navigate('/signup');
+    const handleModalClose = async () => {
+        try {
+            // Retrieve token from local storage
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                console.error('Token not found in local storage.');
+                return;
+            }
+
+            // Send DELETE request to the endpoint
+            const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/delete_user', {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            // Check if the response is successful
+            if (response.status === 200) {
+                console.log('User data successfully deleted from the database.');
+
+                // Clear local storage
+                localStorage.clear();
+
+                // Navigate to the signup page
+                navigate('/signup');
+            } else {
+                console.error(`Failed to delete user data. Status code: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('An error occurred while deleting user data:', error);
+        }
     };
 
     const modalContent = (
