@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 
 interface ChatMessageProps {
   isBot: boolean;
@@ -99,7 +98,7 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
         >
           {isBot ? (
             <div className="prose prose-invert max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown>
                 {typingComplete ? markdownContent : displayedMessage}
               </ReactMarkdown>
               {!typingComplete && (
