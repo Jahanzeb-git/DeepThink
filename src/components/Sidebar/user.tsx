@@ -36,6 +36,7 @@ interface ProfileModalProps {
 const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, toggleTheme }) => {
     const [isVisible, setIsVisible] = useState(false);
     const [activeTab, setActiveTab] = useState<'general' | 'profile'>('general');
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const navigate = useNavigate();
     
     useEffect(() => {
@@ -52,9 +53,6 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
         navigate('/login');
     };
 
-    const ParentComponent = () => {
-          const [isModalOpen, setIsModalOpen] = useState(false);
-          const navigate = useNavigate();
 
     const handleDeleteAccount = () => {
         setIsModalOpen(true); // Open the modal
