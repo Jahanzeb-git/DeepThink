@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { ThemeToggle } from '../ThemeToggle';
 import LoadingModal from './loading';
+import LadingModal2 from './loading2'
 
 interface TabProps {
     isActive: boolean;
@@ -37,6 +38,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
     const [isVisible, setIsVisible] = useState(false);
     const [activeTab, setActiveTab] = useState<'general' | 'profile'>('general');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModal2Open, setIsModal2Open] = useState(false);
     const navigate = useNavigate();
     
     useEffect(() => {
@@ -49,6 +51,10 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
     }, []);
 
     const handleLogout = () => {
+        setIsModal2Open(true) // open the modal
+    };
+
+    const handleModal2Close = () => {
         localStorage.removeItem('token');
         navigate('/login');
     };
@@ -236,6 +242,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                                     <LogOut className="w-5 h-5" />
                                     <span className="text-sm">Log Out</span>
                                 </button>
+                                <LoadingModal2 isOpen={isModal2Open} onClose={handleModal2Close} />
 
                                 <button
                                     onClick={handleDeleteAccount}
