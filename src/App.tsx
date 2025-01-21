@@ -106,7 +106,7 @@ function App() {
         }`}
       >
         {/* Replace Sidebar with HistorySidebar */}
-        <ChatContainer />
+        <HistorySidebar />
       </div>
       <ChatContainer
         messages={messages}
