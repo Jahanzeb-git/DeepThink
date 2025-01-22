@@ -16,11 +16,16 @@ function App() {
     const newMessage = { id: Date.now().toString(), text: message, isBot: false, isTyped: true };
     setMessages((prev) => [...prev, newMessage]);
     setIsLoading(true);
-
+    
+   const token = localStorage.getItem('token');
+    
     try {
       const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
         body: JSON.stringify({ prompt: message }),
       });
 
