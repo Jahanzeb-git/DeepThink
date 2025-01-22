@@ -4,15 +4,17 @@ import ReactMarkdown from 'react-markdown';
 interface ChatMessageProps {
   isBot: boolean;
   message: string;
+  isTyped: boolean; // Add isTyped to the props
+  onTypingComplete?: () => void; // Add a callback for when typing is complete
 }
 
-export function ChatMessage({ isBot, message }: ChatMessageProps) {
-  const [displayedMessage, setDisplayedMessage] = useState('');
-  const [typingComplete, setTypingComplete] = useState(false);
+export function ChatMessage({ isBot, message, isTyped, onTypingComplete }: ChatMessageProps) {
+  const [displayedMessage, setDisplayedMessage] = useState(isTyped ? message : '');
+  const [typingComplete, setTypingComplete] = useState(isTyped);
   const messageEndRef = useRef<HTMLDivElement>(null);
   const typingSpeedRef = useRef(30); // Typing speed in milliseconds
-  const hasTypedMessage = useRef(false); // Tracks if this message has already been typed
 
+  
   useEffect(() => {
     console.log('ChatMessage useEffect - Start');
     console.log(`isBot: ${isBot}`);
@@ -29,6 +31,8 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
     // 1. Not a bot message
     // 2. Typing is already complete
     // 3. The message has already been typed before
+    if (isTyped) return; // Skip typing if already typed
+
     if (!isBot || typingComplete || hasTypedMessage.current) {
       console.log('Skipping typing');
       setDisplayedMessage(message);
@@ -50,7 +54,7 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
       } else {
         console.log('Typing complete');
         setTypingComplete(true);
-        hasTypedMessage.current = true; // Mark the message as fully typed
+        if (onTypingComplete) onTypingComplete();
       }
     };
 
@@ -64,7 +68,7 @@ export function ChatMessage({ isBot, message }: ChatMessageProps) {
       setTypingComplete(false);
       setDisplayedMessage('');
     };
-  }, [isBot, message]);
+  }, [isTyped, message, onTypingComplete]);
 
   useEffect(() => {
     if (messageEndRef.current) {
