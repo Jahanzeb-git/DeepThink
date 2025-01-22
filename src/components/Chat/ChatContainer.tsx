@@ -8,6 +8,7 @@ interface Message {
   id: string; // Unique ID for each message
   text: string;
   isBot: boolean;
+  isTyped: boolean;
 }
 
 interface ChatContainerProps {
@@ -41,14 +42,12 @@ export function ChatContainer({
           <h1 className="text-2xl md:text-3xl font-bold text-white dark:text-gray-900 mb-8">
             Hi, I'm DeepSeek
           </h1>
-          <p className="text-gray-400 dark:text-gray-800 mb-12">
-            How can I help you today?
-          </p>
+          <p className="text-gray-400 dark:text-gray-800 mb-12">How can I help you today?</p>
           <div className="w-full max-w-3xl px-4">
             <ChatInput
               onSendMessage={onSendMessage}
-              value={inputValue} // Pass the current input value
-              onChange={setInputValue} // Pass the change handler
+              value={inputValue}
+              onChange={setInputValue}
             />
             <div className="mt-4 flex justify-center">
               <TagInput onAddTag={handleAddTag} />
@@ -58,17 +57,14 @@ export function ChatContainer({
       ) : (
         <>
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map((msg, index) => (
+            {messages.map((msg) => (
               <ChatMessage
                 key={msg.id}
                 isBot={msg.isBot}
                 message={msg.text}
-                isTyped={msg.isTyped} // Pass the isTyped flag
+                isTyped={msg.isTyped}
                 onTypingComplete={() => {
-                  // Update the typing state for this message
-                  setMessages((prev) =>
-                    prev.map((m, i) => (i === index ? { ...m, isTyped: true } : m))
-                  );
+                  msg.isTyped = true;
                 }}
               />
             ))}
@@ -87,8 +83,8 @@ export function ChatContainer({
             <div className="max-w-3xl mx-auto">
               <ChatInput
                 onSendMessage={onSendMessage}
-                value={inputValue} // Pass the current input value
-                onChange={setInputValue} // Pass the change handler
+                value={inputValue}
+                onChange={setInputValue}
               />
             </div>
           </div>
@@ -100,4 +96,3 @@ export function ChatContainer({
     </div>
   );
 }
-
