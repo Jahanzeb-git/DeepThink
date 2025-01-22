@@ -20,13 +20,23 @@ interface ChatContainerProps {
 export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContainerProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState('');
+  const [messageState, setMessageState] = useState(messages);
+
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messageState]);
 
   const handleAddTag = (tag: string) => {
     setInputValue(tag);
+  };
+
+  const handleTypingComplete = (id: string) => {
+    setMessageState((prevMessages) =>
+      prevMessages.map((msg) =>
+        msg.id === id ? { ...msg, isTyped: true } : msg
+      )
+    );
   };
 
   return (
@@ -51,15 +61,13 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
       ) : (
         <>
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map((msg) => (
+            {messageState.map((msg) => (
               <ChatMessage
                 key={msg.id}
                 isBot={msg.isBot}
                 message={msg.text}
                 isTyped={msg.isTyped}
-                onTypingComplete={() => {
-                  msg.isTyped = true;
-                }}
+                onTypingComplete={() => handleTypingComplete(msg.id)}
               />
             ))}
 
