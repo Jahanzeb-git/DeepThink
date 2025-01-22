@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { ChatContainer } from './components/Chat/ChatContainer';
-import { HistorySidebar } from './components/Sidebar/Sidebar'; // Assuming this is your Sidebar component
+import  HistorySidebar  from './components/Sidebar/Sidebar'; // Assuming this is your Sidebar component
 import { Menu } from 'lucide-react';
 
 interface Message {
