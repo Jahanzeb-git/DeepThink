@@ -18,51 +18,38 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const typingRef = useRef<NodeJS.Timeout | null>(null);
   const messageRef = useRef<HTMLDivElement>(null);
-  const lastScrollPosition = useRef(0);
-  const lastContentHeight = useRef(0);
   
-  // Handle scroll behavior with improved detection
+  // Handle scroll behavior
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = container;
-      const isAtBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 100;
-      
-      // Only update auto-scroll if user has scrolled manually
-      if (Math.abs(lastScrollPosition.current - scrollTop) > 10) {
-        setShouldAutoScroll(isAtBottom);
-      }
-      
-      lastScrollPosition.current = scrollTop;
-      lastContentHeight.current = scrollHeight;
+      const isAtBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 50;
+      setShouldAutoScroll(isAtBottom);
     };
 
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
   }, [containerRef]);
 
-  // Improved auto-scroll function with content height check
-  const scrollToBottom = useCallback(() => {
+  // Scroll to the latest content
+  const scrollToLatestContent = useCallback(() => {
     if (!shouldAutoScroll || !containerRef.current) return;
     
     const container = containerRef.current;
-    const { scrollHeight, clientHeight } = container;
+    const scrollTarget = container.scrollHeight;
     
-    // Only scroll if content height has changed
-    if (scrollHeight > lastContentHeight.current) {
-      requestAnimationFrame(() => {
-        container.scrollTo({
-          top: scrollHeight,
-          behavior: 'smooth'
-        });
-        lastContentHeight.current = scrollHeight;
+    requestAnimationFrame(() => {
+      container.scrollTo({
+        top: scrollTarget,
+        behavior: 'smooth'
       });
-    }
+    });
   }, [shouldAutoScroll, containerRef]);
 
-  // Enhanced typing animation with better scroll timing
+  // Typing animation with line-by-line scrolling
   const animateTyping = useCallback(() => {
     if (!isBot || isTyped) {
       setDisplayedText(message);
@@ -71,54 +58,52 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
 
     setIsTyping(true);
     let currentIndex = 0;
-    let lastNewlineIndex = -1;
-    let scrollTimeout: NodeJS.Timeout | null = null;
+    let currentLine = '';
     const textLength = message.length;
 
     const typeNextChar = () => {
       if (currentIndex < textLength) {
-        const nextChar = message[currentIndex];
+        const char = message[currentIndex];
+        currentLine += char;
+        
         setDisplayedText(prev => message.slice(0, currentIndex + 1));
         
-        // Improved new line detection and scroll timing
-        if (nextChar === '\n' && currentIndex > lastNewlineIndex) {
-          lastNewlineIndex = currentIndex;
-          
-          // Clear previous scroll timeout
-          if (scrollTimeout) clearTimeout(scrollTimeout);
-          
-          // Delay scroll slightly to allow content to render
-          scrollTimeout = setTimeout(() => {
-            scrollToBottom();
-          }, 50);
+        // Check for line breaks or end of text
+        if (char === '\n' || currentIndex === textLength - 1) {
+          // Small delay to ensure content is rendered
+          setTimeout(() => {
+            scrollToLatestContent();
+          }, 10);
+          currentLine = '';
         }
         
         currentIndex++;
         
-        // Adjusted typing speed for better readability
-        const delay = Math.random() * 15 + 15;
+        // Natural typing speed variation
+        const delay = Math.random() * 20 + 10;
         typingRef.current = setTimeout(typeNextChar, delay);
       } else {
         setIsTyping(false);
         onTypingComplete();
-        
-        // Final scroll after typing completes
-        setTimeout(scrollToBottom, 100);
+        scrollToLatestContent();
       }
     };
 
     typeNextChar();
 
     return () => {
-      if (typingRef.current) clearTimeout(typingRef.current);
-      if (scrollTimeout) clearTimeout(scrollTimeout);
+      if (typingRef.current) {
+        clearTimeout(typingRef.current);
+      }
     };
-  }, [message, isBot, isTyped, onTypingComplete, scrollToBottom]);
+  }, [message, isBot, isTyped, onTypingComplete, scrollToLatestContent]);
 
   useEffect(() => {
     animateTyping();
     return () => {
-      if (typingRef.current) clearTimeout(typingRef.current);
+      if (typingRef.current) {
+        clearTimeout(typingRef.current);
+      }
     };
   }, [animateTyping]);
 
