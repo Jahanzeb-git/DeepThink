@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Brain } from 'lucide-react';
 import { ChatMessage } from './ChatMessage';
 import ChatInput from './ChatInput';
 import TagInput from './TagInput';
+import { Brain } from 'lucide-react';
 
 interface Message {
-  id: string; // Unique ID for each message
+  id: string;
   text: string;
   isBot: boolean;
   isTyped: boolean;
@@ -17,22 +17,16 @@ interface ChatContainerProps {
   onSendMessage: (message: string) => Promise<void>;
 }
 
-export function ChatContainer({
-  messages,
-  isLoading,
-  onSendMessage,
-}: ChatContainerProps) {
+export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContainerProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [inputValue, setInputValue] = useState(''); // State to manage ChatInput value
+  const [inputValue, setInputValue] = useState('');
 
-  // Auto-scroll to the bottom when messages are updated
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Handle tag click: Insert tag text into ChatInput
   const handleAddTag = (tag: string) => {
-    setInputValue(tag); // Update the ChatInput value
+    setInputValue(tag);
   };
 
   return (
@@ -96,3 +90,4 @@ export function ChatContainer({
     </div>
   );
 }
+
