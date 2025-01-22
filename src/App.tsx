@@ -18,7 +18,7 @@ function App() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://example.com/chat', {
+      const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: message }),
