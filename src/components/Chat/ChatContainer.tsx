@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallBack } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ChatMessage } from './ChatMessage';
 import ChatInput from './ChatInput';
 import TagInput from './TagInput';
