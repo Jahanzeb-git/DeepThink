@@ -19,6 +19,7 @@ interface ChatContainerProps {
 
 export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContainerProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null); // Add a containerRef
   const [inputValue, setInputValue] = useState('');
 
   useEffect(() => {
@@ -60,6 +61,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
                 onTypingComplete={() => {
                   msg.isTyped = true;
                 }}
+                containerRef={containerRef} // Pass the containerRef to ChatMessage
               />
             ))}
 
