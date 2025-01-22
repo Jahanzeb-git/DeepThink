@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Bot, User, Copy, Check, Info } from 'lucide-react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { Bot, User, Copy, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -15,11 +15,41 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
-  const [showModelInfo, setShowModelInfo] = useState(false);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const typingRef = useRef<NodeJS.Timeout | null>(null);
   const messageRef = useRef<HTMLDivElement>(null);
+  const lastScrollPosition = useRef(0);
+  
+  // Handle scroll behavior
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
 
-  // Typing animation without auto-scroll
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const isAtBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 50;
+      setShouldAutoScroll(isAtBottom);
+      lastScrollPosition.current = scrollTop;
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [containerRef]);
+
+  // Auto-scroll function
+  const scrollToBottom = useCallback(() => {
+    if (!shouldAutoScroll || !containerRef.current) return;
+    
+    const container = containerRef.current;
+    const scrollOptions = {
+      top: container.scrollHeight,
+      behavior: 'smooth' as ScrollBehavior
+    };
+    
+    container.scrollTo(scrollOptions);
+  }, [shouldAutoScroll, containerRef]);
+
+  // Typing animation logic with improved scrolling
   const animateTyping = useCallback(() => {
     if (!isBot || isTyped) {
       setDisplayedText(message);
@@ -28,19 +58,29 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
 
     setIsTyping(true);
     let currentIndex = 0;
+    let lastNewlineIndex = -1;
     const textLength = message.length;
 
     const typeNextChar = () => {
       if (currentIndex < textLength) {
+        const nextChar = message[currentIndex];
         setDisplayedText(prev => message.slice(0, currentIndex + 1));
+        
+        // Check for new line and scroll if needed
+        if (nextChar === '\n' && currentIndex > lastNewlineIndex) {
+          lastNewlineIndex = currentIndex;
+          scrollToBottom();
+        }
+        
         currentIndex++;
         
-        // Natural typing speed variation
+        // Vary typing speed slightly for natural feel
         const delay = Math.random() * 20 + 10;
         typingRef.current = setTimeout(typeNextChar, delay);
       } else {
         setIsTyping(false);
         onTypingComplete();
+        scrollToBottom();
       }
     };
 
@@ -51,7 +91,7 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
         clearTimeout(typingRef.current);
       }
     };
-  }, [message, isBot, isTyped, onTypingComplete]);
+  }, [message, isBot, isTyped, onTypingComplete, scrollToBottom]);
 
   useEffect(() => {
     animateTyping();
@@ -75,7 +115,7 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
 
   return (
     <div
-      className={`flex gap-4 p-4 relative group ${!isBot && 'bg-gray-700/50 dark:bg-gray-200/50 rounded-lg'}`}
+      className={`flex gap-4 p-4 rounded-lg bg-gray-100 dark:bg-gray-800/50 transition-colors duration-200`}
       ref={messageRef}
     >
       <div className="flex-shrink-0">
@@ -89,12 +129,12 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
       </div>
       
       <div className="flex-1 overflow-hidden">
-        <div className="font-medium text-sm text-gray-400 dark:text-gray-600 mb-1">
+        <div className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">
           {isBot ? 'AI Assistant' : 'You'}
         </div>
         
         <div className="prose dark:prose-invert max-w-none">
-          <div className="text-gray-200 dark:text-gray-800 leading-relaxed">
+          <div className="text-gray-800 dark:text-gray-200 leading-relaxed">
             {isBot && !isTyped ? (
               <>
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -115,30 +155,17 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
         </div>
 
         {isBot && (
-          <div className="flex justify-end mt-2 items-center space-x-2">
-            <button
-              onClick={() => setShowModelInfo(prev => !prev)}
-              className="p-1.5 rounded-md transition-colors duration-200 text-gray-400 hover:text-gray-300 dark:text-gray-500 dark:hover:text-gray-600"
-              aria-label="Model Information"
-            >
-              <Info size={16} />
-            </button>
+          <div className="flex justify-end mt-2">
             <button
               onClick={copyToClipboard}
               className={`p-1.5 rounded-md transition-colors duration-200 
                 ${isCopied 
                   ? 'text-green-500 dark:text-green-400' 
-                  : 'text-gray-400 hover:text-gray-300 dark:text-gray-500 dark:hover:text-gray-600'}`}
+                  : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'}`}
               aria-label={isCopied ? 'Copied!' : 'Copy to clipboard'}
             >
               {isCopied ? <Check size={16} /> : <Copy size={16} />}
             </button>
-          </div>
-        )}
-
-        {showModelInfo && (
-          <div className="absolute bottom-full right-0 mb-2 p-3 bg-gray-700 dark:bg-white rounded-lg shadow-lg text-sm text-gray-200 dark:text-gray-800 whitespace-nowrap">
-            <p className="font-medium">Model: Qwen 2.5</p>
           </div>
         )}
       </div>
