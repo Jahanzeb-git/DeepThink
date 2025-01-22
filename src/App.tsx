@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
-import { ChatContainer } from './components/Chat/ChatContainer';
-import  HistorySidebar  from './components/Sidebar/Sidebar'; // Assuming this is your Sidebar component
 import { Menu } from 'lucide-react';
+import { ChatContainer } from './components/Chat/ChatContainer';
+import HistorySidebar from './components/Chat/Sidebar';
 
 interface Message {
   id: string;
@@ -11,17 +11,17 @@ interface Message {
 }
 
 function App() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleSendMessage = useCallback(async (message: string) => {
     const newMessage = { id: Date.now().toString(), text: message, isBot: false, isTyped: true };
     setMessages((prev) => [...prev, newMessage]);
     setIsLoading(true);
-
+    
     const token = localStorage.getItem('token');
-
+    
     try {
       const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/chat', {
         method: 'POST',
@@ -47,35 +47,45 @@ function App() {
     }
   }, []);
 
-  const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
-
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen bg-gray-900 dark:bg-gray-50">
+      {/* Mobile Overlay */}
+      <div 
+        className={`fixed inset-0 bg-black/50 transition-opacity duration-300 lg:hidden ${
+          isSidebarOpen ? 'opacity-100 z-30' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setIsSidebarOpen(false)}
+      />
+
       {/* Sidebar */}
-      <div
-        className={`fixed z-50 inset-y-0 left-0 bg-gray-900 text-white transform ${
+      <aside
+        className={`fixed lg:static top-0 left-0 z-40 h-full w-72 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } transition-transform duration-300 md:translate-x-0 md:static md:flex-shrink-0 md:w-64`}
+        }`}
       >
         <HistorySidebar />
-      </div>
-
-      {/* Mobile Hamburger Icon */}
-      <button
-        className="absolute top-4 left-4 z-50 md:hidden p-2 bg-gray-800 rounded-md text-white focus:outline-none"
-        onClick={toggleSidebar}
-      >
-        <Menu className="w-6 h-6" />
-      </button>
+      </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col ml-0 md:ml-64">
+      <main className="flex-1 flex flex-col min-w-0">
+        {/* Mobile Header */}
+        <div className="lg:hidden flex items-center p-4 border-b border-gray-700/50 dark:border-gray-200/50">
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-1.5 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 text-gray-400 dark:text-gray-600"
+            aria-label="Open sidebar"
+          >
+            <Menu size={24} />
+          </button>
+        </div>
+
+        {/* Chat Container */}
         <ChatContainer
           messages={messages}
           isLoading={isLoading}
           onSendMessage={handleSendMessage}
         />
-      </div>
+      </main>
     </div>
   );
 }
