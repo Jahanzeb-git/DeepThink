@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Bot, User, Copy, Check } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Bot, User, Copy, Check, Info } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -15,41 +15,11 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
-  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const [showModelInfo, setShowModelInfo] = useState(false);
   const typingRef = useRef<NodeJS.Timeout | null>(null);
   const messageRef = useRef<HTMLDivElement>(null);
-  
-  // Handle scroll behavior
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
 
-    const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = container;
-      const isAtBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 50;
-      setShouldAutoScroll(isAtBottom);
-    };
-
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, [containerRef]);
-
-  // Scroll to the latest content
-  const scrollToLatestContent = useCallback(() => {
-    if (!shouldAutoScroll || !containerRef.current) return;
-    
-    const container = containerRef.current;
-    const scrollTarget = container.scrollHeight;
-    
-    requestAnimationFrame(() => {
-      container.scrollTo({
-        top: scrollTarget,
-        behavior: 'smooth'
-      });
-    });
-  }, [shouldAutoScroll, containerRef]);
-
-  // Typing animation with line-by-line scrolling
+  // Typing animation without auto-scroll
   const animateTyping = useCallback(() => {
     if (!isBot || isTyped) {
       setDisplayedText(message);
@@ -58,25 +28,11 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
 
     setIsTyping(true);
     let currentIndex = 0;
-    let currentLine = '';
     const textLength = message.length;
 
     const typeNextChar = () => {
       if (currentIndex < textLength) {
-        const char = message[currentIndex];
-        currentLine += char;
-        
         setDisplayedText(prev => message.slice(0, currentIndex + 1));
-        
-        // Check for line breaks or end of text
-        if (char === '\n' || currentIndex === textLength - 1) {
-          // Small delay to ensure content is rendered
-          setTimeout(() => {
-            scrollToLatestContent();
-          }, 10);
-          currentLine = '';
-        }
-        
         currentIndex++;
         
         // Natural typing speed variation
@@ -85,7 +41,6 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
       } else {
         setIsTyping(false);
         onTypingComplete();
-        scrollToLatestContent();
       }
     };
 
@@ -96,7 +51,7 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
         clearTimeout(typingRef.current);
       }
     };
-  }, [message, isBot, isTyped, onTypingComplete, scrollToLatestContent]);
+  }, [message, isBot, isTyped, onTypingComplete]);
 
   useEffect(() => {
     animateTyping();
@@ -120,7 +75,7 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
 
   return (
     <div
-      className={`flex gap-4 p-4 ${!isBot && 'bg-gray-700/50 dark:bg-gray-200/50 rounded-lg'}`}
+      className={`flex gap-4 p-4 relative group ${!isBot && 'bg-gray-700/50 dark:bg-gray-200/50 rounded-lg'}`}
       ref={messageRef}
     >
       <div className="flex-shrink-0">
@@ -160,7 +115,14 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
         </div>
 
         {isBot && (
-          <div className="flex justify-end mt-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
+          <div className="flex justify-end mt-2 items-center space-x-2">
+            <button
+              onClick={() => setShowModelInfo(prev => !prev)}
+              className="p-1.5 rounded-md transition-colors duration-200 text-gray-400 hover:text-gray-300 dark:text-gray-500 dark:hover:text-gray-600"
+              aria-label="Model Information"
+            >
+              <Info size={16} />
+            </button>
             <button
               onClick={copyToClipboard}
               className={`p-1.5 rounded-md transition-colors duration-200 
@@ -171,6 +133,12 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
             >
               {isCopied ? <Check size={16} /> : <Copy size={16} />}
             </button>
+          </div>
+        )}
+
+        {showModelInfo && (
+          <div className="absolute bottom-full right-0 mb-2 p-3 bg-gray-700 dark:bg-white rounded-lg shadow-lg text-sm text-gray-200 dark:text-gray-800 whitespace-nowrap">
+            <p className="font-medium">Model: Qwen 2.5</p>
           </div>
         )}
       </div>
