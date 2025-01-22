@@ -4,37 +4,18 @@ import ReactMarkdown from 'react-markdown';
 interface ChatMessageProps {
   isBot: boolean;
   message: string;
-  isTyped: boolean; // Add isTyped to the props
-  onTypingComplete?: () => void; // Add a callback for when typing is complete
+  isTyped: boolean;
+  onTypingComplete?: () => void;
 }
 
 export function ChatMessage({ isBot, message, isTyped, onTypingComplete }: ChatMessageProps) {
-  const [displayedMessage, setDisplayedMessage] = useState(isTyped ? message : '');
-  const [typingComplete, setTypingComplete] = useState(isTyped);
+  const [displayedMessage, setDisplayedMessage] = useState('');
+  const [typingComplete, setTypingComplete] = useState(!isTyped);
   const messageEndRef = useRef<HTMLDivElement>(null);
-  const typingSpeedRef = 30; // Typing speed in milliseconds
+  const typingSpeed = 30;
 
-  
   useEffect(() => {
-    console.log('ChatMessage useEffect - Start');
-    console.log(`isBot: ${isBot}`);
-    console.log(`message: ${message}`);
-    console.log(`typingComplete: ${typingComplete}`);
-    console.log(`hasTypedMessage.current: ${hasTypedMessage.current}`);
-
-    // Reset the typing state and flag when the message changes
-    setDisplayedMessage('');
-    setTypingComplete(false);
-    hasTypedMessage.current = false;
-
-    // Skip typing if:
-    // 1. Not a bot message
-    // 2. Typing is already complete
-    // 3. The message has already been typed before
-    if (isTyped) return; // Skip typing if already typed
-
-    if (!isBot || typingComplete || hasTypedMessage.current) {
-      console.log('Skipping typing');
+    if (!isBot || typingComplete) {
       setDisplayedMessage(message);
       setTypingComplete(true);
       return;
@@ -44,37 +25,25 @@ export function ChatMessage({ isBot, message, isTyped, onTypingComplete }: ChatM
 
     const typeMessage = () => {
       if (currentIndex < message.length) {
-        const nextChar = message[currentIndex];
-        setDisplayedMessage((prev) => prev + nextChar);
+        setDisplayedMessage((prev) => prev + message[currentIndex]);
         currentIndex++;
-
-        // Adjust delay for punctuation
-        const delay = /[.,!?]/.test(nextChar) ? typingSpeedRef.current * 3 : typingSpeedRef.current;
+        const delay = /[.,!?]/.test(message[currentIndex - 1]) ? typingSpeed * 3 : typingSpeed;
         setTimeout(typeMessage, delay);
       } else {
-        console.log('Typing complete');
         setTypingComplete(true);
-        if (onTypingComplete) onTypingComplete();
+        onTypingComplete?.();
       }
     };
 
-    console.log('Starting typing effect');
     typeMessage();
 
     return () => {
-      // Cleanup: Stop typing when dependencies change or component unmounts
-      console.log('Cleaning up typing effect');
       currentIndex = message.length;
-      setTypingComplete(false);
-      setDisplayedMessage('');
     };
-  }, [isTyped, message, onTypingComplete]);
+  }, [isBot, message, typingComplete, onTypingComplete]);
 
   useEffect(() => {
-    if (messageEndRef.current) {
-      console.log('Scrolling to the bottom');
-      messageEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    }
+    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [displayedMessage]);
 
   return (
@@ -86,12 +55,7 @@ export function ChatMessage({ isBot, message, isTyped, onTypingComplete }: ChatM
       >
         {isBot ? (
           <div className="prose prose-invert max-w-none">
-            <ReactMarkdown>
-              {typingComplete ? message : displayedMessage}
-            </ReactMarkdown>
-            {!typingComplete && (
-              <span className="inline-block w-2 h-4 ml-1 bg-gray-400 animate-pulse" />
-            )}
+            <ReactMarkdown>{typingComplete ? message : displayedMessage}</ReactMarkdown>
           </div>
         ) : (
           <div className="whitespace-pre-wrap">{message}</div>
@@ -101,4 +65,5 @@ export function ChatMessage({ isBot, message, isTyped, onTypingComplete }: ChatM
     </div>
   );
 }
+
 
