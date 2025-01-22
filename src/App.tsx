@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Menu } from 'lucide-react';
 import { ChatContainer } from './components/Chat/ChatContainer';
-import HistorySidebar from './components/Chat/Sidebar';
+import HistorySidebar from './components/Sidebar/Sidebar';
 
 interface Message {
   id: string;
