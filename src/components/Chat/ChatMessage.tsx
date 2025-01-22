@@ -69,7 +69,7 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
         // Check for new line and scroll if needed
         if (nextChar === '\n' && currentIndex > lastNewlineIndex) {
           lastNewlineIndex = currentIndex;
-          scrollToBottom();
+          requestAnimationFrame(scrollToBottom);
         }
         
         currentIndex++;
@@ -80,7 +80,7 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
       } else {
         setIsTyping(false);
         onTypingComplete();
-        scrollToBottom();
+        requestAnimationFrame(scrollToBottom);
       }
     };
 
@@ -115,7 +115,7 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
 
   return (
     <div
-      className={`flex gap-4 p-4 rounded-lg bg-gray-100 dark:bg-gray-800/50 transition-colors duration-200`}
+      className={`flex gap-4 p-4 ${!isBot && 'bg-gray-700/50 dark:bg-gray-200/50 rounded-lg'}`}
       ref={messageRef}
     >
       <div className="flex-shrink-0">
@@ -129,12 +129,12 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
       </div>
       
       <div className="flex-1 overflow-hidden">
-        <div className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">
+        <div className="font-medium text-sm text-gray-400 dark:text-gray-600 mb-1">
           {isBot ? 'AI Assistant' : 'You'}
         </div>
         
         <div className="prose dark:prose-invert max-w-none">
-          <div className="text-gray-800 dark:text-gray-200 leading-relaxed">
+          <div className="text-gray-200 dark:text-gray-800 leading-relaxed">
             {isBot && !isTyped ? (
               <>
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -155,13 +155,13 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
         </div>
 
         {isBot && (
-          <div className="flex justify-end mt-2">
+          <div className="flex justify-end mt-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
             <button
               onClick={copyToClipboard}
               className={`p-1.5 rounded-md transition-colors duration-200 
                 ${isCopied 
                   ? 'text-green-500 dark:text-green-400' 
-                  : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'}`}
+                  : 'text-gray-400 hover:text-gray-300 dark:text-gray-500 dark:hover:text-gray-600'}`}
               aria-label={isCopied ? 'Copied!' : 'Copy to clipboard'}
             >
               {isCopied ? <Check size={16} /> : <Copy size={16} />}
