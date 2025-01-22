@@ -19,37 +19,50 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
   const typingRef = useRef<NodeJS.Timeout | null>(null);
   const messageRef = useRef<HTMLDivElement>(null);
   const lastScrollPosition = useRef(0);
+  const lastContentHeight = useRef(0);
   
-  // Handle scroll behavior
+  // Handle scroll behavior with improved detection
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = container;
-      const isAtBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 50;
-      setShouldAutoScroll(isAtBottom);
+      const isAtBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 100;
+      
+      // Only update auto-scroll if user has scrolled manually
+      if (Math.abs(lastScrollPosition.current - scrollTop) > 10) {
+        setShouldAutoScroll(isAtBottom);
+      }
+      
       lastScrollPosition.current = scrollTop;
+      lastContentHeight.current = scrollHeight;
     };
 
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
   }, [containerRef]);
 
-  // Auto-scroll function
+  // Improved auto-scroll function with content height check
   const scrollToBottom = useCallback(() => {
     if (!shouldAutoScroll || !containerRef.current) return;
     
     const container = containerRef.current;
-    const scrollOptions = {
-      top: container.scrollHeight,
-      behavior: 'smooth' as ScrollBehavior
-    };
+    const { scrollHeight, clientHeight } = container;
     
-    container.scrollTo(scrollOptions);
+    // Only scroll if content height has changed
+    if (scrollHeight > lastContentHeight.current) {
+      requestAnimationFrame(() => {
+        container.scrollTo({
+          top: scrollHeight,
+          behavior: 'smooth'
+        });
+        lastContentHeight.current = scrollHeight;
+      });
+    }
   }, [shouldAutoScroll, containerRef]);
 
-  // Typing animation logic with improved scrolling
+  // Enhanced typing animation with better scroll timing
   const animateTyping = useCallback(() => {
     if (!isBot || isTyped) {
       setDisplayedText(message);
@@ -59,6 +72,7 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
     setIsTyping(true);
     let currentIndex = 0;
     let lastNewlineIndex = -1;
+    let scrollTimeout: NodeJS.Timeout | null = null;
     const textLength = message.length;
 
     const typeNextChar = () => {
@@ -66,39 +80,45 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
         const nextChar = message[currentIndex];
         setDisplayedText(prev => message.slice(0, currentIndex + 1));
         
-        // Check for new line and scroll if needed
+        // Improved new line detection and scroll timing
         if (nextChar === '\n' && currentIndex > lastNewlineIndex) {
           lastNewlineIndex = currentIndex;
-          scrollToBottom();
+          
+          // Clear previous scroll timeout
+          if (scrollTimeout) clearTimeout(scrollTimeout);
+          
+          // Delay scroll slightly to allow content to render
+          scrollTimeout = setTimeout(() => {
+            scrollToBottom();
+          }, 50);
         }
         
         currentIndex++;
         
-        // Vary typing speed slightly for natural feel
-        const delay = Math.random() * 20 + 10;
+        // Adjusted typing speed for better readability
+        const delay = Math.random() * 15 + 15;
         typingRef.current = setTimeout(typeNextChar, delay);
       } else {
         setIsTyping(false);
         onTypingComplete();
-        scrollToBottom();
+        
+        // Final scroll after typing completes
+        setTimeout(scrollToBottom, 100);
       }
     };
 
     typeNextChar();
 
     return () => {
-      if (typingRef.current) {
-        clearTimeout(typingRef.current);
-      }
+      if (typingRef.current) clearTimeout(typingRef.current);
+      if (scrollTimeout) clearTimeout(scrollTimeout);
     };
   }, [message, isBot, isTyped, onTypingComplete, scrollToBottom]);
 
   useEffect(() => {
     animateTyping();
     return () => {
-      if (typingRef.current) {
-        clearTimeout(typingRef.current);
-      }
+      if (typingRef.current) clearTimeout(typingRef.current);
     };
   }, [animateTyping]);
 
@@ -115,7 +135,7 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
 
   return (
     <div
-      className={`flex gap-4 p-4 rounded-lg bg-gray-100 dark:bg-gray-800/50 transition-colors duration-200`}
+      className={`flex gap-4 p-4 ${!isBot && 'bg-gray-700/50 dark:bg-gray-200/50 rounded-lg'}`}
       ref={messageRef}
     >
       <div className="flex-shrink-0">
@@ -129,12 +149,12 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
       </div>
       
       <div className="flex-1 overflow-hidden">
-        <div className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">
+        <div className="font-medium text-sm text-gray-400 dark:text-gray-600 mb-1">
           {isBot ? 'AI Assistant' : 'You'}
         </div>
         
         <div className="prose dark:prose-invert max-w-none">
-          <div className="text-gray-800 dark:text-gray-200 leading-relaxed">
+          <div className="text-gray-200 dark:text-gray-800 leading-relaxed">
             {isBot && !isTyped ? (
               <>
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -155,13 +175,13 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
         </div>
 
         {isBot && (
-          <div className="flex justify-end mt-2">
+          <div className="flex justify-end mt-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
             <button
               onClick={copyToClipboard}
               className={`p-1.5 rounded-md transition-colors duration-200 
                 ${isCopied 
                   ? 'text-green-500 dark:text-green-400' 
-                  : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'}`}
+                  : 'text-gray-400 hover:text-gray-300 dark:text-gray-500 dark:hover:text-gray-600'}`}
               aria-label={isCopied ? 'Copied!' : 'Copy to clipboard'}
             >
               {isCopied ? <Check size={16} /> : <Copy size={16} />}
