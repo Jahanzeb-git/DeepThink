@@ -9,8 +9,10 @@ import Signup from './components/signup';
 import Terms from './components/terms';
 
 interface Message {
+  id: string;
   text: string;
   isBot: boolean;
+  isTyped: boolean;
 }
 
 function App() {
@@ -23,7 +25,8 @@ function App() {
 
   // Memoized function for sending messages
   const handleSendMessage = useCallback(async (message: string) => {
-    setMessages((prev) => [...prev, { text: message, isBot: false }]);
+    const newMessage = { id: Date.now().toString(), text: message, isBot: false, isTyped: true };
+    setMessages((prev) => [...prev, newMessage]);
     setIsLoading(true);
 
     const token = localStorage.getItem('token');
@@ -54,6 +57,7 @@ function App() {
       }
 
       const data = await response.json();
+      const botMessage = { id: Date.now().toString(), text: data.response, isBot: true, isTyped: false };
 
       if (!data.response) {
         throw new Error('No output from the API');
@@ -61,13 +65,13 @@ function App() {
 
       setMessages((prev) => [
         ...prev,
-        { text: data.response, isBot: true },
+        {  text: data.response, isBot: true, isTyped: false },
       ]);
     } catch (error) {
       console.error('Error fetching response:', error);
       setMessages((prev) => [
         ...prev,
-        { text: 'Sorry, an error occurred. Please try again.', isBot: true },
+        { id: Date.now().toString(), text: 'Error occurred. Try again.', isBot: true, isTyped: false  },
       ]);
     } finally {
       setIsLoading(false);
