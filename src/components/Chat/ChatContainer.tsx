@@ -19,8 +19,12 @@ interface ChatContainerProps {
 
 export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContainerProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null); // Add a containerRef
   const [inputValue, setInputValue] = useState('');
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const handleAddTag = (tag: string) => {
     setInputValue(tag);
@@ -47,10 +51,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
         </div>
       ) : (
         <>
-          <div 
-            ref={containerRef}
-            className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth"
-          >
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((msg) => (
               <ChatMessage
                 key={msg.id}
@@ -60,7 +61,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
                 onTypingComplete={() => {
                   msg.isTyped = true;
                 }}
-                containerRef={containerRef}
+                containerRef={containerRef} // Pass the containerRef to ChatMessage
               />
             ))}
 
@@ -74,7 +75,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
             )}
             <div ref={messagesEndRef} />
           </div>
-          <div className="p-4 border-t border-gray-700/50 dark:border-gray-200/50">
+          <div className="p-4">
             <div className="max-w-3xl mx-auto">
               <ChatInput
                 onSendMessage={onSendMessage}
