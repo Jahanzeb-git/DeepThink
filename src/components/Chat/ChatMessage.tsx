@@ -12,7 +12,7 @@ export function ChatMessage({ isBot, message, isTyped, onTypingComplete }: ChatM
   const [displayedMessage, setDisplayedMessage] = useState('');
   const [typingComplete, setTypingComplete] = useState(!isTyped);
   const messageEndRef = useRef<HTMLDivElement>(null);
-  const typingSpeed = 30;
+  const typingSpeed = useRef<30>;
 
   useEffect(() => {
     if (!isBot || typingComplete) {
