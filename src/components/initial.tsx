@@ -35,14 +35,10 @@ const LoadingPage = () => {
       setScale('scale-100');
     }, 500);
 
-    const redirectTimer = setTimeout(() => {
-      navigate('/'); // Navigate to the main app route
-    }, 3000);
-
+    
     return () => {
       clearInterval(colorTimer);
       clearTimeout(scaleTimer);
-      clearTimeout(redirectTimer);
     };
   }, [darkColors.length, navigate]);
 
