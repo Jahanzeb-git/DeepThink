@@ -21,7 +21,6 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState('');
-  const [isInputVisible, setIsInputVisible] = useState(true);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -31,30 +30,24 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
     setInputValue(tag);
   };
 
-  const handleSend = async (message: string) => {
-    setIsInputVisible(false);
-    await onSendMessage(message);
-    setTimeout(() => setIsInputVisible(true), 100);
-  };
-
   return (
-    <div className="flex-1 flex flex-col h-full bg-gray-900 dark:bg-gray-100 relative">
+    <div className="flex-1 flex flex-col h-full bg-gray-800 dark:bg-gray-100 relative">
       <div className="absolute inset-0 flex flex-col">
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
             <h1 className="text-2xl md:text-3xl font-bold text-white dark:text-gray-900 mb-4 md:mb-8 text-center">
               Hi, I'm DeepSeek
             </h1>
-            <p className="text-gray-400 dark:text-gray-600 mb-8 md:mb-12 text-center">
+            <p className="text-gray-400 dark:text-gray-800 mb-8 md:mb-12 text-center">
               How can I help you today?
             </p>
             <div className="w-full max-w-3xl px-4 md:px-8">
               <ChatInput
-                onSendMessage={handleSend}
+                onSendMessage={onSendMessage}
                 value={inputValue}
                 onChange={setInputValue}
               />
-              <div className="mt-6 overflow-x-auto pb-4 -mx-4 px-4 md:px-0 md:mx-0 hide-scrollbar">
+              <div className="mt-4 flex justify-center">
                 <TagInput onAddTag={handleAddTag} />
               </div>
             </div>
@@ -63,7 +56,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
           <>
             <div 
               ref={containerRef}
-              className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 pb-40"
+              className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 pb-32"
             >
               {messages.map((msg) => (
                 <ChatMessage
@@ -88,24 +81,21 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
               )}
               <div ref={messagesEndRef} />
             </div>
-            <div 
-              className={`fixed bottom-0 left-0 right-0 transform transition-transform duration-300 ease-out
-                ${isInputVisible ? 'translate-y-0' : 'translate-y-full'}`}
-            >
-              <div className="absolute inset-x-0 -top-20 h-20 bg-gradient-to-t from-gray-900 dark:from-gray-100 to-transparent pointer-events-none" />
-              <div className="bg-gray-900 dark:bg-gray-100 p-4 md:p-6">
-                <div className="max-w-3xl mx-auto">
-                  <ChatInput
-                    onSendMessage={handleSend}
-                    value={inputValue}
-                    onChange={setInputValue}
-                  />
-                </div>
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gray-800/95 dark:bg-gray-100/95 backdrop-blur-sm">
+              <div className="max-w-3xl mx-auto">
+                <ChatInput
+                  onSendMessage={onSendMessage}
+                  value={inputValue}
+                  onChange={setInputValue}
+                />
               </div>
             </div>
           </>
         )}
       </div>
+      <p className="absolute bottom-0 left-0 right-0 text-center text-gray-400 text-xs sm:text-sm py-1 bg-gray-800/95 dark:bg-gray-100/95">
+        DeepThink can make mistakes. Check important info.
+      </p>
     </div>
   );
 }
