@@ -20,36 +20,57 @@ interface ChatContainerProps {
 export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContainerProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const typingScrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [inputValue, setInputValue] = useState('');
   const [isUserScrolling, setIsUserScrolling] = useState(false);
-  const [isScrolledToBottom, setIsScrolledToBottom] = useState(true);
 
-  const checkScrollPosition = useCallback(() => {
-    if (messagesContainerRef.current) {
-      const container = messagesContainerRef.current;
-      const isAtBottom = 
-        container.scrollHeight - container.clientHeight <= container.scrollTop + 1;
-      setIsScrolledToBottom(isAtBottom);
+  const scrollToBottom = useCallback((smooth = true) => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: smooth ? 'smooth' : 'auto' 
+      });
     }
   }, []);
 
-  const scrollToBottom = useCallback(() => {
-    if (!isUserScrolling && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [isUserScrolling]);
+  // Check if any message is currently being typed
+  const isAnyMessageTyping = messages.some(msg => !msg.isTyped);
 
+  // Manage typing scroll interval
   useEffect(() => {
-    // Scroll to bottom when new messages are added
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
+    // Clear any existing interval
+    if (typingScrollIntervalRef.current) {
+      clearInterval(typingScrollIntervalRef.current);
+    }
 
+    // If messages are being typed and user is not scrolling
+    if (isAnyMessageTyping && !isUserScrolling) {
+      // Start interval to scroll every 500ms
+      typingScrollIntervalRef.current = setInterval(() => {
+        scrollToBottom(true);
+      }, 500);
+
+      // Cleanup interval when component unmounts or conditions change
+      return () => {
+        if (typingScrollIntervalRef.current) {
+          clearInterval(typingScrollIntervalRef.current);
+        }
+      };
+    }
+  }, [isAnyMessageTyping, isUserScrolling, scrollToBottom]);
+
+  // Scroll to bottom when new messages are added and not typing
+  useEffect(() => {
+    if (!isAnyMessageTyping) {
+      scrollToBottom();
+    }
+  }, [messages, isAnyMessageTyping, scrollToBottom]);
+
+  // Scroll event handling
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
 
     const handleScroll = () => {
-      checkScrollPosition();
       setIsUserScrolling(true);
     };
 
@@ -58,18 +79,11 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
     return () => {
       container.removeEventListener('scroll', handleScroll);
     };
-  }, [checkScrollPosition]);
+  }, []);
 
   const handleAddTag = (tag: string) => {
     setInputValue(tag);
   };
-
-  // Detect when user returns to bottom
-  useEffect(() => {
-    if (isScrolledToBottom) {
-      setIsUserScrolling(false);
-    }
-  }, [isScrolledToBottom]);
 
   return (
     <div className="flex-1 flex flex-col h-full bg-gray-800 dark:bg-gray-100 relative">
