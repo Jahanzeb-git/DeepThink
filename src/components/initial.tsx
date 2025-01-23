@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 const LoadingPage = () => {
   const [colorIndex, setColorIndex] = useState(0);
   const [scale, setScale] = useState('scale-95');
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const navigate = useNavigate(); // Programmatic navigation hook
 
   const darkColors = [
     'text-blue-300', 
@@ -35,23 +33,27 @@ const LoadingPage = () => {
       setScale('scale-100');
     }, 500);
 
-    
+    const redirectTimer = setTimeout(() => {
+      window.location.href = '/main';
+    }, 3000);
+
     return () => {
       clearInterval(colorTimer);
       clearTimeout(scaleTimer);
+      clearTimeout(redirectTimer);
     };
-  }, [darkColors.length, navigate]);
+  }, []);
 
   return (
-    <div className={`
+    <div className={
       flex 
       items-center 
       justify-center 
       h-screen 
       ${isDarkMode ? 'bg-black' : 'bg-white'}
-    `}>
+    }>
       <div className="flex items-center space-x-4">
-        <h1 className={`
+        <h1 className={
           ${isDarkMode ? darkColors[colorIndex] : lightColors[colorIndex]}
           text-4xl 
           font-bold 
@@ -61,16 +63,16 @@ const LoadingPage = () => {
           transition-all 
           duration-1000 
           ease-in-out
-        `}>
+        }>
           DeepThinks
         </h1>
         <div className="animate-pulse opacity-70">
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
-            className={`
+            className={
               h-10 w-10 
               ${isDarkMode ? 'text-white' : 'text-black'}
-            `}
+            }
             fill="none" 
             viewBox="0 0 24 24" 
             stroke="currentColor"
