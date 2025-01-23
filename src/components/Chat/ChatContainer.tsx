@@ -19,11 +19,20 @@ interface ChatContainerProps {
 
 export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContainerProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState('');
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Scroll to bottom when messages change, but only if user hasn't scrolled up
+    if (messagesContainerRef.current) {
+      const container = messagesContainerRef.current;
+      const isScrolledToBottom = 
+        container.scrollHeight - container.clientHeight <= container.scrollTop + 1;
+      
+      if (isScrolledToBottom) {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
   }, [messages]);
 
   const handleAddTag = (tag: string) => {
@@ -61,8 +70,8 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
         ) : (
           <>
             <div 
-              ref={containerRef}
-              className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 pb-32"
+              ref={messagesContainerRef}
+              className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 pb-32 scrollbar-thin scrollbar-thumb-gray-600 dark:scrollbar-thumb-gray-400"
             >
               {messages.map((msg) => (
                 <ChatMessage
@@ -73,10 +82,9 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
                   onTypingComplete={() => {
                     msg.isTyped = true;
                   }}
-                  containerRef={containerRef}
+                  containerRef={messagesContainerRef}
                 />
               ))}
-
               {isLoading && (
                 <div className="flex items-center space-x-2 text-gray-400">
                   <div className="animate-spin">
