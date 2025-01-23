@@ -51,6 +51,12 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
                 <TagInput onAddTag={handleAddTag} />
               </div>
             </div>
+            <p className="absolute bottom-0 left-0 right-0 text-center text-gray-400 py-1 bg-gray-800/95 dark:bg-gray-100/95">
+              <span className="block sm:hidden text-xs">DeepThink can make mistakes.</span>
+              <span className="hidden sm:block text-xs sm:text-sm">
+                DeepThink can make mistakes. Check important info.
+              </span>
+            </p>
           </div>
         ) : (
           <>
@@ -93,9 +99,6 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
           </>
         )}
       </div>
-      <p className="absolute bottom-0 left-0 right-0 text-center text-gray-400 text-xs sm:text-sm py-1 bg-gray-800/95 dark:bg-gray-100/95">
-        DeepThink can make mistakes. Check important info.
-      </p>
     </div>
   );
 }
