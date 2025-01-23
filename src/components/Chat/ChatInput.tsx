@@ -3,8 +3,8 @@ import { Brain, Search, Send, Mic } from 'lucide-react';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => Promise<void>;
-  value: string;
-  onChange: (value: string) => void;
+  value: string; // Controlled input value
+  onChange: (value: string) => void; // Change handler
   className?: string;
 }
 
@@ -30,10 +30,7 @@ export default function ChatInput({
     e.preventDefault();
     if (value.trim()) {
       await onSendMessage(value);
-      onChange('');
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-      }
+      onChange(''); // Clear input after sending
     }
   };
 
@@ -47,25 +44,24 @@ export default function ChatInput({
   return (
     <form
       onSubmit={handleSubmit}
-      className="relative bg-gray-700 dark:bg-gray-300 rounded-3xl border border-gray-700 dark:border-gray-300"
+      className="relative bg-gray-700 dark:bg-gray-300 rounded-3xl border border-gray-700 dark:border-gray-300 p-4"
     >
-      <div className="relative p-2">
+      <div className="relative">
         <textarea
           ref={textareaRef}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Message DeepSeek..."
-          className="w-full max-h-[150px] min-h-[60px] overflow-y-auto p-3 rounded-xl resize-none 
+          className="w-full max-h-[350px] overflow-y-auto p-4 mb-12 rounded-xl resize-none 
             bg-gray-700 dark:bg-gray-300
             text-gray-100 dark:text-gray-800
             border-none
             focus:outline-none focus:ring-0
             whitespace-pre-wrap
             scrollbar-thin scrollbar-thumb-gray-600 dark:scrollbar-thumb-gray-400"
-          style={{ paddingBottom: '3rem' }}
         />
-        <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between bg-gray-700 dark:bg-gray-300 rounded-xl">
+        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-2 py-2 bg-gray-700 dark:bg-gray-300 rounded-b-xl">
           <div className="flex items-center gap-2">
             <button
               type="button"
