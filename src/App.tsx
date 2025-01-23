@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import HistorySidebar from './components/Sidebar/Sidebar'; // Updated import
+import HistorySidebar from './components/Sidebar/Sidebar';
 import { ChatContainer } from './components/Chat/ChatContainer';
 import { MobileNav } from './components/Layout/MobileNav';
 import { Chat } from './components/Chat/ChatArea';
@@ -21,7 +21,6 @@ function App() {
   const [promptCount, setPromptCount] = useState(0);
   const MAX_PROMPTS = 5;
 
-  // Memoized function for sending messages
   const handleSendMessage = useCallback(async (message: string) => {
     setMessages((prev) => [...prev, { text: message, isBot: false }]);
     setIsLoading(true);
@@ -74,65 +73,59 @@ function App() {
     }
   }, [promptCount]);
 
-  // Memoized function for starting a new chat
   const handleNewChat = useCallback(() => {
     setMessages([]);
     setIsSidebarOpen(false);
   }, []);
 
-  // Memoized theme toggler
   const toggleTheme = useCallback(() => {
     setIsDark((prev) => !prev);
     document.documentElement.classList.toggle('dark', !isDark);
   }, [isDark]);
 
-  // Memoized sidebar toggle function
   const toggleSidebar = useCallback(() => {
     setIsSidebarOpen((prev) => !prev);
   }, []);
 
-  // Memoized MainLayout component
   const MainLayout = useMemo(() => () => (
-    <div className="flex h-screen bg-gray-900">
-      <MobileNav onToggleSidebar={toggleSidebar} />
+    <div className="flex h-screen bg-gray-900 overflow-hidden">
+      <MobileNav onToggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
+      
+      {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black/50 md:hidden transition-opacity z-40 ${
+        className={`fixed inset-0 bg-black/50 md:hidden transition-opacity duration-300 z-40 ${
           isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => setIsSidebarOpen(false)}
       />
+      
+      {/* Sidebar */}
       <div
-        className={`fixed md:static w-64 h-full bg-gray-900 transition-transform duration-300 ease-in-out z-50 ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
+        className={`fixed md:static w-[280px] h-full bg-gray-900 transition-all duration-300 ease-in-out transform z-50
+          ${isSidebarOpen ? 'translate-x-0 shadow-lg' : '-translate-x-full md:translate-x-0'}
+          md:w-64 md:transition-none`}
       >
-        {/* Replace Sidebar with HistorySidebar */}
-        <HistorySidebar />
+        <HistorySidebar onNewChat={handleNewChat} />
       </div>
-      <ChatContainer
-        messages={messages}
-        isLoading={isLoading}
-        onSendMessage={handleSendMessage}
-      />
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col h-full relative">
+        <ChatContainer
+          messages={messages}
+          isLoading={isLoading}
+          onSendMessage={handleSendMessage}
+        />
+      </div>
     </div>
-  ), [isSidebarOpen, messages, isLoading, handleSendMessage]);
+  ), [isSidebarOpen, messages, isLoading, handleSendMessage, handleNewChat]);
 
   return (
     <Router>
       <Routes>
-        {/* Main App Route */}
         <Route path="/" element={<MainLayout />} />
-
-        {/* Login Page */}
         <Route path="/login" element={<Login />} />
-
-        {/* Signup Page */}
         <Route path="/signup" element={<Signup />} />
-
-        {/* Terms Page */}
         <Route path="/terms" element={<Terms />} />
-
-        {/* Redirect any unknown route to the main page */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
