@@ -7,6 +7,7 @@ import { Chat } from './components/Chat/ChatArea';
 import Login from './components/login';
 import Signup from './components/signup';
 import Terms from './components/terms';
+import Initial from './components/initial'
 
 interface Message {
   text: string;
@@ -20,6 +21,16 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [promptCount, setPromptCount] = useState(0);
   const MAX_PROMPTS = 5;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return isLoading ? <Initial /> : <MainApp />;
+}
 
   const handleSendMessage = useCallback(async (message: string) => {
     setMessages((prev) => [...prev, { text: message, isBot: false }]);
@@ -126,6 +137,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/terms" element={<Terms />} />
+         <Route path="/initial" element={<Initial />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
