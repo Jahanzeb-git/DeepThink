@@ -18,19 +18,24 @@ function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isDark, setIsDark] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [promptCount, setPromptCount] = useState(0);
-  const MAX_PROMPTS = 5;
-
+  
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 3000);
-    return () => clearTimeout(timer);
+
+    return () => clearTimeout(timer); // Clean up timeout on unmount
   }, []);
 
-  return isLoading ? <Initial /> : <MainApp />;
+  if (isLoading) {
+    return <Initial />; // Show loading screen
+  }
+
+  return <MainApp />;
 }
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [promptCount, setPromptCount] = useState(0);
+  const MAX_PROMPTS = 5;
 
   const handleSendMessage = useCallback(async (message: string) => {
     setMessages((prev) => [...prev, { text: message, isBot: false }]);
