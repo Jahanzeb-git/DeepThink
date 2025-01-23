@@ -44,13 +44,13 @@ function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token && { Authorization: Bearer ${token} }),
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify({ prompt: message }),
       });
 
       if (!response.ok) {
-        throw new Error(HTTP error! Status: ${response.status});
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
       const data = await response.json();
@@ -94,17 +94,17 @@ function App() {
       
       {/* Overlay */}
       <div
-        className={fixed inset-0 bg-black/50 md:hidden transition-opacity duration-300 z-40 ${
+        className={`fixed inset-0 bg-black/50 md:hidden transition-opacity duration-300 z-40 ${
           isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }}
+        }`}
         onClick={() => setIsSidebarOpen(false)}
       />
       
       {/* Sidebar */}
       <div
-        className={fixed md:static w-[280px] h-full bg-gray-900 transition-all duration-300 ease-in-out transform z-50
+        className={`fixed md:static w-[280px] h-full bg-gray-900 transition-all duration-300 ease-in-out transform z-50
           ${isSidebarOpen ? 'translate-x-0 shadow-lg' : '-translate-x-full md:translate-x-0'}
-          md:w-64 md:transition-none}
+          md:w-64 md:transition-none`}
       >
         <HistorySidebar onNewChat={handleNewChat} />
       </div>
