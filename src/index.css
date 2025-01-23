@@ -12,6 +12,21 @@
   --scrollbar-track: #1f2937;
 }
 
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -28,3 +43,4 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb);
 }
+
