@@ -18,21 +18,6 @@ function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isDark, setIsDark] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 3000);
-
-    return () => clearTimeout(timer); // Clean up timeout on unmount
-  }, []);
-
-  if (isLoading) {
-    return <Initial />; // Show loading screen
-  }
-
-  return <MainApp />;
-  }
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [promptCount, setPromptCount] = useState(0);
   const MAX_PROMPTS = 5;
@@ -142,12 +127,12 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/terms" element={<Terms />} />
-        <Route path="/initial" element={<Initial />} />
+        <Route path="/loading" element={<Initial />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
-
+}
 export default App;
 
 
