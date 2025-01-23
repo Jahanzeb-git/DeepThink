@@ -68,10 +68,10 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
             </p>
           </div>
         ) : (
-          <>
+          <div className="flex flex-col h-full">
             <div 
               ref={messagesContainerRef}
-              className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 pb-32 scrollbar-thin scrollbar-thumb-gray-600 dark:scrollbar-thumb-gray-400"
+              className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 pb-4 scrollbar-thin scrollbar-thumb-gray-600 dark:scrollbar-thumb-gray-400"
             >
               {messages.map((msg) => (
                 <ChatMessage
@@ -95,7 +95,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
               )}
               <div ref={messagesEndRef} />
             </div>
-            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gray-800/95 dark:bg-gray-100/95 backdrop-blur-sm">
+            <div className="p-4 bg-gray-800/95 dark:bg-gray-100/95 backdrop-blur-sm">
               {/* Fade Area */}
               <div className="absolute top-[-30px] left-0 right-0 h-8 bg-gradient-to-t from-gray-800/95 dark:from-gray-100/95 to-transparent pointer-events-none">
               </div>
@@ -107,7 +107,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
                 />
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>
