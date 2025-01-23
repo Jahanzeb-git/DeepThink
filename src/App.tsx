@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from 'react-router-dom';
+import React, { useState, useCallback, useMemo } from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import HistorySidebar from './components/Sidebar/Sidebar';
 import { ChatContainer } from './components/Chat/ChatContainer';
 import { MobileNav } from './components/Layout/MobileNav';
@@ -7,7 +7,7 @@ import { Chat } from './components/Chat/ChatArea';
 import Login from './components/login';
 import Signup from './components/signup';
 import Terms from './components/terms';
-import Initial from './components/initial';
+import Initial from './components/initial'
 
 interface Message {
   text: string;
@@ -20,17 +20,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [promptCount, setPromptCount] = useState(0);
-  const [isInitialPage, setIsInitialPage] = useState(true); // New state for Initial Page
   const MAX_PROMPTS = 5;
-
-  useEffect(() => {
-    // Redirect from the Initial Page after 3 seconds
-    const timer = setTimeout(() => {
-      setIsInitialPage(false);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleSendMessage = useCallback(async (message: string) => {
     setMessages((prev) => [...prev, { text: message, isBot: false }]);
@@ -54,13 +44,13 @@ function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
+          ...(token && { Authorization: Bearer ${token} }),
         },
         body: JSON.stringify({ prompt: message }),
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        throw new Error(HTTP error! Status: ${response.status});
       }
 
       const data = await response.json();
@@ -104,17 +94,17 @@ function App() {
       
       {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black/50 md:hidden transition-opacity duration-300 z-40 ${
+        className={fixed inset-0 bg-black/50 md:hidden transition-opacity duration-300 z-40 ${
           isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
+        }}
         onClick={() => setIsSidebarOpen(false)}
       />
       
       {/* Sidebar */}
       <div
-        className={`fixed md:static w-[280px] h-full bg-gray-900 transition-all duration-300 ease-in-out transform z-50
+        className={fixed md:static w-[280px] h-full bg-gray-900 transition-all duration-300 ease-in-out transform z-50
           ${isSidebarOpen ? 'translate-x-0 shadow-lg' : '-translate-x-full md:translate-x-0'}
-          md:w-64 md:transition-none`}
+          md:w-64 md:transition-none}
       >
         <HistorySidebar onNewChat={handleNewChat} />
       </div>
@@ -130,15 +120,10 @@ function App() {
     </div>
   ), [isSidebarOpen, messages, isLoading, handleSendMessage, handleNewChat]);
 
-  if (isInitialPage) {
-    return <Initial />;
-  }
-
   return (
     <Router>
       <Routes>
         <Route path="/" element={<MainLayout />} />
-        <Route path="/main" element={<MainLayout />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/terms" element={<Terms />} />
@@ -148,7 +133,6 @@ function App() {
     </Router>
   );
 }
-
 export default App;
 
 
