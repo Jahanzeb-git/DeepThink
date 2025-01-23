@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ChatMessage } from './ChatMessage';
 import ChatInput from './ChatInput';
 import TagInput from './TagInput';
@@ -21,23 +21,55 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState('');
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const [isScrolledToBottom, setIsScrolledToBottom] = useState(true);
 
-  useEffect(() => {
-    // Scroll to bottom when messages change, but only if user hasn't scrolled up
+  const checkScrollPosition = useCallback(() => {
     if (messagesContainerRef.current) {
       const container = messagesContainerRef.current;
-      const isScrolledToBottom = 
+      const isAtBottom = 
         container.scrollHeight - container.clientHeight <= container.scrollTop + 1;
-      
-      if (isScrolledToBottom) {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }
+      setIsScrolledToBottom(isAtBottom);
     }
-  }, [messages]);
+  }, []);
+
+  const scrollToBottom = useCallback(() => {
+    if (!isUserScrolling && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [isUserScrolling]);
+
+  useEffect(() => {
+    // Scroll to bottom when new messages are added
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      checkScrollPosition();
+      setIsUserScrolling(true);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+    };
+  }, [checkScrollPosition]);
 
   const handleAddTag = (tag: string) => {
     setInputValue(tag);
   };
+
+  // Detect when user returns to bottom
+  useEffect(() => {
+    if (isScrolledToBottom) {
+      setIsUserScrolling(false);
+    }
+  }, [isScrolledToBottom]);
 
   return (
     <div className="flex-1 flex flex-col h-full bg-gray-800 dark:bg-gray-100 relative">
