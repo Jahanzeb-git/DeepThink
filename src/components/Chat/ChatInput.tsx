@@ -19,10 +19,8 @@ export default function ChatInput({
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(
-        textareaRef.current.scrollHeight,
-        150
-      )}px`;
+      const newHeight = Math.min(textareaRef.current.scrollHeight, window.innerWidth < 768 ? 150 : 200);
+      textareaRef.current.style.height = `${newHeight}px`;
     }
   }, [value]);
 
@@ -31,6 +29,9 @@ export default function ChatInput({
     if (value.trim()) {
       await onSendMessage(value);
       onChange('');
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
     }
   };
 
@@ -44,8 +45,8 @@ export default function ChatInput({
   return (
     <form
       onSubmit={handleSubmit}
-      className={`relative bg-gray-700 dark:bg-gray-300 rounded-2xl border border-gray-600 dark:border-gray-400 
-        shadow-lg ${className}`}
+      className={`relative bg-gray-800/80 dark:bg-gray-200/80 backdrop-blur-lg rounded-2xl 
+        shadow-lg transition-all duration-200 ${className}`}
     >
       <div className="relative">
         <textarea
@@ -54,47 +55,50 @@ export default function ChatInput({
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Message DeepSeek..."
-          className="w-full max-h-[150px] overflow-y-auto pt-4 pb-14 px-4 rounded-t-2xl resize-none 
-            bg-transparent text-gray-100 dark:text-gray-800
+          className="w-full min-h-[60px] max-h-[200px] md:max-h-[250px] overflow-y-auto pt-4 pb-16 px-4 rounded-t-2xl 
+            bg-transparent text-gray-100 dark:text-gray-800 resize-none
             border-none focus:outline-none focus:ring-0
-            placeholder-gray-400 dark:placeholder-gray-600"
-          style={{ minHeight: '60px' }}
+            placeholder-gray-500 dark:placeholder-gray-400"
+          style={{
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(156, 163, 175, 0.5) transparent'
+          }}
         />
-        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between p-2 
-          bg-gray-600/50 dark:bg-gray-400/50 backdrop-blur-sm rounded-b-2xl">
-          <div className="flex items-center gap-1">
+        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between p-3 
+          bg-gray-700/50 dark:bg-gray-300/50 backdrop-blur-sm rounded-b-2xl">
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              className="p-1.5 rounded-lg hover:bg-gray-500/50 dark:hover:bg-gray-300/50
-                text-gray-300 dark:text-gray-700 transition-colors"
+              className="p-2 rounded-xl hover:bg-gray-600/50 dark:hover:bg-gray-400/50
+                text-gray-300 dark:text-gray-600 transition-colors"
               title="DeepThink"
             >
-              <Brain className="w-4 h-4" />
+              <Brain className="w-5 h-5" />
             </button>
             <button
               type="button"
-              className="p-1.5 rounded-lg hover:bg-gray-500/50 dark:hover:bg-gray-300/50
-                text-gray-300 dark:text-gray-700 transition-colors"
+              className="p-2 rounded-xl hover:bg-gray-600/50 dark:hover:bg-gray-400/50
+                text-gray-300 dark:text-gray-600 transition-colors"
               title="Search"
             >
-              <Search className="w-4 h-4" />
+              <Search className="w-5 h-5" />
             </button>
             <button
               type="button"
-              className="p-1.5 rounded-lg hover:bg-gray-500/50 dark:hover:bg-gray-300/50
-                text-gray-300 dark:text-gray-700 transition-colors"
+              className="p-2 rounded-xl hover:bg-gray-600/50 dark:hover:bg-gray-400/50
+                text-gray-300 dark:text-gray-600 transition-colors"
               title="Voice input"
             >
-              <Mic className="w-4 h-4" />
+              <Mic className="w-5 h-5" />
             </button>
           </div>
           <button
             type="submit"
-            className="p-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 
-              text-white transition-colors"
+            className="p-2 rounded-xl bg-blue-500 hover:bg-blue-600 
+              text-white transition-all duration-200 hover:scale-105"
             title="Send message"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-5 h-5" />
           </button>
         </div>
       </div>
