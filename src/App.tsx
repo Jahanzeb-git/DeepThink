@@ -32,7 +32,7 @@ function App() {
   }
 
   return <MainApp />;
-}
+  }
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [promptCount, setPromptCount] = useState(0);
   const MAX_PROMPTS = 5;
