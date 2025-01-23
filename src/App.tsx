@@ -3,10 +3,10 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import HistorySidebar from './components/Sidebar/Sidebar';
 import { ChatContainer } from './components/Chat/ChatContainer';
 import { MobileNav } from './components/Layout/MobileNav';
-import { Chat } from './components/Chat/ChatArea';
 import Login from './components/login';
 import Signup from './components/signup';
 import Terms from './components/terms';
+import LoadingPage from './components/LoadingPage';
 
 interface Message {
   text: string;
@@ -122,7 +122,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<MainLayout />} />
+        <Route path="/" element={<LoadingPage />} />
+        <Route path="/main" element={<MainLayout />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/terms" element={<Terms />} />
@@ -131,6 +132,7 @@ function App() {
     </Router>
   );
 }
+
 export default App;
 
 
