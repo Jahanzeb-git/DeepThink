@@ -21,70 +21,27 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState('');
-  const [userScrolled, setUserScrolled] = useState(false);
-
-  const scrollToBottom = (force = false) => {
-    if (messagesEndRef.current && (!userScrolled || force)) {
-      const scrollOptions = {
-        behavior: 'smooth' as const,
-        block: 'end' as const,
-      };
-      messagesEndRef.current.scrollIntoView(scrollOptions);
-    }
-  };
 
   useEffect(() => {
-    scrollToBottom(true);
-    setUserScrolled(false);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      if (container) {
-        const isAtBottom = 
-          container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
-        setUserScrolled(!isAtBottom);
-      }
-    };
-
-    const observer = new MutationObserver(() => {
-      if (!userScrolled) {
-        scrollToBottom();
-      }
-    });
-
-    observer.observe(container, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
-
-    container.addEventListener('scroll', handleScroll);
-    return () => {
-      observer.disconnect();
-      container.removeEventListener('scroll', handleScroll);
-    };
-  }, [userScrolled]);
 
   const handleAddTag = (tag: string) => {
     setInputValue(tag);
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-800 dark:bg-gray-100">
-      {messages.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
-          <div className="w-full max-w-3xl mx-auto flex flex-col items-center">
+    <div className="flex-1 flex flex-col h-full bg-gray-800 dark:bg-gray-100 relative">
+      <div className="absolute inset-0 flex flex-col">
+        {messages.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
             <h1 className="text-2xl md:text-3xl font-bold text-white dark:text-gray-900 mb-4 md:mb-8 text-center">
               Hi, I'm DeepSeek
             </h1>
             <p className="text-gray-400 dark:text-gray-800 mb-8 md:mb-12 text-center">
               How can I help you today?
             </p>
-            <div className="w-full px-4 md:px-8">
+            <div className="w-full max-w-3xl px-4 md:px-8">
               <ChatInput
                 onSendMessage={onSendMessage}
                 value={inputValue}
@@ -94,25 +51,19 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
                 <TagInput onAddTag={handleAddTag} />
               </div>
             </div>
+            <p className="absolute bottom-0 left-0 right-0 text-center text-gray-400 py-1 bg-gray-800/95 dark:bg-gray-100/95">
+              <span className="block sm:hidden text-xs">DeepThink can make mistakes.</span>
+              <span className="hidden sm:block text-xs sm:text-sm">
+                DeepThink can make mistakes. Check important info.
+              </span>
+            </p>
           </div>
-          <p className="fixed bottom-0 left-0 right-0 text-center text-gray-400 py-1 bg-gray-800/95 dark:bg-gray-100/95">
-            <span className="block sm:hidden text-xs">DeepThink can make mistakes.</span>
-            <span className="hidden sm:block text-xs sm:text-sm">
-              DeepThink can make mistakes. Check important info.
-            </span>
-          </p>
-        </div>
-      ) : (
-        <>
-          <div 
-            ref={containerRef}
-            className="flex-1 overflow-y-auto"
-            style={{ 
-              paddingBottom: 'calc(6rem + 100px)',
-              height: 'calc(100vh - 80px)' 
-            }}
-          >
-            <div className="max-w-3xl mx-auto p-4 md:p-6 space-y-4">
+        ) : (
+          <>
+            <div 
+              ref={containerRef}
+              className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 pb-32"
+            >
               {messages.map((msg) => (
                 <ChatMessage
                   key={msg.id}
@@ -121,7 +72,6 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
                   isTyped={msg.isTyped}
                   onTypingComplete={() => {
                     msg.isTyped = true;
-                    scrollToBottom();
                   }}
                   containerRef={containerRef}
                 />
@@ -135,13 +85,12 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
                   <span>Thinking...</span>
                 </div>
               )}
-              <div ref={messagesEndRef} className="h-1" />
+              <div ref={messagesEndRef} />
             </div>
-          </div>
-          
-          <div className="fixed bottom-0 left-0 right-0 bg-gray-800/95 dark:bg-gray-100/95 backdrop-blur-sm">
-            <div className="h-8 bg-gradient-to-t from-gray-800/95 dark:from-gray-100/95 to-transparent" />
-            <div className="p-4">
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gray-800/95 dark:bg-gray-100/95 backdrop-blur-sm">
+              {/* Fade Area */}
+              <div className="absolute top-[-30px] left-0 right-0 h-8 bg-gradient-to-t from-gray-800/95 dark:from-gray-100/95 to-transparent pointer-events-none">
+              </div>
               <div className="max-w-3xl mx-auto">
                 <ChatInput
                   onSendMessage={onSendMessage}
@@ -150,9 +99,9 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
                 />
               </div>
             </div>
-          </div>
-        </>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
