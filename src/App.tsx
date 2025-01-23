@@ -137,7 +137,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/terms" element={<Terms />} />
-         <Route path="/initial" element={<Initial />} />
+        <Route path="/initial" element={<Initial />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
