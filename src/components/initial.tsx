@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const LoadingPage = () => {
   const [colorIndex, setColorIndex] = useState(0);
   const [scale, setScale] = useState('scale-95');
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const navigate = useNavigate(); // Programmatic navigation hook
 
   const darkColors = [
     'text-blue-300', 
@@ -34,7 +36,7 @@ const LoadingPage = () => {
     }, 500);
 
     const redirectTimer = setTimeout(() => {
-      window.location.href = '/main';
+      navigate('/'); // Navigate to the main app route
     }, 3000);
 
     return () => {
@@ -42,7 +44,7 @@ const LoadingPage = () => {
       clearTimeout(scaleTimer);
       clearTimeout(redirectTimer);
     };
-  }, []);
+  }, [darkColors.length, navigate]);
 
   return (
     <div className={`
@@ -86,3 +88,4 @@ const LoadingPage = () => {
 };
 
 export default LoadingPage;
+
