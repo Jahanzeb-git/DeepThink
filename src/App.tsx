@@ -7,7 +7,6 @@ import { Chat } from './components/Chat/ChatArea';
 import Login from './components/login';
 import Signup from './components/signup';
 import Terms from './components/terms';
-import Initial from './components/initial'
 
 interface Message {
   text: string;
@@ -127,7 +126,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/terms" element={<Terms />} />
-        <Route path="/loading" element={<Initial />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
