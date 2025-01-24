@@ -20,6 +20,7 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
   const [isCodePreviewOpen, setIsCodePreviewOpen] = useState(false);
   const [currentCode, setCurrentCode] = useState('');
   const [isTypingCode, setIsTypingCode] = useState(false);
+  const [codeBlockContent, setCodeBlockContent] = useState('');
   const typingRef = useRef<NodeJS.Timeout | null>(null);
   const messageRef = useRef<HTMLDivElement>(null);
 
@@ -37,10 +38,15 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
     return match ? match[1] : 'typescript';
   };
 
+  // Replace code blocks with placeholder
+  const replaceCodeBlocks = (text: string) => {
+    return text.replace(/```(?:\w+)?\n[\s\S]*?```/g, '```code```');
+  };
+
   // Typing animation with code block detection
   const animateTyping = useCallback(() => {
     if (!isBot || isTyped) {
-      setDisplayedText(message);
+      setDisplayedText(replaceCodeBlocks(message));
       return;
     }
 
@@ -52,8 +58,6 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
 
     const typeNextChar = () => {
       if (currentIndex < textLength) {
-        setDisplayedText(prev => message.slice(0, currentIndex + 1));
-        
         // Check for code block markers
         if (message.slice(currentIndex).startsWith('```')) {
           if (!inCodeBlock) {
@@ -71,12 +75,19 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
             const code = extractCodeBlock(codeBlock);
             if (code) {
               setCurrentCode(code);
+              setCodeBlockContent(code);
               setIsCodePreviewOpen(true);
             }
           }
           currentIndex += 3; // Skip the ```
+          
+          // Update displayed text with placeholder
+          setDisplayedText(replaceCodeBlocks(message.slice(0, currentIndex)));
         } else {
           currentIndex++;
+          if (!inCodeBlock) {
+            setDisplayedText(replaceCodeBlocks(message.slice(0, currentIndex)));
+          }
         }
         
         // Natural typing speed variation
@@ -120,10 +131,29 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
 
   const handleCodePreview = () => {
     const code = extractCodeBlock(message);
-    const language = getCodeLanguage(message);
     setCurrentCode(code);
     setIsCodePreviewOpen(true);
   };
+
+  // Custom renderer for code blocks
+  const CodeBlockPlaceholder = () => (
+    <div className="my-4 p-4 bg-gray-800/50 dark:bg-gray-200/50 rounded-lg border border-gray-700 dark:border-gray-300">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Code size={20} className={isTypingCode ? "animate-pulse text-emerald-500" : "text-gray-400"} />
+          <span className="text-sm text-gray-400">
+            {isTypingCode ? "Generating code..." : "Code block"}
+          </span>
+        </div>
+        <button
+          onClick={handleCodePreview}
+          className="text-sm text-blue-500 hover:text-blue-400 dark:text-blue-600 dark:hover:text-blue-500"
+        >
+          View code
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div
@@ -144,21 +174,19 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
         <div className="font-medium text-sm text-gray-400 dark:text-gray-600 mb-1">
           {isBot ? 'AI Assistant' : 'You'}
         </div>
-        
-        {isTypingCode && (
-          <div className="flex items-center space-x-2 mb-2 text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-400/10 p-2 rounded">
-            <Code size={16} className="animate-pulse" />
-            <span className="text-sm">Generating code...</span>
-          </div>
-        )}
 
         <div className="prose dark:prose-invert max-w-none">
           <div className="text-gray-200 dark:text-gray-800 leading-relaxed">
             {isBot && !isTyped ? (
               <>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {displayedText}
-                </ReactMarkdown>
+                {displayedText.split('```code```').map((text, index, array) => (
+                  <React.Fragment key={index}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {text}
+                    </ReactMarkdown>
+                    {index < array.length - 1 && <CodeBlockPlaceholder />}
+                  </React.Fragment>
+                ))}
                 {isTyping && (
                   <span className="inline-flex ml-1">
                     <span className="w-1 h-4 bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
@@ -166,25 +194,22 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
                 )}
               </>
             ) : (
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {message}
-              </ReactMarkdown>
+              <>
+                {message.split(/```(?:\w+)?\n[\s\S]*?```/).map((text, index, array) => (
+                  <React.Fragment key={index}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {text}
+                    </ReactMarkdown>
+                    {index < array.length - 1 && <CodeBlockPlaceholder />}
+                  </React.Fragment>
+                ))}
+              </>
             )}
           </div>
         </div>
 
         {isBot && (
           <div className="flex justify-end mt-2 items-center space-x-2">
-            {message.includes('```') && (
-              <button
-                onClick={handleCodePreview}
-                className="p-1.5 rounded-md transition-colors duration-200 text-gray-400 hover:text-gray-300 dark:text-gray-500 dark:hover:text-gray-600 flex items-center space-x-1"
-                aria-label="View Code"
-              >
-                <Code size={16} />
-                <span className="text-sm">View code</span>
-              </button>
-            )}
             <button
               onClick={() => setShowModelInfo(prev => !prev)}
               className="p-1.5 rounded-md transition-colors duration-200 text-gray-400 hover:text-gray-300 dark:text-gray-500 dark:hover:text-gray-600"
