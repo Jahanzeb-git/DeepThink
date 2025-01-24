@@ -41,7 +41,7 @@ const LoadingPage: React.FC = () => {
     // Redirect to main app
     const redirectTimer = setTimeout(() => {
       navigate('/main');
-    }, 3000);
+    }, 1000);
 
     // Cleanup timers
     return () => {
