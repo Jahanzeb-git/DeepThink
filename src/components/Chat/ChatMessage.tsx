@@ -76,7 +76,6 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
             if (code) {
               setCurrentCode(code);
               setCodeBlockContent(code);
-              setIsCodePreviewOpen(true);
             }
           }
           currentIndex += 3; // Skip the ```
