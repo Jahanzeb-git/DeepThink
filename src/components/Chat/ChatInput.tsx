@@ -1,10 +1,10 @@
-import React, { useRef, useEffect } from 'react';
-import { Brain, Search, Send, Mic } from 'lucide-react';
+import React, { useRef, useEffect, useState } from 'react';
+import { Brain, ArrowUp, Mic, ImageIcon, Upload } from 'lucide-react';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => Promise<void>;
-  value: string; // Controlled input value
-  onChange: (value: string) => void; // Change handler
+  value: string;
+  onChange: (value: string) => void;
   className?: string;
 }
 
@@ -14,7 +14,9 @@ export default function ChatInput({
   onChange,
   className = '',
 }: ChatInputProps) {
+  const [activeMode, setActiveMode] = useState<'chat' | 'image'>('chat');
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -30,7 +32,7 @@ export default function ChatInput({
     e.preventDefault();
     if (value.trim()) {
       await onSendMessage(value);
-      onChange(''); // Clear input after sending
+      onChange('');
     }
   };
 
@@ -38,6 +40,18 @@ export default function ChatInput({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e as unknown as React.FormEvent);
+    }
+  };
+
+  const handleUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Handle file upload logic here
+      console.log('File selected:', file);
     }
   };
 
@@ -52,7 +66,7 @@ export default function ChatInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Message DeepSeek..."
+          placeholder={activeMode === 'chat' ? "Message DeepSeek..." : "Describe the image you want to generate..."}
           className="w-full max-h-[350px] overflow-y-auto p-4 mb-12 rounded-xl resize-none 
             bg-gray-700 dark:bg-gray-300
             text-gray-100 dark:text-gray-800
@@ -65,20 +79,43 @@ export default function ChatInput({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="p-2 rounded-lg hover:bg-gray-600 dark:hover:bg-gray-400 
-                     text-gray-100 dark:text-gray-800 transition-colors"
+              onClick={() => setActiveMode('chat')}
+              className={`p-2 rounded-lg transition-all duration-200 flex items-center gap-2
+                ${activeMode === 'chat' 
+                  ? 'bg-blue-500/20 text-blue-500' 
+                  : 'hover:bg-gray-600 dark:hover:bg-gray-400 text-gray-100 dark:text-gray-800'}`}
               title="DeepThink"
             >
               <Brain className="w-5 h-5" />
+              {activeMode === 'chat' && <span className="text-sm">R1</span>}
             </button>
             <button
               type="button"
+              onClick={() => setActiveMode('image')}
+              className={`p-2 rounded-lg transition-all duration-200 flex items-center gap-2
+                ${activeMode === 'image' 
+                  ? 'bg-purple-500/20 text-purple-500' 
+                  : 'hover:bg-gray-600 dark:hover:bg-gray-400 text-gray-100 dark:text-gray-800'}`}
+              title="Image Generation"
+            >
+              <ImageIcon className="w-5 h-5" />
+              {activeMode === 'image' && <span className="text-sm">Gen</span>}
+            </button>
+            <button
+              type="button"
+              onClick={handleUpload}
               className="p-2 rounded-lg hover:bg-gray-600 dark:hover:bg-gray-400 
                      text-gray-100 dark:text-gray-800 transition-colors"
-              title="Search"
+              title="Upload file"
             >
-              <Search className="w-5 h-5" />
+              <Upload className="w-5 h-5" />
             </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
+            />
             <button
               type="button"
               className="p-2 rounded-lg hover:bg-gray-600 dark:hover:bg-gray-400 
@@ -90,11 +127,11 @@ export default function ChatInput({
           </div>
           <button
             type="submit"
-            className="p-2 rounded-lg hover:bg-gray-600 dark:hover:bg-gray-400 
-                   text-gray-100 dark:text-gray-800 transition-colors"
+            className="p-2 rounded-full bg-blue-500 hover:bg-blue-600 
+                   text-white transition-colors"
             title="Send message"
           >
-            <Send className="w-5 h-5 text-blue-500" />
+            <ArrowUp className="w-5 h-5" />
           </button>
         </div>
       </div>
