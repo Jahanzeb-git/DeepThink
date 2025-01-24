@@ -31,7 +31,7 @@ const LoadingPage: React.FC = () => {
     // Color cycling animation
     const colorTimer = setInterval(() => {
       setColorIndex((prev) => (prev + 1) % darkColors.length);
-    }, 500);
+    }, 300);
 
     // Scale animation
     const scaleTimer = setTimeout(() => {
@@ -41,7 +41,7 @@ const LoadingPage: React.FC = () => {
     // Redirect to main app
     const redirectTimer = setTimeout(() => {
       navigate('/main');
-    }, 1000);
+    }, 2000);
 
     // Cleanup timers
     return () => {
@@ -77,25 +77,6 @@ const LoadingPage: React.FC = () => {
         >
           DeepThinks
         </h1>
-        <div className="animate-pulse opacity-70">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className={`
-              h-10 w-10 
-              ${isDarkMode ? 'text-white' : 'text-black'}
-            `}
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" 
-            />
-          </svg>
-        </div>
       </div>
     </div>
   );
