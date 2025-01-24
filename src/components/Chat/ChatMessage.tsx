@@ -158,6 +158,7 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
     <div
       className={`flex gap-4 p-4 relative group ${!isBot && 'bg-gray-700/50 dark:bg-gray-200/50 rounded-lg'}`}
       ref={messageRef}
+      style={{ userSelect: 'none' }}
     >
       <div className="flex-shrink-0">
         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -241,6 +242,10 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
         language={getCodeLanguage(message)}
         isOpen={isCodePreviewOpen}
         onClose={() => setIsCodePreviewOpen(false)}
+        onOpen={() => setIsCodePreviewOpen(true)}
+        className={`transition-transform duration-500 ${
+          isCodePreviewOpen ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
+        }`}
       />
     </div>
   );
