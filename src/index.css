@@ -44,3 +44,7 @@
   background: var(--scrollbar-thumb);
 }
 
+/* Optional: Remove line highlights */
+pre[class*="language-"] .line {
+  background: transparent !important;
+}
