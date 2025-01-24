@@ -14,7 +14,8 @@ export default function ChatInput({
   onChange,
   className = '',
 }: ChatInputProps) {
-  const [activeMode, setActiveMode] = useState<'chat' | 'image'>('chat');
+  const [mode, setMode] = useState<'chat' | 'image'>('chat');
+  const [isDeepThinkEnabled, setIsDeepThinkEnabled] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -43,6 +44,17 @@ export default function ChatInput({
     }
   };
 
+  const handleModeChange = (newMode: 'chat' | 'image') => {
+    setMode(newMode);
+    if (newMode === 'image') {
+      setIsDeepThinkEnabled(false);
+    }
+  };
+
+  const toggleDeepThink = () => {
+    setIsDeepThinkEnabled(prev => !prev);
+  };
+
   const handleUpload = () => {
     fileInputRef.current?.click();
   };
@@ -66,7 +78,11 @@ export default function ChatInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={activeMode === 'chat' ? "Message DeepSeek..." : "Describe the image you want to generate..."}
+          placeholder={
+            mode === 'chat'
+              ? `Message DeepSeek${isDeepThinkEnabled ? ' with advanced reasoning...' : '...'}`
+              : "Describe the image you want to generate..."
+          }
           className="w-full max-h-[350px] overflow-y-auto p-4 mb-12 rounded-xl resize-none 
             bg-gray-700 dark:bg-gray-300
             text-gray-100 dark:text-gray-800
@@ -79,27 +95,28 @@ export default function ChatInput({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setActiveMode('chat')}
+              onClick={toggleDeepThink}
               className={`p-2 rounded-lg transition-all duration-200 flex items-center gap-2
-                ${activeMode === 'chat' 
+                ${isDeepThinkEnabled 
                   ? 'bg-blue-500/20 text-blue-500' 
                   : 'hover:bg-gray-600 dark:hover:bg-gray-400 text-gray-100 dark:text-gray-800'}`}
-              title="DeepThink"
+              title="Toggle DeepThink mode"
+              disabled={mode === 'image'}
             >
               <Brain className="w-5 h-5" />
-              {activeMode === 'chat' && <span className="text-sm">R1</span>}
+              {isDeepThinkEnabled && <span className="text-sm">R1</span>}
             </button>
             <button
               type="button"
-              onClick={() => setActiveMode('image')}
+              onClick={() => handleModeChange(mode === 'chat' ? 'image' : 'chat')}
               className={`p-2 rounded-lg transition-all duration-200 flex items-center gap-2
-                ${activeMode === 'image' 
+                ${mode === 'image'
                   ? 'bg-purple-500/20 text-purple-500' 
                   : 'hover:bg-gray-600 dark:hover:bg-gray-400 text-gray-100 dark:text-gray-800'}`}
-              title="Image Generation"
+              title="Toggle image generation mode"
             >
               <ImageIcon className="w-5 h-5" />
-              {activeMode === 'image' && <span className="text-sm">Gen</span>}
+              {mode === 'image' && <span className="text-sm">Gen</span>}
             </button>
             <button
               type="button"
