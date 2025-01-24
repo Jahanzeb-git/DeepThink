@@ -44,69 +44,71 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
   };
 
   // Typing animation with code block detection
-  const animateTyping = useCallback(() => {
-    if (!isBot || isTyped) {
-      setDisplayedText(replaceCodeBlocks(message));
-      return;
-    }
+ const animateTyping = useCallback(() => {
+  if (!isBot || isTyped) {
+    setDisplayedText(replaceCodeBlocks(message));
+    return;
+  }
 
-    setIsTyping(true);
-    let currentIndex = 0;
-    const textLength = message.length;
-    let inCodeBlock = false;
-    let codeBlockStart = -1;
+  setIsTyping(true);
+  let currentIndex = 0;
+  const textLength = message.length;
+  let inCodeBlock = false;
+  let codeBlockStart = -1;
 
-    const typeNextChar = () => {
-      if (currentIndex < textLength) {
-        // Check for code block markers
-        if (message.slice(currentIndex).startsWith('```')) {
-          if (!inCodeBlock) {
-            // Starting a code block
-            inCodeBlock = true;
-            codeBlockStart = currentIndex;
-            setIsTypingCode(true);
-          } else {
-            // Ending a code block
-            inCodeBlock = false;
-            setIsTypingCode(false);
-            
-            // Extract and set the code for preview
-            const codeBlock = message.slice(codeBlockStart, currentIndex + 3);
-            const code = extractCodeBlock(codeBlock);
-            if (code) {
-              setCurrentCode(code);
-              setCodeBlockContent(code);
-            }
-          }
-          currentIndex += 3; // Skip the ```
-          
-          // Update displayed text with placeholder
-          setDisplayedText(replaceCodeBlocks(message.slice(0, currentIndex)));
+  const typeNextChar = () => {
+    if (currentIndex < textLength) {
+      // Check for code block markers
+      if (message.slice(currentIndex).startsWith('```')) {
+        if (!inCodeBlock) {
+          // Starting a code block
+          inCodeBlock = true;
+          codeBlockStart = currentIndex;
+          setIsTypingCode(true);
+          setIsCodePreviewOpen(true); // Automatically open CodePreview
         } else {
-          currentIndex++;
-          if (!inCodeBlock) {
-            setDisplayedText(replaceCodeBlocks(message.slice(0, currentIndex)));
+          // Ending a code block
+          inCodeBlock = false;
+          setIsTypingCode(false);
+
+          // Extract and set the code for preview
+          const codeBlock = message.slice(codeBlockStart, currentIndex + 3);
+          const code = extractCodeBlock(codeBlock);
+          if (code) {
+            setCurrentCode(code);
+            setCodeBlockContent(code);
           }
         }
-        
-        // Natural typing speed variation
-        const delay = inCodeBlock ? 5 : Math.random() * 20 + 10; // Faster typing for code
-        typingRef.current = setTimeout(typeNextChar, delay);
+        currentIndex += 3; // Skip the ```
       } else {
-        setIsTyping(false);
-        setIsTypingCode(false);
-        onTypingComplete();
+        currentIndex++;
+        if (inCodeBlock) {
+          // Dynamically update code block content for preview
+          const dynamicCode = message.slice(codeBlockStart + 3, currentIndex);
+          setCodeBlockContent(dynamicCode);
+        }
+        setDisplayedText(replaceCodeBlocks(message.slice(0, currentIndex)));
       }
-    };
 
-    typeNextChar();
+      // Natural typing speed variation
+      const delay = inCodeBlock ? 5 : Math.random() * 20 + 10; // Faster typing for code
+      typingRef.current = setTimeout(typeNextChar, delay);
+    } else {
+      setIsTyping(false);
+      setIsTypingCode(false);
+      onTypingComplete();
+    }
+  };
 
-    return () => {
-      if (typingRef.current) {
-        clearTimeout(typingRef.current);
-      }
-    };
-  }, [message, isBot, isTyped, onTypingComplete]);
+  typeNextChar();
+
+  return () => {
+    if (typingRef.current) {
+      clearTimeout(typingRef.current);
+    }
+  };
+}, [message, isBot, isTyped, onTypingComplete]);
+
 
   useEffect(() => {
     animateTyping();
@@ -237,7 +239,7 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
       </div>
 
       <CodePreview
-        code={currentCode}
+        code={codeBlockContent}
         language={getCodeLanguage(message)}
         isOpen={isCodePreviewOpen}
         onClose={() => setIsCodePreviewOpen(false)}
