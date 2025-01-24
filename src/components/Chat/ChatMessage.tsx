@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Bot, User, Copy, Check, Info } from 'lucide-react';
+import { Bot, User, Copy, Check, Info, Code } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { CodePreview } from './CodePreview';
 
 interface ChatMessageProps {
   message: string;
@@ -16,10 +17,27 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
   const [isTyping, setIsTyping] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [showModelInfo, setShowModelInfo] = useState(false);
+  const [isCodePreviewOpen, setIsCodePreviewOpen] = useState(false);
+  const [currentCode, setCurrentCode] = useState('');
+  const [isTypingCode, setIsTypingCode] = useState(false);
   const typingRef = useRef<NodeJS.Timeout | null>(null);
   const messageRef = useRef<HTMLDivElement>(null);
 
-  // Typing animation without auto-scroll
+  // Extract code blocks from message
+  const extractCodeBlock = (text: string) => {
+    const codeBlockRegex = /```(?:\w+)?\n([\s\S]*?)```/;
+    const match = text.match(codeBlockRegex);
+    return match ? match[1].trim() : '';
+  };
+
+  // Get programming language from code block
+  const getCodeLanguage = (text: string) => {
+    const languageRegex = /```(\w+)\n/;
+    const match = text.match(languageRegex);
+    return match ? match[1] : 'typescript';
+  };
+
+  // Typing animation with code block detection
   const animateTyping = useCallback(() => {
     if (!isBot || isTyped) {
       setDisplayedText(message);
@@ -29,17 +47,44 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
     setIsTyping(true);
     let currentIndex = 0;
     const textLength = message.length;
+    let inCodeBlock = false;
+    let codeBlockStart = -1;
 
     const typeNextChar = () => {
       if (currentIndex < textLength) {
         setDisplayedText(prev => message.slice(0, currentIndex + 1));
-        currentIndex++;
+        
+        // Check for code block markers
+        if (message.slice(currentIndex).startsWith('```')) {
+          if (!inCodeBlock) {
+            // Starting a code block
+            inCodeBlock = true;
+            codeBlockStart = currentIndex;
+            setIsTypingCode(true);
+          } else {
+            // Ending a code block
+            inCodeBlock = false;
+            setIsTypingCode(false);
+            
+            // Extract and set the code for preview
+            const codeBlock = message.slice(codeBlockStart, currentIndex + 3);
+            const code = extractCodeBlock(codeBlock);
+            if (code) {
+              setCurrentCode(code);
+              setIsCodePreviewOpen(true);
+            }
+          }
+          currentIndex += 3; // Skip the ```
+        } else {
+          currentIndex++;
+        }
         
         // Natural typing speed variation
-        const delay = Math.random() * 20 + 10;
+        const delay = inCodeBlock ? 5 : Math.random() * 20 + 10; // Faster typing for code
         typingRef.current = setTimeout(typeNextChar, delay);
       } else {
         setIsTyping(false);
+        setIsTypingCode(false);
         onTypingComplete();
       }
     };
@@ -73,6 +118,13 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
     }
   };
 
+  const handleCodePreview = () => {
+    const code = extractCodeBlock(message);
+    const language = getCodeLanguage(message);
+    setCurrentCode(code);
+    setIsCodePreviewOpen(true);
+  };
+
   return (
     <div
       className={`flex gap-4 p-4 relative group ${!isBot && 'bg-gray-700/50 dark:bg-gray-200/50 rounded-lg'}`}
@@ -93,6 +145,13 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
           {isBot ? 'AI Assistant' : 'You'}
         </div>
         
+        {isTypingCode && (
+          <div className="flex items-center space-x-2 mb-2 text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-400/10 p-2 rounded">
+            <Code size={16} className="animate-pulse" />
+            <span className="text-sm">Generating code...</span>
+          </div>
+        )}
+
         <div className="prose dark:prose-invert max-w-none">
           <div className="text-gray-200 dark:text-gray-800 leading-relaxed">
             {isBot && !isTyped ? (
@@ -116,6 +175,16 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
 
         {isBot && (
           <div className="flex justify-end mt-2 items-center space-x-2">
+            {message.includes('```') && (
+              <button
+                onClick={handleCodePreview}
+                className="p-1.5 rounded-md transition-colors duration-200 text-gray-400 hover:text-gray-300 dark:text-gray-500 dark:hover:text-gray-600 flex items-center space-x-1"
+                aria-label="View Code"
+              >
+                <Code size={16} />
+                <span className="text-sm">View code</span>
+              </button>
+            )}
             <button
               onClick={() => setShowModelInfo(prev => !prev)}
               className="p-1.5 rounded-md transition-colors duration-200 text-gray-400 hover:text-gray-300 dark:text-gray-500 dark:hover:text-gray-600"
@@ -142,8 +211,13 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
           </div>
         )}
       </div>
+
+      <CodePreview
+        code={currentCode}
+        language={getCodeLanguage(message)}
+        isOpen={isCodePreviewOpen}
+        onClose={() => setIsCodePreviewOpen(false)}
+      />
     </div>
   );
 }
-
-
