@@ -9,12 +9,13 @@ interface Message {
   text: string;
   isBot: boolean;
   isTyped: boolean;
+  isDeepThinkEnabled?: boolean; // Add this field
 }
 
 interface ChatContainerProps {
   messages: Message[];
   isLoading: boolean;
-  onSendMessage: (message: string) => Promise<void>;
+  onSendMessage: (message: string, isDeepThinkEnabled: boolean) => Promise<void>;
 }
 
 export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContainerProps) {
@@ -23,7 +24,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
   const typingScrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [inputValue, setInputValue] = useState('');
   const [isUserScrolling, setIsUserScrolling] = useState(false);
-  const [isDeepThinkEnabled, setIsDeepThinkEnabled] = useState(false); // New state
+  const [isDeepThinkEnabled, setIsDeepThinkEnabled] = useState(false);
 
   const scrollToBottom = useCallback((smooth = true) => {
     if (messagesEndRef.current) {
@@ -82,9 +83,9 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
     };
   }, []);
 
-   // Handle sending a message
-  const handleSendMessage = async (message: string) => {
-    await onSendMessage(message, isDeepThinkEnabled); // Pass isDeepThinkEnabled to onSendMessage
+  // Handle sending a message
+  const handleSendMessage = async (message: string, deepThinkEnabled: boolean) => {
+    await onSendMessage(message, deepThinkEnabled);
     setInputValue('');
   };
 
@@ -105,11 +106,11 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
             </p>
             <div className="w-full max-w-3xl px-4 md:px-8">
               <ChatInput
-                onSendMessage={onSendMessage}
+                onSendMessage={handleSendMessage}
                 value={inputValue}
                 onChange={setInputValue}
-                isDeepThinkEnabled={isDeepThinkEnabled} // Pass isDeepThinkEnabled
-                onToggleDeepThink={() => setIsDeepThinkEnabled(prev => !prev)} // Pass toggle function
+                isDeepThinkEnabled={isDeepThinkEnabled}
+                onToggleDeepThink={() => setIsDeepThinkEnabled(prev => !prev)}
               />
               <div className="mt-4 flex justify-center">
                 <TagInput onAddTag={handleAddTag} />
@@ -138,7 +139,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
                     msg.isTyped = true;
                   }}
                   containerRef={messagesContainerRef}
-                  isDeepThinkEnabled={msg.isDeepThinkEnabled} // Pass isDeepThinkEnabled
+                  isDeepThinkEnabled={msg.isDeepThinkEnabled || false}
                 />
               ))}
               {isLoading && (
@@ -157,11 +158,11 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
               </div>
               <div className="max-w-3xl mx-auto">
                 <ChatInput
-                  onSendMessage={onSendMessage}
+                  onSendMessage={handleSendMessage}
                   value={inputValue}
                   onChange={setInputValue}
-                  isDeepThinkEnabled={isDeepThinkEnabled} // Pass isDeepThinkEnabled
-                  onToggleDeepThink={() => setIsDeepThinkEnabled(prev => !prev)} // Pass toggle function
+                  isDeepThinkEnabled={isDeepThinkEnabled}
+                  onToggleDeepThink={() => setIsDeepThinkEnabled(prev => !prev)}
                 />
               </div>
             </div>
