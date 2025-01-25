@@ -8,62 +8,46 @@ interface CodeSandboxPreviewProps {
 }
 
 export function CodeSandboxPreview({ code, language, onClose }: CodeSandboxPreviewProps) {
-  const [sandboxId, setSandboxId] = useState<string | null>(null);
+  const [Component, setComponent] = useState<React.FC | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const createSandbox = async () => {
+    const renderCode = async () => {
       setIsLoading(true);
       setError(null);
 
       try {
-        // Create appropriate files based on language
-        const files: Record<string, { content: string }> = {};
-        
         if (language === 'react') {
-          files['App.js'] = { content: code };
-          files['index.js'] = {
-            content: `
-              import React from 'react';
-              import ReactDOM from 'react-dom';
-              import App from './App';
-              
-              ReactDOM.render(
-                <React.StrictMode>
-                  <App />
-                </React.StrictMode>,
-                document.getElementById('root')
-              );
-            `
-          };
+          // Dynamically evaluate the React code
+          const exportedComponent = eval(`
+            (function() {
+              ${code}
+              return App;
+            })()
+          `);
+          setComponent(() => exportedComponent);
         } else if (language === 'html') {
-          files['index.html'] = { content: code };
+          // Render HTML/CSS directly in an iframe
+          const blob = new Blob([code], { type: 'text/html' });
+          const url = URL.createObjectURL(blob);
+          setComponent(() => () => (
+            <iframe
+              src={url}
+              className="w-full h-full border-0"
+              title="HTML Preview"
+              sandbox="allow-scripts"
+            />
+          ));
         }
-
-        // Create sandbox using CodeSandbox API
-        const response = await fetch('https://codesandbox.io/api/v1/sandboxes/define', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `csb_v1_6BmExF3TLe-Dw-UubTjFJEO77xG90rlT1UK-Hr-yJiM` // Note: This should be in environment variables
-          },
-          body: JSON.stringify({
-            files,
-            template: language === 'react' ? 'create-react-app' : 'static'
-          })
-        });
-
-        const { sandbox_id } = await response.json();
-        setSandboxId(sandbox_id);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to create preview');
+        setError(err instanceof Error ? err.message : 'Failed to render code');
       } finally {
         setIsLoading(false);
       }
     };
 
-    createSandbox();
+    renderCode();
   }, [code, language]);
 
   return (
@@ -82,21 +66,15 @@ export function CodeSandboxPreview({ code, language, onClose }: CodeSandboxPrevi
           <div className="flex items-center justify-center h-full">
             <div className="flex items-center gap-2 text-emerald-500">
               <Loader className="animate-spin" size={20} />
-              Creating preview...
+              Rendering preview...
             </div>
           </div>
         ) : error ? (
           <div className="flex items-center justify-center h-full text-red-500">
             {error}
           </div>
-        ) : sandboxId ? (
-          <iframe
-            src={`https://codesandbox.io/embed/${sandboxId}?fontsize=14&hidenavigation=1&theme=dark`}
-            className="w-full h-full border-0"
-            title="Code Preview"
-            allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
-            sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
-          />
+        ) : Component ? (
+          <Component />
         ) : null}
       </div>
     </div>
