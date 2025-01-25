@@ -13,12 +13,20 @@ interface CodePreviewProps {
 export function CodePreview({ code, language = 'typescript', isOpen, onClose }: CodePreviewProps) {
   const [copied, setCopied] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true);
+      setIsAnimating(true);
+      const timer = setTimeout(() => setIsAnimating(false), 300);
+      return () => clearTimeout(timer);
     } else {
-      const timer = setTimeout(() => setIsVisible(false), 300);
+      setIsAnimating(true);
+      const timer = setTimeout(() => {
+        setIsVisible(false);
+        setIsAnimating(false);
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
@@ -34,15 +42,16 @@ export function CodePreview({ code, language = 'typescript', isOpen, onClose }: 
   return (
     <div className="fixed inset-0 z-50 lg:right-auto">
       <div 
-        className={`fixed inset-0 bg-black/20 dark:bg-white/20 backdrop-blur-sm transition-opacity duration-300 ${
-          isOpen ? 'opacity-100' : 'opacity-0'
+        className={`fixed inset-0 bg-black/20 dark:bg-white/20 backdrop-blur-sm transition-all duration-300 ${
+          isOpen && !isAnimating ? 'opacity-100' : 'opacity-0'
         }`} 
         onClick={onClose}
       />
       <div
-        className={`fixed top-0 right-0 h-full w-full lg:w-[600px] bg-gray-900 dark:bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        className={`fixed top-0 right-0 h-full w-full lg:w-[600px] bg-gray-900 dark:bg-white shadow-xl 
+          transform transition-all duration-300 ease-out
+          ${isOpen && !isAnimating ? 'translate-x-0 opacity-100' : 'translate-x-[10%] opacity-0'}
+        `}
       >
         <div className="h-full flex flex-col">
           <div className="flex justify-between items-center p-4 border-b border-gray-700 dark:border-gray-200">
