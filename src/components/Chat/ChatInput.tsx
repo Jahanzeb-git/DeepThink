@@ -1,11 +1,13 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Brain, ArrowUp, Mic, ImageIcon, Upload } from 'lucide-react';
 
 interface ChatInputProps {
-  onSendMessage: (message: string,  isDeepThinkEnabled: boolean) => Promise<void>;
+  onSendMessage: (message: string, isDeepThinkEnabled: boolean) => Promise<void>;
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  isDeepThinkEnabled: boolean;
+  onToggleDeepThink: () => void;
 }
 
 export default function ChatInput({
@@ -13,9 +15,10 @@ export default function ChatInput({
   value,
   onChange,
   className = '',
+  isDeepThinkEnabled,
+  onToggleDeepThink
 }: ChatInputProps) {
-  const [mode, setMode] = useState<'chat' | 'image'>('chat');
-  const [isDeepThinkEnabled, setIsDeepThinkEnabled] = useState(false);
+  const [mode, setMode] = React.useState<'chat' | 'image'>('chat');
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -46,13 +49,6 @@ export default function ChatInput({
 
   const handleModeChange = (newMode: 'chat' | 'image') => {
     setMode(newMode);
-    if (newMode === 'image') {
-      setIsDeepThinkEnabled(false);
-    }
-  };
-
-  const toggleDeepThink = () => {
-    setIsDeepThinkEnabled(prev => !prev);
   };
 
   const handleUpload = () => {
@@ -95,7 +91,7 @@ export default function ChatInput({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={toggleDeepThink}
+              onClick={onToggleDeepThink}
               className={`p-2 rounded-lg transition-all duration-200 flex items-center gap-2
                 ${isDeepThinkEnabled 
                   ? 'bg-blue-500/20 text-blue-500' 
