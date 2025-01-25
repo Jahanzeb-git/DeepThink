@@ -13,7 +13,7 @@ interface CodePreviewProps {
 }
 
 const BACKEND_LANGUAGES = ['python', 'c', 'cpp', 'java', 'javascript'];
-const FRONTEND_LANGUAGES = ['react', 'html', 'css'];
+const FRONTEND_LANGUAGES = ['react', 'html', 'css', 'tsx', 'jsx', 'typescript'];
 
 export function CodePreview({ code: initialCode, language = 'typescript', isOpen, onClose }: CodePreviewProps) {
   const [code, setCode] = useState(initialCode);
@@ -25,8 +25,12 @@ export function CodePreview({ code: initialCode, language = 'typescript', isOpen
   const [isEditing, setIsEditing] = useState(false);
   const [editedCode, setEditedCode] = useState(initialCode);
 
-  const isBackendLanguage = BACKEND_LANGUAGES.includes(language.toLowerCase());
-  const isFrontendLanguage = FRONTEND_LANGUAGES.includes(language.toLowerCase());
+  const normalizedLanguage = language.toLowerCase();
+  const isBackendLanguage = BACKEND_LANGUAGES.includes(normalizedLanguage);
+  const isFrontendLanguage = FRONTEND_LANGUAGES.includes(normalizedLanguage) || 
+                            normalizedLanguage.includes('react') || 
+                            normalizedLanguage.includes('jsx') || 
+                            normalizedLanguage.includes('tsx');
 
   useEffect(() => {
     if (isOpen) {
