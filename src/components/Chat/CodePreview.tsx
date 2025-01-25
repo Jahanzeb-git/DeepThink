@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { X, Copy, Check } from 'lucide-react';
+import { X, Copy, Check, Play, Eye } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { CodeExecutor } from './CodeExecutor';
+import { CodeSandboxPreview } from './CodeSandboxPreview';
 
 interface CodePreviewProps {
   code: string;
@@ -10,10 +12,18 @@ interface CodePreviewProps {
   onClose: () => void;
 }
 
+const BACKEND_LANGUAGES = ['python', 'c', 'cpp', 'java', 'javascript'];
+const FRONTEND_LANGUAGES = ['react', 'html', 'css'];
+
 export function CodePreview({ code, language = 'typescript', isOpen, onClose }: CodePreviewProps) {
   const [copied, setCopied] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showExecutor, setShowExecutor] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+
+  const isBackendLanguage = BACKEND_LANGUAGES.includes(language.toLowerCase());
+  const isFrontendLanguage = FRONTEND_LANGUAGES.includes(language.toLowerCase());
 
   useEffect(() => {
     if (isOpen) {
@@ -23,6 +33,8 @@ export function CodePreview({ code, language = 'typescript', isOpen, onClose }: 
       return () => clearTimeout(timer);
     } else {
       setIsAnimating(true);
+      setShowExecutor(false);
+      setShowPreview(false);
       const timer = setTimeout(() => {
         setIsVisible(false);
         setIsAnimating(false);
@@ -35,6 +47,16 @@ export function CodePreview({ code, language = 'typescript', isOpen, onClose }: 
     await navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleRunCode = () => {
+    setShowExecutor(true);
+    setShowPreview(false);
+  };
+
+  const handleViewPreview = () => {
+    setShowPreview(true);
+    setShowExecutor(false);
   };
 
   if (!isVisible) return null;
@@ -51,12 +73,33 @@ export function CodePreview({ code, language = 'typescript', isOpen, onClose }: 
         className={`fixed top-0 right-0 h-full w-full lg:w-[600px] bg-gray-900 dark:bg-white shadow-xl 
           transform transition-all duration-300 ease-out
           ${isOpen && !isAnimating ? 'translate-x-0 opacity-100' : 'translate-x-[10%] opacity-0'}
+          ${showPreview ? 'lg:w-full' : ''}
         `}
       >
         <div className="h-full flex flex-col">
           <div className="flex justify-between items-center p-4 border-b border-gray-700 dark:border-gray-200">
             <h3 className="text-white dark:text-gray-900 font-medium">Code Preview</h3>
             <div className="flex gap-2">
+              {isBackendLanguage && (
+                <button
+                  onClick={handleRunCode}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 rounded-md transition-colors"
+                  title="Run code"
+                >
+                  <Play size={16} />
+                  Run Code
+                </button>
+              )}
+              {isFrontendLanguage && (
+                <button
+                  onClick={handleViewPreview}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 rounded-md transition-colors"
+                  title="View preview"
+                >
+                  <Eye size={16} />
+                  View Preview
+                </button>
+              )}
               <button
                 onClick={handleCopy}
                 className="p-2 hover:bg-gray-700 dark:hover:bg-gray-100 rounded-md text-gray-400 dark:text-gray-600 hover:text-white dark:hover:text-gray-900 transition-colors"
@@ -73,7 +116,7 @@ export function CodePreview({ code, language = 'typescript', isOpen, onClose }: 
               </button>
             </div>
           </div>
-          <div className="flex-1 overflow-auto p-4">
+          <div className="flex-1 overflow-auto p-4 relative">
             <SyntaxHighlighter
               language={language}
               style={oneDark}
@@ -82,11 +125,30 @@ export function CodePreview({ code, language = 'typescript', isOpen, onClose }: 
                 margin: 0,
                 borderRadius: '0.375rem',
                 fontSize: '14px',
+                background: '#1a1a1a',
               }}
             >
               {code}
             </SyntaxHighlighter>
+
+            {/* Code Executor Terminal */}
+            {showExecutor && (
+              <CodeExecutor
+                code={code}
+                language={language}
+                onClose={() => setShowExecutor(false)}
+              />
+            )}
           </div>
+
+          {/* Frontend Preview */}
+          {showPreview && (
+            <CodeSandboxPreview
+              code={code}
+              language={language}
+              onClose={() => setShowPreview(false)}
+            />
+          )}
         </div>
       </div>
     </div>
