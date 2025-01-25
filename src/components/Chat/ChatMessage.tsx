@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Bot, User, Copy, Check, Info, Code } from 'lucide-react';
+import { Bot, User, Copy, Check, Info, Code, Brain } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CodePreview } from './CodePreview';
@@ -10,7 +10,7 @@ interface ChatMessageProps {
   isTyped: boolean;
   onTypingComplete: () => void;
   containerRef: React.RefObject<HTMLDivElement>;
-  isDeepThinkEnabled: boolean; // New prop
+  isDeepThinkEnabled: boolean;
 }
 
 interface CodeBlock {
@@ -188,14 +188,21 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
       </div>
       
       <div className="flex-1 overflow-hidden">
-        <div className="font-medium text-sm text-gray-400 dark:text-gray-600 mb-1">
+        <div className="font-medium text-sm text-gray-400 dark:text-gray-600 mb-1 flex items-center">
           {isBot ? 'DeepThink' : 'You'}
           {isDeepThinkEnabled && isBot && (
-            <span className="ml-2 inline-flex items-center text-blue-500 dark:text-blue-400 tooltip">
-              <Brain size={16} className="mr-1" />
-              <span className="text-xs">R1</span>
-              <span className="tooltiptext">Generated with Advanced Reasoning</span>
-            </span>
+            <div className="ml-2 relative inline-flex items-center text-blue-500 dark:text-blue-400 group">
+              <div className="flex items-center">
+                <Brain size={16} className="mr-1" />
+                <span className="text-xs">R1</span>
+              </div>
+              {/* Tooltip */}
+              <div className="absolute invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-300 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-black rounded-md whitespace-nowrap">
+                Generated with Advanced Reasoning
+                {/* Arrow */}
+                <div className="absolute left-1/2 transform -translate-x-1/2 top-full w-2 h-2 bg-black rotate-45"></div>
+              </div>
+            </div>
           )}
         </div>
 
