@@ -10,6 +10,7 @@ interface ChatMessageProps {
   isTyped: boolean;
   onTypingComplete: () => void;
   containerRef: React.RefObject<HTMLDivElement>;
+  isDeepThinkEnabled: boolean; // New prop
 }
 
 interface CodeBlock {
@@ -18,7 +19,7 @@ interface CodeBlock {
   language: string;
 }
 
-export function ChatMessage({ message, isBot, isTyped, onTypingComplete, containerRef }: ChatMessageProps) {
+export function ChatMessage({ message, isBot, isTyped, onTypingComplete, containerRef, isDeepThinkEnabled }: ChatMessageProps) {
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -188,7 +189,13 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
       
       <div className="flex-1 overflow-hidden">
         <div className="font-medium text-sm text-gray-400 dark:text-gray-600 mb-1">
-          {isBot ? 'AI Assistant' : 'You'}
+          {isBot ? 'DeepThink' : 'You'}
+          {isDeepThinkEnabled && isBot && (
+            <span className="ml-2 inline-flex items-center text-blue-500 dark:text-blue-400" title="Generated with Advanced Reasoning">
+              <Brain size={16} className="mr-1" />
+              <span className="text-xs">R1</span>
+            </span>
+          )}
         </div>
 
         <div className="prose dark:prose-invert max-w-none">
