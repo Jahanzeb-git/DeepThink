@@ -23,6 +23,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
   const typingScrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [inputValue, setInputValue] = useState('');
   const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const [isDeepThinkEnabled, setIsDeepThinkEnabled] = useState(false); // New state
 
   const scrollToBottom = useCallback((smooth = true) => {
     if (messagesEndRef.current) {
@@ -81,6 +82,12 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
     };
   }, []);
 
+   // Handle sending a message
+  const handleSendMessage = async (message: string) => {
+    await onSendMessage(message, isDeepThinkEnabled); // Pass isDeepThinkEnabled to onSendMessage
+    setInputValue('');
+  };
+
   const handleAddTag = (tag: string) => {
     setInputValue(tag);
   };
@@ -101,6 +108,8 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
                 onSendMessage={onSendMessage}
                 value={inputValue}
                 onChange={setInputValue}
+                isDeepThinkEnabled={isDeepThinkEnabled} // Pass isDeepThinkEnabled
+                onToggleDeepThink={() => setIsDeepThinkEnabled(prev => !prev)} // Pass toggle function
               />
               <div className="mt-4 flex justify-center">
                 <TagInput onAddTag={handleAddTag} />
@@ -129,6 +138,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
                     msg.isTyped = true;
                   }}
                   containerRef={messagesContainerRef}
+                  isDeepThinkEnabled={msg.isDeepThinkEnabled} // Pass isDeepThinkEnabled
                 />
               ))}
               {isLoading && (
@@ -150,6 +160,8 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
                   onSendMessage={onSendMessage}
                   value={inputValue}
                   onChange={setInputValue}
+                  isDeepThinkEnabled={isDeepThinkEnabled} // Pass isDeepThinkEnabled
+                  onToggleDeepThink={() => setIsDeepThinkEnabled(prev => !prev)} // Pass toggle function
                 />
               </div>
             </div>
