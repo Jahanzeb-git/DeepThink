@@ -171,7 +171,6 @@ export function CodePreview({ code: initialCode, language = 'typescript', isOpen
                   margin: 0,
                   borderRadius: '0.375rem',
                   fontSize: '14px',
-                  background: '#1a1a1a',
                 }}
               >
                 {code}
