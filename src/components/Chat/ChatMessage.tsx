@@ -191,9 +191,10 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
         <div className="font-medium text-sm text-gray-400 dark:text-gray-600 mb-1">
           {isBot ? 'DeepThink' : 'You'}
           {isDeepThinkEnabled && isBot && (
-            <span className="ml-2 inline-flex items-center text-blue-500 dark:text-blue-400" title="Generated with Advanced Reasoning">
+            <span className="ml-2 inline-flex items-center text-blue-500 dark:text-blue-400 tooltip">
               <Brain size={16} className="mr-1" />
               <span className="text-xs">R1</span>
+              <span className="tooltiptext">Generated with Advanced Reasoning</span>
             </span>
           )}
         </div>
