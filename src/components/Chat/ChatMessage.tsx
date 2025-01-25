@@ -12,6 +12,12 @@ interface ChatMessageProps {
   containerRef: React.RefObject<HTMLDivElement>;
 }
 
+interface CodeBlock {
+  id: string;
+  code: string;
+  language: string;
+}
+
 export function ChatMessage({ message, isBot, isTyped, onTypingComplete, containerRef }: ChatMessageProps) {
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -19,23 +25,27 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
   const [showModelInfo, setShowModelInfo] = useState(false);
   const [isCodePreviewOpen, setIsCodePreviewOpen] = useState(false);
   const [currentCode, setCurrentCode] = useState('');
+  const [currentLanguage, setCurrentLanguage] = useState('typescript');
   const [isTypingCode, setIsTypingCode] = useState(false);
-  const [codeBlockContent, setCodeBlockContent] = useState('');
+  const [codeBlocks, setCodeBlocks] = useState<CodeBlock[]>([]);
   const typingRef = useRef<NodeJS.Timeout | null>(null);
   const messageRef = useRef<HTMLDivElement>(null);
 
   // Extract code blocks from message
-  const extractCodeBlock = (text: string) => {
-    const codeBlockRegex = /```(?:\w+)?\n([\s\S]*?)```/;
-    const match = text.match(codeBlockRegex);
-    return match ? match[1].trim() : '';
-  };
+  const extractCodeBlocks = (text: string): CodeBlock[] => {
+    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+    const blocks: CodeBlock[] = [];
+    let match;
 
-  // Get programming language from code block
-  const getCodeLanguage = (text: string) => {
-    const languageRegex = /```(\w+)\n/;
-    const match = text.match(languageRegex);
-    return match ? match[1] : 'typescript';
+    while ((match = codeBlockRegex.exec(text)) !== null) {
+      blocks.push({
+        id: Math.random().toString(36).substring(7),
+        language: match[1] || 'typescript',
+        code: match[2].trim()
+      });
+    }
+
+    return blocks;
   };
 
   // Replace code blocks with placeholder
@@ -47,6 +57,7 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
   const animateTyping = useCallback(() => {
     if (!isBot || isTyped) {
       setDisplayedText(replaceCodeBlocks(message));
+      setCodeBlocks(extractCodeBlocks(message));
       return;
     }
 
@@ -55,6 +66,7 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
     const textLength = message.length;
     let inCodeBlock = false;
     let codeBlockStart = -1;
+    let tempCodeBlocks: CodeBlock[] = [];
 
     const typeNextChar = () => {
       if (currentIndex < textLength) {
@@ -70,12 +82,12 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
             inCodeBlock = false;
             setIsTypingCode(false);
             
-            // Extract and set the code for preview
-            const codeBlock = message.slice(codeBlockStart, currentIndex + 3);
-            const code = extractCodeBlock(codeBlock);
-            if (code) {
-              setCurrentCode(code);
-              setCodeBlockContent(code);
+            // Extract and add the code block
+            const codeBlockText = message.slice(codeBlockStart, currentIndex + 3);
+            const blocks = extractCodeBlocks(codeBlockText);
+            if (blocks.length > 0) {
+              tempCodeBlocks = [...tempCodeBlocks, blocks[0]];
+              setCodeBlocks(tempCodeBlocks);
             }
           }
           currentIndex += 3; // Skip the ```
@@ -128,37 +140,41 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
     }
   };
 
-  const handleCodePreview = () => {
-    const code = extractCodeBlock(message);
-    setCurrentCode(code);
+  const handleCodePreview = (codeBlock: CodeBlock) => {
+    setCurrentCode(codeBlock.code);
+    setCurrentLanguage(codeBlock.language);
     setIsCodePreviewOpen(true);
   };
 
   // Custom renderer for code blocks
-  const CodeBlockPlaceholder = () => (
-    <div className="my-4 p-4 bg-gray-800/50 dark:bg-gray-200/50 rounded-lg border border-gray-700 dark:border-gray-300">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Code size={20} className={isTypingCode ? "animate-pulse text-emerald-500" : "text-gray-400"} />
-          <span className="text-sm text-gray-400">
-            {isTypingCode ? "Generating code..." : "Code block"}
-          </span>
+  const CodeBlockPlaceholder = ({ index }: { index: number }) => {
+    const codeBlock = codeBlocks[index];
+    if (!codeBlock) return null;
+
+    return (
+      <div className="my-4 p-4 bg-gray-800/50 dark:bg-gray-200/50 rounded-lg border border-gray-700 dark:border-gray-300">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Code size={20} className={isTypingCode ? "animate-pulse text-emerald-500" : "text-gray-400"} />
+            <span className="text-sm text-gray-400">
+              {isTypingCode && index === codeBlocks.length - 1 ? "Generating code..." : `${codeBlock.language} code`}
+            </span>
+          </div>
+          <button
+            onClick={() => handleCodePreview(codeBlock)}
+            className="text-sm text-blue-500 hover:text-blue-400 dark:text-blue-600 dark:hover:text-blue-500"
+          >
+            View code
+          </button>
         </div>
-        <button
-          onClick={handleCodePreview}
-          className="text-sm text-blue-500 hover:text-blue-400 dark:text-blue-600 dark:hover:text-blue-500"
-        >
-          View code
-        </button>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div
       className={`flex gap-4 p-4 relative group ${!isBot && 'bg-gray-700/50 dark:bg-gray-200/50 rounded-lg'}`}
       ref={messageRef}
-      style={{ userSelect: 'none' }}
     >
       <div className="flex-shrink-0">
         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -184,7 +200,7 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {text}
                     </ReactMarkdown>
-                    {index < array.length - 1 && <CodeBlockPlaceholder />}
+                    {index < array.length - 1 && <CodeBlockPlaceholder index={index} />}
                   </React.Fragment>
                 ))}
                 {isTyping && (
@@ -200,7 +216,7 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {text}
                     </ReactMarkdown>
-                    {index < array.length - 1 && <CodeBlockPlaceholder />}
+                    {index < array.length - 1 && <CodeBlockPlaceholder index={index} />}
                   </React.Fragment>
                 ))}
               </>
@@ -239,13 +255,9 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
 
       <CodePreview
         code={currentCode}
-        language={getCodeLanguage(message)}
+        language={currentLanguage}
         isOpen={isCodePreviewOpen}
         onClose={() => setIsCodePreviewOpen(false)}
-        onOpen={() => setIsCodePreviewOpen(true)}
-        className={`transition-transform duration-500 ${
-          isCodePreviewOpen ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
-        }`}
       />
     </div>
   );
