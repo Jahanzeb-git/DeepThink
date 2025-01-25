@@ -82,7 +82,6 @@ export function CodePreview({ code, language = 'typescript', isOpen, onClose }: 
                 margin: 0,
                 borderRadius: '0.375rem',
                 fontSize: '14px',
-                background: '#1a1a1a',
               }}
             >
               {code}
