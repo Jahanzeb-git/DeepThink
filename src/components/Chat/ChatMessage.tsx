@@ -3,7 +3,7 @@ import { Bot, User, Copy, Check, Info, Code, Brain, ImageIcon } from 'lucide-rea
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CodePreview } from './CodePreview';
-import ImageCarousel from '..components/Slideshow';
+import ImageCarousel from './Slideshow';
 
 interface ChatMessageProps {
   message: string;
