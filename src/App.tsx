@@ -14,7 +14,7 @@ interface Message {
   isBot: boolean;
   isTyped: boolean;
   isDeepThinkEnabled: boolean;
-  imageBase64?: string; // Changed from imageUrl to imageBase64
+  imageBase64?: string;
 }
 
 function App() {
@@ -139,7 +139,7 @@ function App() {
           isBot: true,
           isTyped: true,
           isDeepThinkEnabled: false,
-          imageBase64: imageData.output // Use the base64 string from the response
+          imageBase64: imageData.output
         }]);
       } else {
         // Regular chat message
