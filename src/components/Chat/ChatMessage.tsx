@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Bot, User, Copy, Check, Info, Code, Brain, ImageIcon } from 'lucide-react';
+import { Bot, User, Copy, Check, Info, Code, Brain, ImageIcon, Download } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CodePreview } from './CodePreview';
@@ -12,7 +12,7 @@ interface ChatMessageProps {
   onTypingComplete: () => void;
   containerRef: React.RefObject<HTMLDivElement>;
   isDeepThinkEnabled: boolean;
-  imageBase64?: string; // Changed from imageUrl to imageBase64
+  imageBase64?: string;
 }
 
 interface CodeBlock {
@@ -219,9 +219,7 @@ export function ChatMessage({
     >
       {!isBot && (
         <div className="flex-shrink-0">
-          <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center bg-blue-500/20 text-blue-500 dark:bg-blue-500/30 dark:text-blue-400`}
-          >
+          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-500/20 text-blue-500 dark:bg-blue-500/30 dark:text-blue-400">
             <User size={20} />
           </div>
         </div>
@@ -283,15 +281,33 @@ export function ChatMessage({
             {/* Display generated image if available */}
             {imageBase64 && (
               <div className="mt-4 relative group">
-                <img
-                  src={`data:image/jpeg;base64,${imageBase64}`}
-                  alt="Generated image"
-                  className="w-full max-w-2xl rounded-lg shadow-lg"
-                  loading="lazy"
-                />
-                <div className="absolute top-2 left-2 bg-black/50 text-white px-2 py-1 rounded-md text-sm flex items-center">
-                  <ImageIcon size={16} className="mr-1" />
-                  Generated Image
+                <div className="relative">
+                  <img
+                    src={`data:image/jpeg;base64,${imageBase64}`}
+                    alt="Generated image"
+                    className="w-full max-w-2xl rounded-lg shadow-lg"
+                    loading="lazy"
+                  />
+                  <div className="absolute top-2 left-2 bg-black/50 text-white px-2 py-1 rounded-md text-sm flex items-center">
+                    <ImageIcon size={16} className="mr-1" />
+                    Generated Image
+                  </div>
+                </div>
+                <div className="mt-2 flex justify-end space-x-2">
+                  <button
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = `data:image/jpeg;base64,${imageBase64}`;
+                      link.download = `generated-image-${Date.now()}.jpg`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }}
+                    className="inline-flex items-center px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                  >
+                    <Download size={16} className="mr-1.5" />
+                    Download
+                  </button>
                 </div>
               </div>
             )}
