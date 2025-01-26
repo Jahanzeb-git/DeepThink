@@ -24,6 +24,7 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
   const [isTyping, setIsTyping] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [showModelInfo, setShowModelInfo] = useState(false);
+  const [showR1Info, setShowR1Info] = useState(false);
   const [isCodePreviewOpen, setIsCodePreviewOpen] = useState(false);
   const [currentCode, setCurrentCode] = useState('');
   const [currentLanguage, setCurrentLanguage] = useState('typescript');
@@ -31,6 +32,7 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
   const [codeBlocks, setCodeBlocks] = useState<CodeBlock[]>([]);
   const typingRef = useRef<NodeJS.Timeout | null>(null);
   const messageRef = useRef<HTMLDivElement>(null);
+  const r1ButtonRef = useRef<HTMLButtonElement>(null);
 
   // Extract code blocks from message
   const extractCodeBlocks = (text: string): CodeBlock[] => {
@@ -53,6 +55,20 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
   const replaceCodeBlocks = (text: string) => {
     return text.replace(/```(?:\w+)?\n[\s\S]*?```/g, '```code```');
   };
+
+  // Handle click outside for R1 tooltip
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (r1ButtonRef.current && !r1ButtonRef.current.contains(event.target as Node)) {
+        setShowR1Info(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Typing animation with code block detection
   const animateTyping = useCallback(() => {
@@ -191,18 +207,24 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
         <div className="font-medium text-sm text-gray-400 dark:text-gray-600 mb-1 flex items-center">
           {isBot ? 'DeepThink' : 'You'}
           {isDeepThinkEnabled && isBot && (
-            <div className="ml-2 relative inline-flex items-center text-blue-500 dark:text-blue-400 group">
+            <button
+              ref={r1ButtonRef}
+              onClick={() => setShowR1Info(!showR1Info)}
+              className="ml-2 relative inline-flex items-center text-blue-500 dark:text-blue-400 hover:text-blue-400 dark:hover:text-blue-500 transition-colors"
+            >
               <div className="flex items-center">
                 <Brain size={16} className="mr-1" />
                 <span className="text-xs">R1</span>
               </div>
               {/* Tooltip */}
-              <div className="absolute invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-300 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-black rounded-md whitespace-nowrap">
-                Generated with Advanced Reasoning
-                {/* Arrow */}
-                <div className="absolute left-1/2 transform -translate-x-1/2 top-full w-2 h-2 bg-black rotate-45"></div>
-              </div>
-            </div>
+              {showR1Info && (
+                <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-sm text-white bg-black rounded-md whitespace-nowrap shadow-lg">
+                  Generated with Advanced Reasoning model
+                  {/* Arrow */}
+                  <div className="absolute left-1/2 transform -translate-x-1/2 top-full w-2 h-2 bg-black rotate-45"></div>
+                </div>
+              )}
+            </button>
           )}
         </div>
 
