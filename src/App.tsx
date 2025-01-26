@@ -9,11 +9,11 @@ import Terms from './components/terms';
 import LoadingPage from './components/LoadingPage';
 
 interface Message {
-  id: string;  // Add this
+  id: string;
   text: string;
   isBot: boolean;
-  isTyped: boolean;  // Add this
-  isDeepThinkEnabled: boolean;  // Add this
+  isTyped: boolean;
+  isDeepThinkEnabled: boolean;
 }
 
 function App() {
@@ -25,20 +25,27 @@ function App() {
   const MAX_PROMPTS = 5;
 
   const handleSendMessage = useCallback(async (message: string, isDeepThinkEnabled: boolean) => {
-    setMessages((prev) => [...prev, { id: Math.random().toString(36).substring(7), text: message, isBot: false, isTyped: true, isDeepThinkEnabled: false }]);
+    // Add user message
+    setMessages((prev) => [...prev, {
+      id: Math.random().toString(36).substring(7),
+      text: message,
+      isBot: false,
+      isTyped: true,
+      isDeepThinkEnabled: false // User messages don't need this flag
+    }]);
+    
     setIsLoading(true);
 
     const token = localStorage.getItem('token');
     if (!token) {
       if (promptCount >= MAX_PROMPTS) {
-        setMessages((prev) => [
-          ...prev, { 
-        id: Math.random().toString(36).substring(7),
-        text: 'To continue, please login.',
-        isBot: true,
-        isTyped: true,
-        isDeepThinkEnabled: false },
-        ]);
+        setMessages((prev) => [...prev, {
+          id: Math.random().toString(36).substring(7),
+          text: 'To continue, please login.',
+          isBot: true,
+          isTyped: true,
+          isDeepThinkEnabled: false
+        }]);
         setIsLoading(false);
         return;
       }
@@ -65,21 +72,22 @@ function App() {
         throw new Error('No output from the API');
       }
 
-      setMessages((prev) => [
-        ...prev,
-        { text: data.response, isBot: true },
-      ]);
-    } catch (error) {
-      console.error('Error fetching response:', error);
-      setMessages((prev) => [
-        ...prev, { 
+      setMessages((prev) => [...prev, {
         id: Math.random().toString(36).substring(7),
         text: data.response,
         isBot: true,
         isTyped: false,
-        isDeepThinkEnabled
-        },
-      ]);
+        isDeepThinkEnabled // Pass the flag to bot responses
+      }]);
+    } catch (error) {
+      console.error('Error fetching response:', error);
+      setMessages((prev) => [...prev, {
+        id: Math.random().toString(36).substring(7),
+        text: 'Sorry, an error occurred. Please try again.',
+        isBot: true,
+        isTyped: true,
+        isDeepThinkEnabled: false
+      }]);
     } finally {
       setIsLoading(false);
     }
