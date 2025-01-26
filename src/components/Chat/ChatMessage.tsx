@@ -26,7 +26,7 @@ export function ChatMessage({
   isBot, 
   isTyped, 
   onTypingComplete, 
-  containerRef, 
+  containerRef,
   isDeepThinkEnabled,
   imageBase64 
 }: ChatMessageProps) {
