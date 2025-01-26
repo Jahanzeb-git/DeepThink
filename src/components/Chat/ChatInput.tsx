@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { Brain, ArrowUp, Mic, ImageIcon, Upload } from 'lucide-react';
 
 interface ChatInputProps {
-  onSendMessage: (message: string, isDeepThinkEnabled: boolean) => Promise<void>;
+  onSendMessage: (message: string, isDeepThinkEnabled: boolean, isImageMode: boolean) => Promise<void>;
   value: string;
   onChange: (value: string) => void;
   className?: string;
@@ -35,7 +35,7 @@ export default function ChatInput({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (value.trim()) {
-      await onSendMessage(value, isDeepThinkEnabled);
+      await onSendMessage(value, isDeepThinkEnabled, mode === 'image');
       onChange('');
     }
   };
@@ -49,6 +49,7 @@ export default function ChatInput({
 
   const handleModeChange = (newMode: 'chat' | 'image') => {
     setMode(newMode);
+    onChange(''); // Clear input when switching modes
   };
 
   const handleUpload = () => {
