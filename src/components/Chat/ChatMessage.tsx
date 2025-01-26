@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Bot, User, Copy, Check, Info, Code, Brain } from 'lucide-react';
+import { Bot, User, Copy, Check, Info, Code, Brain, ImageIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CodePreview } from './CodePreview';
+import ImageCarousel from './ImageCarousel';
 
 interface ChatMessageProps {
   message: string;
@@ -11,6 +12,7 @@ interface ChatMessageProps {
   onTypingComplete: () => void;
   containerRef: React.RefObject<HTMLDivElement>;
   isDeepThinkEnabled: boolean;
+  imageBase64?: string; // Changed from imageUrl to imageBase64
 }
 
 interface CodeBlock {
@@ -19,7 +21,15 @@ interface CodeBlock {
   language: string;
 }
 
-export function ChatMessage({ message, isBot, isTyped, onTypingComplete, containerRef, isDeepThinkEnabled }: ChatMessageProps) {
+export function ChatMessage({ 
+  message, 
+  isBot, 
+  isTyped, 
+  onTypingComplete, 
+  containerRef, 
+  isDeepThinkEnabled,
+  imageBase64 
+}: ChatMessageProps) {
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -188,6 +198,20 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
     );
   };
 
+  // Special case for image generation welcome message
+  if (message === "Hi, I'm DeepSeek, How can I help you today?" && isBot) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-white dark:text-gray-900 mb-4 md:mb-8 text-center">
+          {message}
+        </h1>
+        <div className="w-full h-64 md:h-96">
+          <ImageCarousel />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`flex gap-4 p-4 relative group ${!isBot && 'bg-gray-700/50 dark:bg-gray-200/50 rounded-lg'}`}
@@ -215,11 +239,9 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
                 <Brain size={16} className="mr-1" />
                 <span className="text-xs">R1</span>
               </div>
-              {/* Tooltip */}
               {showR1Info && (
                 <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-sm text-white bg-black rounded-md whitespace-nowrap shadow-lg">
                   Generated with Advanced Reasoning model
-                  {/* Arrow */}
                   <div className="absolute left-1/2 transform -translate-x-1/2 top-full w-2 h-2 bg-black rotate-45"></div>
                 </div>
               )}
@@ -256,6 +278,22 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
                   </React.Fragment>
                 ))}
               </>
+            )}
+            
+            {/* Display generated image if available */}
+            {imageBase64 && (
+              <div className="mt-4 relative group">
+                <img
+                  src={`data:image/jpeg;base64,${imageBase64}`}
+                  alt="Generated image"
+                  className="w-full max-w-2xl rounded-lg shadow-lg"
+                  loading="lazy"
+                />
+                <div className="absolute top-2 left-2 bg-black/50 text-white px-2 py-1 rounded-md text-sm flex items-center">
+                  <ImageIcon size={16} className="mr-1" />
+                  Generated Image
+                </div>
+              </div>
             )}
           </div>
         </div>
