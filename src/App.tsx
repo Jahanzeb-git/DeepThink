@@ -9,8 +9,11 @@ import Terms from './components/terms';
 import LoadingPage from './components/LoadingPage';
 
 interface Message {
+  id: string;  // Add this
   text: string;
   isBot: boolean;
+  isTyped: boolean;  // Add this
+  isDeepThinkEnabled: boolean;  // Add this
 }
 
 function App() {
@@ -21,16 +24,20 @@ function App() {
   const [promptCount, setPromptCount] = useState(0);
   const MAX_PROMPTS = 5;
 
-  const handleSendMessage = useCallback(async (message: string) => {
-    setMessages((prev) => [...prev, { text: message, isBot: false }]);
+  const handleSendMessage = useCallback(async (message: string, isDeepThinkEnabled: boolean) => {
+    setMessages((prev) => [...prev, { id: Math.random().toString(36).substring(7), text: message, isBot: false, isTyped: true, isDeepThinkEnabled: false }]);
     setIsLoading(true);
 
     const token = localStorage.getItem('token');
     if (!token) {
       if (promptCount >= MAX_PROMPTS) {
         setMessages((prev) => [
-          ...prev,
-          { text: 'To continue, please login.', isBot: true },
+          ...prev, { 
+        id: Math.random().toString(36).substring(7),
+        text: 'To continue, please login.',
+        isBot: true,
+        isTyped: true,
+        isDeepThinkEnabled: false },
         ]);
         setIsLoading(false);
         return;
@@ -65,8 +72,13 @@ function App() {
     } catch (error) {
       console.error('Error fetching response:', error);
       setMessages((prev) => [
-        ...prev,
-        { text: 'Sorry, an error occurred. Please try again.', isBot: true },
+        ...prev, { 
+        id: Math.random().toString(36).substring(7),
+        text: data.response,
+        isBot: true,
+        isTyped: false,
+        isDeepThinkEnabled
+        },
       ]);
     } finally {
       setIsLoading(false);
