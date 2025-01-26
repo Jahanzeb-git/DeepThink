@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ChatMessage } from './ChatMessage';
 import ChatInput from './ChatInput';
 import TagInput from './TagInput';
+import ImageCarousel from './Slideshow';
 import { Brain } from 'lucide-react';
 
 interface Message {
@@ -84,8 +85,8 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
   }, []);
 
   // Handle sending a message
-  const handleSendMessage = async (message: string) => {
-    await onSendMessage(message, isDeepThinkEnabled, false);
+  const handleSendMessage = async (message: string, isDeepThinkEnabled: boolean, isImageMode: boolean) => {
+    await onSendMessage(message, isDeepThinkEnabled, isImageMode);
     setInputValue('');
   };
 
@@ -101,6 +102,9 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
             <h1 className="text-2xl md:text-3xl font-bold text-white dark:text-gray-900 mb-4 md:mb-8 text-center">
               Hi, I'm DeepSeek
             </h1>
+            <div className="w-full h-64 md:h-96">
+              <ImageCarousel /> {/* Add this component */}
+            </div>
             <p className="text-gray-400 dark:text-gray-800 mb-8 md:mb-12 text-center">
               How can I help you today?
             </p>
