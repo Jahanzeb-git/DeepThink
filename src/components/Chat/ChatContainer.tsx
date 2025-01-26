@@ -15,7 +15,7 @@ interface Message {
 interface ChatContainerProps {
   messages: Message[];
   isLoading: boolean;
-  onSendMessage: (message: string, isDeepThinkEnabled: boolean) => Promise<void>;
+  onSendMessage: (message: string, isDeepThinkEnabled: boolean, isImageMode: boolean) => Promise<void>;
 }
 
 export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContainerProps) {
@@ -85,7 +85,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
 
   // Handle sending a message
   const handleSendMessage = async (message: string) => {
-    await onSendMessage(message, isDeepThinkEnabled);
+    await onSendMessage(message, isDeepThinkEnabled, false);
     setInputValue('');
   };
 
