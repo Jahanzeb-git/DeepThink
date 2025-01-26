@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import HistorySidebar from './components/Sidebar/Sidebar';
 import { ChatContainer } from './components/Chat/ChatContainer';
@@ -18,11 +18,39 @@ interface Message {
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isDark, setIsDark] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [promptCount, setPromptCount] = useState(0);
   const MAX_PROMPTS = 5;
+
+  // Initialize theme based on system preference and localStorage
+  const [isDark, setIsDark] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme !== null) {
+      return savedTheme === 'dark';
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  // Apply theme effect
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDark);
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
+
+  // Listen for system theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === null) {
+        setIsDark(e.matches);
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   const handleSendMessage = useCallback(async (message: string, isDeepThinkEnabled: boolean) => {
     // Add user message
@@ -100,8 +128,7 @@ function App() {
 
   const toggleTheme = useCallback(() => {
     setIsDark((prev) => !prev);
-    document.documentElement.classList.toggle('dark', !isDark);
-  }, [isDark]);
+  }, []);
 
   const toggleSidebar = useCallback(() => {
     setIsSidebarOpen((prev) => !prev);
@@ -154,15 +181,3 @@ function App() {
 }
 
 export default App;
-
-
-
-
-
-
-
-
-
-
-
-
