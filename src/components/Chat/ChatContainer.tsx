@@ -9,7 +9,7 @@ interface Message {
   text: string;
   isBot: boolean;
   isTyped: boolean;
-  isDeepThinkEnabled?: boolean; // Add this field
+  isDeepThinkEnabled: boolean;
 }
 
 interface ChatContainerProps {
@@ -84,8 +84,8 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
   }, []);
 
   // Handle sending a message
-  const handleSendMessage = async (message: string, deepThinkEnabled: boolean) => {
-    await onSendMessage(message, deepThinkEnabled);
+  const handleSendMessage = async (message: string) => {
+    await onSendMessage(message, isDeepThinkEnabled);
     setInputValue('');
   };
 
@@ -139,7 +139,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
                     msg.isTyped = true;
                   }}
                   containerRef={messagesContainerRef}
-                  isDeepThinkEnabled={msg.isDeepThinkEnabled || false}
+                  isDeepThinkEnabled={msg.isDeepThinkEnabled}
                 />
               ))}
               {isLoading && (
