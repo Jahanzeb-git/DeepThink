@@ -14,6 +14,7 @@ interface Message {
   isBot: boolean;
   isTyped: boolean;
   isDeepThinkEnabled: boolean;
+  imageBase64?: string; // Changed from imageUrl to imageBase64
 }
 
 function App() {
@@ -52,14 +53,14 @@ function App() {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  const handleSendMessage = useCallback(async (message: string, isDeepThinkEnabled: boolean) => {
+  const handleSendMessage = useCallback(async (message: string, isDeepThinkEnabled: boolean, isImageMode: boolean) => {
     // Add user message
     setMessages((prev) => [...prev, {
       id: Math.random().toString(36).substring(7),
       text: message,
       isBot: false,
       isTyped: true,
-      isDeepThinkEnabled: false // User messages don't need this flag
+      isDeepThinkEnabled: false
     }]);
     
     setIsLoading(true);
@@ -81,37 +82,99 @@ function App() {
     }
 
     try {
-      const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        body: JSON.stringify({ prompt: message }),
-      });
+      if (isImageMode) {
+        // Add initial loading message
+        setMessages((prev) => [...prev, {
+          id: Math.random().toString(36).substring(7),
+          text: "I'm generating your image. This usually takes about 4 minutes. I'll keep you updated on the progress...",
+          isBot: true,
+          isTyped: true,
+          isDeepThinkEnabled: false
+        }]);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        // Progress updates
+        const progressUpdates = [
+          "Analyzing your description and planning the image...",
+          "Creating initial composition...",
+          "Adding details and refining the image...",
+          "Applying final touches and optimizing quality..."
+        ];
+
+        // Start image generation request
+        const imageResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/image_generation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify({ prompt: message }),
+        });
+
+        if (!imageResponse.ok) {
+          throw new Error(`HTTP error! Status: ${imageResponse.status}`);
+        }
+
+        // Show progress updates while waiting for the response
+        for (const update of progressUpdates) {
+          await new Promise(resolve => setTimeout(resolve, 45000)); // 45 seconds between updates
+          setMessages((prev) => [...prev, {
+            id: Math.random().toString(36).substring(7),
+            text: update,
+            isBot: true,
+            isTyped: true,
+            isDeepThinkEnabled: false
+          }]);
+        }
+
+        const imageData = await imageResponse.json();
+
+        if (imageData.error) {
+          throw new Error(imageData.error);
+        }
+
+        // Add the generated image message
+        setMessages((prev) => [...prev, {
+          id: Math.random().toString(36).substring(7),
+          text: 'Here is your generated image:',
+          isBot: true,
+          isTyped: true,
+          isDeepThinkEnabled: false,
+          imageBase64: imageData.output // Use the base64 string from the response
+        }]);
+      } else {
+        // Regular chat message
+        const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify({ prompt: message }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.response) {
+          throw new Error('No output from the API');
+        }
+
+        setMessages((prev) => [...prev, {
+          id: Math.random().toString(36).substring(7),
+          text: data.response,
+          isBot: true,
+          isTyped: false,
+          isDeepThinkEnabled
+        }]);
       }
-
-      const data = await response.json();
-
-      if (!data.response) {
-        throw new Error('No output from the API');
-      }
-
-      setMessages((prev) => [...prev, {
-        id: Math.random().toString(36).substring(7),
-        text: data.response,
-        isBot: true,
-        isTyped: false,
-        isDeepThinkEnabled // Pass the flag to bot responses
-      }]);
     } catch (error) {
-      console.error('Error fetching response:', error);
+      console.error('Error:', error);
       setMessages((prev) => [...prev, {
         id: Math.random().toString(36).substring(7),
-        text: 'Sorry, an error occurred. Please try again.',
+        text: `Sorry, an error occurred: ${error.message}`,
         isBot: true,
         isTyped: true,
         isDeepThinkEnabled: false
@@ -179,5 +242,3 @@ function App() {
     </Router>
   );
 }
-
-export default App;
