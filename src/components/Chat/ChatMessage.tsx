@@ -199,7 +199,7 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
             ? 'bg-emerald-500/20 text-emerald-500 dark:bg-emerald-500/30 dark:text-emerald-400' 
             : 'bg-blue-500/20 text-blue-500 dark:bg-blue-500/30 dark:text-blue-400'
         }`}>
-          {isBot ? <Bot size={20} /> : <User size={20} />}
+          {<User size={20} />}
         </div>
       </div>
       
