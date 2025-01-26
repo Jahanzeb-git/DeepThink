@@ -194,15 +194,10 @@ export function ChatMessage({ message, isBot, isTyped, onTypingComplete, contain
       ref={messageRef}
     >
       <div className="flex-shrink-0">
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-          isBot 
-            ? 'bg-emerald-500/20 text-emerald-500 dark:bg-emerald-500/30 dark:text-emerald-400' 
-            : 'bg-blue-500/20 text-blue-500 dark:bg-blue-500/30 dark:text-blue-400'
-        }`}>
-          {<User size={20} />}
+        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-500/20 text-blue-500 dark:bg-blue-500/30 dark:text-blue-400">
+          <User size={20} />
         </div>
       </div>
-      
       <div className="flex-1 overflow-hidden">
         <div className="font-medium text-sm text-gray-400 dark:text-gray-600 mb-1 flex items-center">
           {isBot ? 'DeepThink' : 'You'}
