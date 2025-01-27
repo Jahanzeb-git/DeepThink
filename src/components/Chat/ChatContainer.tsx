@@ -37,24 +37,18 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
     }
   }, []);
 
-  // Check if any message is currently being typed
   const isAnyMessageTyping = messages.some(msg => !msg.isTyped);
 
-  // Manage typing scroll interval
   useEffect(() => {
-    // Clear any existing interval
     if (typingScrollIntervalRef.current) {
       clearInterval(typingScrollIntervalRef.current);
     }
 
-    // If messages are being typed and user is not scrolling
     if (isAnyMessageTyping && !isUserScrolling) {
-      // Start interval to scroll every 500ms
       typingScrollIntervalRef.current = setInterval(() => {
         scrollToBottom(true);
       }, 500);
 
-      // Cleanup interval when component unmounts or conditions change
       return () => {
         if (typingScrollIntervalRef.current) {
           clearInterval(typingScrollIntervalRef.current);
@@ -63,14 +57,12 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
     }
   }, [isAnyMessageTyping, isUserScrolling, scrollToBottom]);
 
-  // Scroll to bottom when new messages are added and not typing
   useEffect(() => {
     if (!isAnyMessageTyping) {
       scrollToBottom();
     }
   }, [messages, isAnyMessageTyping, scrollToBottom]);
 
-  // Scroll event handling
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
@@ -86,7 +78,6 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
     };
   }, []);
 
-  // Handle sending a message
   const handleSendMessage = async (message: string, isDeepThinkEnabled: boolean, isImageMode: boolean) => {
     await onSendMessage(message, isDeepThinkEnabled, isImageMode);
     setInputValue('');
@@ -94,6 +85,10 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
 
   const handleAddTag = (tag: string) => {
     setInputValue(tag);
+  };
+
+  const handleModeChange = (newMode: 'text' | 'image') => {
+    setMode(newMode);
   };
 
   return (
@@ -104,12 +99,17 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
             <h1 className="text-2xl md:text-3xl font-bold text-white dark:text-gray-900 mb-4 md:mb-8 text-center">
               Hi, I'm DeepSeek
             </h1>
-            <div className="w-full h-64 md:h-96">
-              <ImageCarousel />
-            </div>
-            <p className="text-gray-400 dark:text-gray-800 mb-8 md:mb-12 text-center">
-              How can I help you today?
-            </p>
+            
+            {mode === 'image' ? (
+              <div className="w-full h-64 md:h-96">
+                <ImageCarousel />
+              </div>
+            ) : (
+              <p className="text-gray-400 dark:text-gray-800 mb-8 md:mb-12 text-center">
+                How can I help you today?
+              </p>
+            )}
+
             <div className="w-full max-w-3xl px-4 md:px-8">
               <ChatInput
                 onSendMessage={handleSendMessage}
@@ -117,6 +117,8 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
                 onChange={setInputValue}
                 isDeepThinkEnabled={isDeepThinkEnabled}
                 onToggleDeepThink={() => setIsDeepThinkEnabled(prev => !prev)}
+                onModeChange={handleModeChange}
+                mode={mode}
               />
               <div className="mt-4 flex justify-center">
                 <TagInput onAddTag={handleAddTag} />
@@ -160,7 +162,6 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
               <div ref={messagesEndRef} />
             </div>
             <div className="p-4 bg-gray-800/95 dark:bg-gray-100/95 backdrop-blur-sm">
-              {/* Fade Area */}
               <div className="absolute top-[-30px] left-0 right-0 h-8 bg-gradient-to-t from-gray-800/95 dark:from-gray-100/95 to-transparent pointer-events-none">
               </div>
               <div className="max-w-3xl mx-auto">
@@ -170,6 +171,8 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
                   onChange={setInputValue}
                   isDeepThinkEnabled={isDeepThinkEnabled}
                   onToggleDeepThink={() => setIsDeepThinkEnabled(prev => !prev)}
+                  onModeChange={handleModeChange}
+                  mode={mode}
                 />
               </div>
             </div>
