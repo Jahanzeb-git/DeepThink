@@ -97,7 +97,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-gray-800 dark:bg-gray-100 relative">
+    <div className="flex-1 flex flex-col h-full bg-[#2e2726] dark:bg-gray-100 relative">
       <div className="absolute inset-0 flex flex-col">
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
