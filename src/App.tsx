@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import HistorySidebar from './components/Sidebar/Sidebar';
 import { ChatContainer } from './components/Chat/ChatContainer';
@@ -17,22 +17,11 @@ interface Message {
   imageBase64?: string;
 }
 
-const PROCESSING_MESSAGES = [
-  "I'm generating your image. This usually takes about 4 minutes. I'll keep you updated on the progress...",
-  "Analyzing your description and planning the image...",
-  "Creating initial composition...",
-  "Adding details and refining the image...",
-  "Applying final touches and optimizing quality..."
-];
-
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [promptCount, setPromptCount] = useState(0);
-  const [currentProcessingIndex, setCurrentProcessingIndex] = useState(0);
-  const processingMessageId = useRef<string>('');
-  const processingInterval = useRef<NodeJS.Timeout | null>(null);
   const MAX_PROMPTS = 5;
 
   // Initialize theme based on system preference and localStorage
@@ -64,53 +53,6 @@ function App() {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  // Clean up interval on unmount
-  useEffect(() => {
-    return () => {
-      if (processingInterval.current) {
-        clearInterval(processingInterval.current);
-      }
-    };
-  }, []);
-
-  // Update processing message
-  const updateProcessingMessage = useCallback((newText: string) => {
-    setMessages(prev => prev.map(msg => 
-      msg.id === processingMessageId.current
-        ? {
-            ...msg,
-            text: newText
-          }
-        : msg
-    ));
-  }, []);
-
-  // Start processing message rotation
-  const startProcessingMessages = useCallback(() => {
-    const messageId = Math.random().toString(36).substring(7);
-    processingMessageId.current = messageId;
-    
-    // Add initial message
-    setMessages(prev => [...prev, {
-      id: messageId,
-      text: PROCESSING_MESSAGES[0],
-      isBot: true,
-      isTyped: true,
-      isDeepThinkEnabled: false
-    }]);
-    
-    setCurrentProcessingIndex(0);
-    
-    // Set up interval to rotate through messages
-    processingInterval.current = setInterval(() => {
-      setCurrentProcessingIndex(prevIndex => {
-        const nextIndex = (prevIndex + 1) % (PROCESSING_MESSAGES.length - 1) + 1;
-        updateProcessingMessage(PROCESSING_MESSAGES[nextIndex]);
-        return nextIndex;
-      });
-    }, 500);
-  }, [updateProcessingMessage]);
-
   const handleSendMessage = useCallback(async (message: string, isDeepThinkEnabled: boolean, isImageMode: boolean) => {
     // Add user message
     setMessages((prev) => [...prev, {
@@ -141,8 +83,18 @@ function App() {
 
     try {
       if (isImageMode) {
-        // Start the processing message rotation
-        startProcessingMessages();
+        // Add initial message with all progress updates
+        const initialMessage = [
+          "I'm generating your image. This usually takes about 4 minutes. I'll keep you updated on the progress...","..."
+        ];
+
+        setMessages((prev) => [...prev, {
+          id: Math.random().toString(36).substring(7),
+          text: initialMessage,
+          isBot: true,
+          isTyped: true,
+          isDeepThinkEnabled: false
+        }]);
 
         // Start image generation request
         const imageResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/image_generation', {
@@ -154,12 +106,6 @@ function App() {
           body: JSON.stringify({ prompt: message }),
         });
 
-        // Clear the processing message interval
-        if (processingInterval.current) {
-          clearInterval(processingInterval.current);
-          processingInterval.current = null;
-        }
-
         if (!imageResponse.ok) {
           throw new Error(`HTTP error! Status: ${imageResponse.status}`);
         }
@@ -169,9 +115,6 @@ function App() {
         if (imageData.error) {
           throw new Error(imageData.error);
         }
-
-        // Remove the processing message
-        setMessages(prev => prev.filter(msg => msg.id !== processingMessageId.current));
 
         // Add the generated image message
         setMessages((prev) => [...prev, {
@@ -183,7 +126,7 @@ function App() {
           imageBase64: imageData.output
         }]);
       } else {
-        // Regular chat message handling...
+        // Regular chat message
         const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/chat', {
           method: 'POST',
           headers: {
@@ -213,13 +156,6 @@ function App() {
       }
     } catch (error) {
       console.error('Error:', error);
-      // Clear the processing message interval if there's an error
-      if (processingInterval.current) {
-        clearInterval(processingInterval.current);
-        processingInterval.current = null;
-      }
-      // Remove the processing message if it exists
-      setMessages(prev => prev.filter(msg => msg.id !== processingMessageId.current));
       setMessages((prev) => [...prev, {
         id: Math.random().toString(36).substring(7),
         text: `Sorry, an error occurred: ${error.message}`,
@@ -230,9 +166,8 @@ function App() {
     } finally {
       setIsLoading(false);
     }
-  }, [promptCount, startProcessingMessages]);
+  }, [promptCount]);
 
-  // Rest of the component remains the same...
   const handleNewChat = useCallback(() => {
     setMessages([]);
     setIsSidebarOpen(false);
