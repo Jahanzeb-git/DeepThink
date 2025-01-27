@@ -53,10 +53,10 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
             <div className="flex-1 flex flex-col items-center justify-center" style={{ minHeight: '210px' }}>
               {mode === 'text' ? (
                 <>
-                  <h1 className="text-2xl md:text-3xl font-bold text-white dark:text-gray-900 mb-4 md:mb-8 text-center">
+                  <h1 className="text-2xl md:text-3xl font-bold text-white dark:text-gray-900 mb-4 md:mb-8 text-center transition-all duration-500 ease-in-out">
                     Hi, I'm DeepSeek
                   </h1>
-                  <p className="text-gray-400 dark:text-gray-800 text-center">
+                  <p className="text-gray-400 dark:text-gray-800 text-center transition-all duration-500 ease-in-out">
                     How can I help you today?
                   </p>
                 </>
