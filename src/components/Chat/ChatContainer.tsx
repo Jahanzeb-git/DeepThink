@@ -50,7 +50,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col justify-between p-4 md:p-8">
             {/* Content Area with fixed height */}
-            <div className="flex-1 flex flex-col items-center justify-center" style={{ minHeight: '250px' }}>
+            <div className="flex-1 flex flex-col items-center justify-center" style={{ minHeight: '210px' }}>
               {mode === 'text' ? (
                 <>
                   <h1 className="text-2xl md:text-3xl font-bold text-white dark:text-gray-900 mb-4 md:mb-8 text-center">
