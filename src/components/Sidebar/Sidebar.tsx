@@ -155,7 +155,7 @@ const HistorySidebar = () => {
     }, {});
 
     return (
-        <div className="p-4 bg-gray-900 h-full text-white flex flex-col relative">
+         <div className="p-4 bg-white dark:bg-gray-900 h-full text-gray-900 dark:text-white flex flex-col relative">
             <div className="mb-6">
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent">
                     Deepthink
@@ -177,16 +177,16 @@ const HistorySidebar = () => {
             <div className="flex-1 overflow-y-auto space-y-6">
                 {history.length === 0 ? (
                     <div className="flex items-center justify-center h-full">
-                        <p className="text-gray-400 text-base">No History Found. Chat to Continue</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-base">No History Found. Chat to Continue</p>
                     </div>
                 ) : (
                     Object.entries(groupedHistory).map(([date, items]) => (
                     <div key={date} className="space-y-1">
-                        <h3 className="text-xs text-gray-400 font-medium mb-2 px-2">{date}</h3>
+                        <h3 className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-2 px-2">{date}</h3>
                         {items.map((item, index) => (
                             <div
                                 key={index}
-                                className={`group relative p-2.5 rounded-md hover:bg-gray-800 transition-all duration-200 
+                                className={`group relative p-2.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 
                                          ${mounted ? 'translate-x-0 opacity-100' : '-translate-x-4 opacity-0'}`}
                                 style={{ transitionDelay: `${index * 100}ms` }}
                             >
@@ -201,13 +201,13 @@ const HistorySidebar = () => {
                                                 handleRename(index);
                                             }
                                         }}
-                                        className="w-full bg-gray-700 text-white px-3 py-1.5 rounded-md outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-base"
+                                        className="w-full bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-1.5 rounded-md outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-base"
                                         autoFocus
                                     />
                                 ) : (
                                     <div className="flex flex-col">
                                         <button
-                                            className="text-left flex-1 text-white font-medium text-base w-full pr-8 mb-1"
+                                            className="text-left flex-1 text-gray-900 dark:text-white font-medium text-base w-full pr-8 mb-1"
                                             onClick={() => console.log(`Clicked session ${item.session_number}`)}
                                         >
                                             {item.prompt}
@@ -218,9 +218,9 @@ const HistorySidebar = () => {
                                 <div className="absolute right-2 top-1/2 -translate-y-1/2">
                                     <button
                                         onClick={(e) => handleOpenDropdown(index, e)}
-                                        className="p-1.5 rounded-md hover:bg-gray-700 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                                        className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 opacity-0 group-hover:opacity-100"
                                     >
-                                        <MoreHorizontal className="w-4 h-4 text-gray-400" />
+                                        <MoreHorizontal className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                                     </button>
                                 </div>
                             </div>
@@ -230,8 +230,7 @@ const HistorySidebar = () => {
                 )}
             </div>
             
-            {/* User component at the bottom */}
-            <div className="mt-4 border-t border-gray-800 pt-4">
+            <div className="mt-4 border-t border-gray-200 dark:border-gray-800 pt-4">
                 <User />
             </div>
 
@@ -243,18 +242,18 @@ const HistorySidebar = () => {
                         top: `${menuPositionRef.current.top}px`,
                         left: `${menuPositionRef.current.left - 150}px`,
                     }}
-                    className="py-1.5 w-36 bg-gray-800 rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 z-50 
+                    className="py-1.5 w-36 bg-white dark:bg-gray-800 rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 z-50 
                              animate-in fade-in duration-200 scale-95 origin-top-right"
                 >
                     <button
                         onClick={() => startRename(activeDropdown)}
-                        className="block w-full text-left px-4 py-2 text-base text-gray-300 hover:bg-gray-700 transition-colors"
+                        className="block w-full text-left px-4 py-2 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
                         Rename
                     </button>
                     <button
                         onClick={() => handleDeletePrompt(activeDropdown)}
-                        className="block w-full text-left px-4 py-2 text-base text-red-400 hover:bg-gray-700 transition-colors"
+                        className="block w-full text-left px-4 py-2 text-base text-red-500 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
                         Delete
                     </button>
