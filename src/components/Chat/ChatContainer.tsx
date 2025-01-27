@@ -11,6 +11,7 @@ interface Message {
   isBot: boolean;
   isTyped: boolean;
   isDeepThinkEnabled: boolean;
+  imageBase64?: string;
 }
 
 interface ChatContainerProps {
@@ -103,7 +104,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
               Hi, I'm DeepSeek
             </h1>
             <div className="w-full h-64 md:h-96">
-              <ImageCarousel /> {/* Add this component */}
+              <ImageCarousel />
             </div>
             <p className="text-gray-400 dark:text-gray-800 mb-8 md:mb-12 text-center">
               How can I help you today?
@@ -144,6 +145,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
                   }}
                   containerRef={messagesContainerRef}
                   isDeepThinkEnabled={msg.isDeepThinkEnabled}
+                  imageBase64={msg.imageBase64}
                 />
               ))}
               {isLoading && (
