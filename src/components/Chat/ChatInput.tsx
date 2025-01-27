@@ -67,7 +67,7 @@ export default function ChatInput({
   return (
     <form
       onSubmit={handleSubmit}
-      className="relative bg-[#584b49] dark:bg-gray-300 rounded-3xl border border-[#584b49] dark:border-gray-300 p-4"
+      className="relative bg-gray-700 dark:bg-gray-300 rounded-3xl border border-gray-700 dark:border-gray-300 p-4"
     >
       <div className="relative">
         <textarea
