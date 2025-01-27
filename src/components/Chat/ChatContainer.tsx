@@ -78,7 +78,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
                 onModeChange={handleModeChange}
                 mode={mode}
               />
-              <div className="mt-4 flex justify-center">>
+              <div className="mt-4 flex justify-center">
                 <TagInput onAddTag={handleAddTag} />
               </div>
             </div>
