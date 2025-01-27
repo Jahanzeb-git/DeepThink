@@ -8,6 +8,8 @@ interface ChatInputProps {
   className?: string;
   isDeepThinkEnabled: boolean;
   onToggleDeepThink: () => void;
+  onModeChange: (mode: 'text' | 'image') => void;
+  mode: 'text' | 'image';
 }
 
 export default function ChatInput({
@@ -16,9 +18,10 @@ export default function ChatInput({
   onChange,
   className = '',
   isDeepThinkEnabled,
-  onToggleDeepThink
+  onToggleDeepThink,
+  onModeChange,
+  mode
 }: ChatInputProps) {
-  const [mode, setMode] = React.useState<'chat' | 'image'>('chat');
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -47,8 +50,9 @@ export default function ChatInput({
     }
   };
 
-  const handleModeChange = (newMode: 'chat' | 'image') => {
-    setMode(newMode);
+  const handleModeChange = () => {
+    const newMode = mode === 'text' ? 'image' : 'text';
+    onModeChange(newMode);
     onChange(''); // Clear input when switching modes
   };
 
@@ -76,7 +80,7 @@ export default function ChatInput({
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={
-            mode === 'chat'
+            mode === 'text'
               ? `Message DeepSeek${isDeepThinkEnabled ? ' with advanced reasoning...' : '...'}`
               : "Describe the image you want to generate..."
           }
@@ -105,7 +109,7 @@ export default function ChatInput({
             </button>
             <button
               type="button"
-              onClick={() => handleModeChange(mode === 'chat' ? 'image' : 'chat')}
+              onClick={handleModeChange}
               className={`p-2 rounded-lg transition-all duration-200 flex items-center gap-2
                 ${mode === 'image'
                   ? 'bg-purple-500/20 text-purple-500' 
