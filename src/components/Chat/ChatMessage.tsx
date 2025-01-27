@@ -40,9 +40,46 @@ export function ChatMessage({
   const [currentLanguage, setCurrentLanguage] = useState('typescript');
   const [isTypingCode, setIsTypingCode] = useState(false);
   const [codeBlocks, setCodeBlocks] = useState<CodeBlock[]>([]);
+  const [currentProgressIndex, setCurrentProgressIndex] = useState(0);
+  const progressUpdateRef = useRef<NodeJS.Timeout | null>(null);
   const typingRef = useRef<NodeJS.Timeout | null>(null);
   const messageRef = useRef<HTMLDivElement>(null);
   const r1ButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Progress update messages
+  const progressUpdates = [
+    "Analyzing your description and planning the image...",
+    "Creating initial composition...",
+    "Adding details and refining the image...",
+    "Applying final touches and optimizing quality..."
+  ];
+
+  // Handle progress updates for image generation
+  useEffect(() => {
+    if (isBot && message.includes("I'm generating your image")) {
+      const initialMessage = "I'm generating your image. This usually takes about 4 minutes. I'll keep you updated on the progress...";
+      setDisplayedText(initialMessage);
+
+      // Start progress updates after 500ms
+      const startProgressUpdates = () => {
+        progressUpdateRef.current = setInterval(() => {
+          setCurrentProgressIndex(prev => {
+            const nextIndex = (prev + 1) % progressUpdates.length;
+            setDisplayedText(`${initialMessage}\n\n${progressUpdates[nextIndex]}`);
+            return nextIndex;
+          });
+        }, 500);
+      };
+
+      setTimeout(startProgressUpdates, 500);
+
+      return () => {
+        if (progressUpdateRef.current) {
+          clearInterval(progressUpdateRef.current);
+        }
+      };
+    }
+  }, [isBot, message]);
 
   // Extract code blocks from message
   const extractCodeBlocks = (text: string): CodeBlock[] => {
@@ -280,7 +317,7 @@ export function ChatMessage({
             
             {/* Display generated image if available */}
             {imageBase64 && (
-              <div className="mt-4 relative group">
+              <div className="mt-4 relative">
                 <div className="relative">
                   <img
                     src={`data:image/jpeg;base64,${imageBase64}`}
@@ -292,22 +329,6 @@ export function ChatMessage({
                     <ImageIcon size={16} className="mr-1" />
                     Generated Image
                   </div>
-                </div>
-                <div className="mt-2 flex justify-end space-x-2">
-                  <button
-                    onClick={() => {
-                      const link = document.createElement('a');
-                      link.href = `data:image/jpeg;base64,${imageBase64}`;
-                      link.download = `generated-image-${Date.now()}.jpg`;
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                    }}
-                    className="inline-flex items-center px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
-                  >
-                    <Download size={16} className="mr-1.5" />
-                    Download
-                  </button>
                 </div>
               </div>
             )}
@@ -323,6 +344,22 @@ export function ChatMessage({
             >
               <Info size={16} />
             </button>
+            {imageBase64 && (
+              <button
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = `data:image/jpeg;base64,${imageBase64}`;
+                  link.download = `generated-image-${Date.now()}.jpg`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+                className="p-1.5 rounded-md transition-colors duration-200 text-gray-400 hover:text-gray-300 dark:text-gray-500 dark:hover:text-gray-600"
+                aria-label="Download image"
+              >
+                <Download size={16} />
+              </button>
+            )}
             <button
               onClick={copyToClipboard}
               className={`p-1.5 rounded-md transition-colors duration-200 
