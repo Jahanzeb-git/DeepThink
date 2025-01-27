@@ -6,7 +6,7 @@ import { CodePreview } from './CodePreview';
 import ImageCarousel from './Slideshow';
 
 interface ChatMessageProps {
-  message: string;
+  message: string | string[];
   isBot: boolean;
   isTyped: boolean;
   onTypingComplete: () => void;
@@ -49,14 +49,13 @@ export function ChatMessage({
   // Progress update messages
   const progressUpdates = [
     "...","..."
-
   ];
 
   // Handle progress updates for image generation
   useEffect(() => {
-    if (isBot && message.includes("I'm generating your image")) {
+    if (isBot && Array.isArray(message) && message[0]?.includes("I'm generating your image")) {
       // Set initial message
-      const initialMessage = "I'm generating your image. This usually takes about 4 minutes. I'll keep you updated on the progress...";
+      const initialMessage = message[0];
       setDisplayedText(initialMessage);
 
       // Clear any existing interval
@@ -125,14 +124,16 @@ export function ChatMessage({
   // Typing animation with code block detection
   const animateTyping = useCallback(() => {
     if (!isBot || isTyped) {
-      setDisplayedText(replaceCodeBlocks(message));
-      setCodeBlocks(extractCodeBlocks(message));
+      const messageText = Array.isArray(message) ? message.join('\n') : message;
+      setDisplayedText(replaceCodeBlocks(messageText));
+      setCodeBlocks(extractCodeBlocks(messageText));
       return;
     }
 
     setIsTyping(true);
+    const messageText = Array.isArray(message) ? message.join('\n') : message;
     let currentIndex = 0;
-    const textLength = message.length;
+    const textLength = messageText.length;
     let inCodeBlock = false;
     let codeBlockStart = -1;
     let tempCodeBlocks: CodeBlock[] = [];
@@ -140,7 +141,7 @@ export function ChatMessage({
     const typeNextChar = () => {
       if (currentIndex < textLength) {
         // Check for code block markers
-        if (message.slice(currentIndex).startsWith('```')) {
+        if (messageText.slice(currentIndex).startsWith('```')) {
           if (!inCodeBlock) {
             // Starting a code block
             inCodeBlock = true;
@@ -152,7 +153,7 @@ export function ChatMessage({
             setIsTypingCode(false);
             
             // Extract and add the code block
-            const codeBlockText = message.slice(codeBlockStart, currentIndex + 3);
+            const codeBlockText = messageText.slice(codeBlockStart, currentIndex + 3);
             const blocks = extractCodeBlocks(codeBlockText);
             if (blocks.length > 0) {
               tempCodeBlocks = [...tempCodeBlocks, blocks[0]];
@@ -162,11 +163,11 @@ export function ChatMessage({
           currentIndex += 3; // Skip the ```
           
           // Update displayed text with placeholder
-          setDisplayedText(replaceCodeBlocks(message.slice(0, currentIndex)));
+          setDisplayedText(replaceCodeBlocks(messageText.slice(0, currentIndex)));
         } else {
           currentIndex++;
           if (!inCodeBlock) {
-            setDisplayedText(replaceCodeBlocks(message.slice(0, currentIndex)));
+            setDisplayedText(replaceCodeBlocks(messageText.slice(0, currentIndex)));
           }
         }
         
@@ -201,7 +202,8 @@ export function ChatMessage({
   // Copy message to clipboard with feedback
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(message);
+      const textToCopy = Array.isArray(message) ? message.join('\n') : message;
+      await navigator.clipboard.writeText(textToCopy);
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
@@ -253,6 +255,8 @@ export function ChatMessage({
       </div>
     );
   }
+
+  const messageText = Array.isArray(message) ? message.join('\n') : message;
 
   return (
     <div
@@ -309,7 +313,7 @@ export function ChatMessage({
               </>
             ) : (
               <>
-                {message.split(/```(?:\w+)?\n[\s\S]*?```/).map((text, index, array) => (
+                {messageText.split(/```(?:\w+)?\n[\s\S]*?```/).map((text, index, array) => (
                   <React.Fragment key={index}>
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {text}
