@@ -23,13 +23,16 @@ interface ChatContainerProps {
 export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContainerProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const typingScrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [inputValue, setInputValue] = useState('');
-  const [isUserScrolling, setIsUserScrolling] = useState(false);
   const [isDeepThinkEnabled, setIsDeepThinkEnabled] = useState(false);
   const [mode, setMode] = useState<'text' | 'image'>('text');
 
-  // ... [previous scroll and typing logic remains the same]
+  // Scroll to bottom whenever messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isLoading]);
 
   const handleSendMessage = async (message: string, isDeepThinkEnabled: boolean, isImageMode: boolean) => {
     await onSendMessage(message, isDeepThinkEnabled, isImageMode);
