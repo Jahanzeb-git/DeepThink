@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import { MoreHorizontal, Loader2 } from 'lucide-react';
 import User from './user'
 
-
 const HistorySidebar = () => {
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -40,7 +39,6 @@ const HistorySidebar = () => {
         const date = new Date(dateString);
         const now = new Date();
         
-        // Reset time portion for accurate day comparison
         const dateWithoutTime = new Date(date.getFullYear(), date.getMonth(), date.getDate());
         const nowWithoutTime = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         
@@ -155,7 +153,7 @@ const HistorySidebar = () => {
     }, {});
 
     return (
-         <div className="p-4 bg-white dark:bg-gray-900 h-full text-gray-900 dark:text-white flex flex-col relative">
+        <div className="p-4 bg-gray-50 dark:bg-gray-900 h-full text-gray-900 dark:text-white flex flex-col relative">
             <div className="mb-6">
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent">
                     Deepthink
@@ -207,7 +205,7 @@ const HistorySidebar = () => {
                                 ) : (
                                     <div className="flex flex-col">
                                         <button
-                                            className="text-left flex-1 text-gray-900 dark:text-white font-medium text-base w-full pr-8 mb-1"
+                                            className="text-left flex-1 text-gray-800 dark:text-white font-medium text-base w-full pr-8 mb-1"
                                             onClick={() => console.log(`Clicked session ${item.session_number}`)}
                                         >
                                             {item.prompt}
@@ -242,7 +240,7 @@ const HistorySidebar = () => {
                         top: `${menuPositionRef.current.top}px`,
                         left: `${menuPositionRef.current.left - 150}px`,
                     }}
-                    className="py-1.5 w-36 bg-white dark:bg-gray-800 rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 z-50 
+                    className="py-1.5 w-36 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 z-50 
                              animate-in fade-in duration-200 scale-95 origin-top-right"
                 >
                     <button
@@ -253,7 +251,7 @@ const HistorySidebar = () => {
                     </button>
                     <button
                         onClick={() => handleDeletePrompt(activeDropdown)}
-                        className="block w-full text-left px-4 py-2 text-base text-red-500 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        className="block w-full text-left px-4 py-2 text-base text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
                         Delete
                     </button>
