@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
+import React, { useState, useRef } from 'react';
+import { motion, useMotionValue } from 'framer-motion';
 
 const images = [
   'https://example.com/image1.jpg',
@@ -28,13 +28,13 @@ const ImageCarousel = () => {
       ref={carouselRef}
       className="w-full h-full flex items-center justify-center overflow-hidden relative"
     >
-      <div className="flex items-center justify-center w-full max-w-5xl space-x-[-200px]">
+      <div className="flex items-center justify-center w-full max-w-5xl space-x-[-100px]">
         {images.map((image, index) => {
           const distanceFromCenter = Math.abs(index - currentIndex);
           const scale = 1 - distanceFromCenter * 0.2;
           const opacity = 1 - distanceFromCenter * 0.4;
           const zIndex = images.length - distanceFromCenter;
-          const xOffset = (index - currentIndex) * 200;
+          const xOffset = (index - currentIndex) * 100; // Reduced spacing
 
           return (
             <motion.div
@@ -56,8 +56,8 @@ const ImageCarousel = () => {
               className="cursor-grab active:cursor-grabbing"
               style={{
                 position: 'absolute',
-                width: '400px',
-                height: '300px',
+                width: '200px', // Reduced width
+                height: '150px', // Reduced height
                 borderRadius: '16px',
                 backgroundImage: `url(${image})`,
                 backgroundSize: 'cover',
@@ -73,3 +73,4 @@ const ImageCarousel = () => {
 };
 
 export default ImageCarousel;
+
