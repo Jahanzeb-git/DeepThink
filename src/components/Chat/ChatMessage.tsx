@@ -57,23 +57,30 @@ export function ChatMessage({
   // Handle progress updates for image generation
   useEffect(() => {
     if (isBot && message.includes("I'm generating your image")) {
+      // Set initial message
       const initialMessage = "I'm generating your image. This usually takes about 4 minutes. I'll keep you updated on the progress...";
       setDisplayedText(initialMessage);
 
+      // Clear any existing interval
+      if (progressUpdateRef.current) {
+        clearInterval(progressUpdateRef.current);
+      }
+
       // Start progress updates after 500ms
-      const startProgressUpdates = () => {
+      const timeoutId = setTimeout(() => {
+        let currentIndex = 0;
+        
         progressUpdateRef.current = setInterval(() => {
-          setCurrentProgressIndex(prev => {
-            const nextIndex = (prev + 1) % progressUpdates.length;
-            setDisplayedText(`${initialMessage}\n\n${progressUpdates[nextIndex]}`);
-            return nextIndex;
+          setDisplayedText(prev => {
+            const newMessage = `${initialMessage}\n\n${progressUpdates[currentIndex]}`;
+            currentIndex = (currentIndex + 1) % progressUpdates.length;
+            return newMessage;
           });
         }, 500);
-      };
-
-      setTimeout(startProgressUpdates, 500);
+      }, 500);
 
       return () => {
+        clearTimeout(timeoutId);
         if (progressUpdateRef.current) {
           clearInterval(progressUpdateRef.current);
         }
