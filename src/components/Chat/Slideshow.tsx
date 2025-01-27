@@ -1,16 +1,17 @@
 import React, { useState, useRef } from 'react';
 import { motion, useMotionValue } from 'framer-motion';
 
+// Using placeholder images instead of external URLs
 const images = [
-  'https://example.com/image1.jpg',
-  'https://example.com/image2.jpg',
-  'https://example.com/image3.jpg',
-  'https://example.com/image4.jpg',
-  'https://example.com/image5.jpg'
+  '/api/placeholder/200/150',
+  '/api/placeholder/200/150',
+  '/api/placeholder/200/150',
+  '/api/placeholder/200/150',
+  '/api/placeholder/200/150'
 ];
 
 const ImageCarousel = () => {
-  const [currentIndex, setCurrentIndex] = useState(2); // Start with center image
+  const [currentIndex, setCurrentIndex] = useState(2);
   const carouselRef = useRef(null);
   const x = useMotionValue(0);
 
@@ -26,15 +27,15 @@ const ImageCarousel = () => {
   return (
     <motion.div 
       ref={carouselRef}
-      className="w-full h-full flex items-center justify-center overflow-hidden relative"
+      className="w-full h-64 flex items-center justify-center overflow-hidden relative"
     >
-      <div className="flex items-center justify-center w-full max-w-5xl space-x-[-100px]">
+      <div className="flex items-center justify-center w-full max-w-5xl relative">
         {images.map((image, index) => {
           const distanceFromCenter = Math.abs(index - currentIndex);
           const scale = 1 - distanceFromCenter * 0.2;
           const opacity = 1 - distanceFromCenter * 0.4;
           const zIndex = images.length - distanceFromCenter;
-          const xOffset = (index - currentIndex) * 100; // Reduced spacing
+          const xOffset = (index - currentIndex) * 100;
 
           return (
             <motion.div
@@ -53,11 +54,10 @@ const ImageCarousel = () => {
                 stiffness: 300, 
                 damping: 30 
               }}
-              className="cursor-grab active:cursor-grabbing"
+              className="cursor-grab active:cursor-grabbing absolute"
               style={{
-                position: 'absolute',
-                width: '200px', // Reduced width
-                height: '150px', // Reduced height
+                width: '200px',
+                height: '150px',
                 borderRadius: '16px',
                 backgroundImage: `url(${image})`,
                 backgroundSize: 'cover',
