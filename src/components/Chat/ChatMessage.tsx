@@ -48,10 +48,8 @@ export function ChatMessage({
 
   // Progress update messages
   const progressUpdates = [
-    "Analyzing your description and planning the image...",
-    "Creating initial composition...",
-    "Adding details and refining the image...",
-    "Applying final touches and optimizing quality..."
+    "...","..."
+
   ];
 
   // Handle progress updates for image generation
