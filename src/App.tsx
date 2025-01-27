@@ -83,22 +83,22 @@ function App() {
 
     try {
       if (isImageMode) {
-        // Add initial loading message
+        // Add initial message with all progress updates
+        const initialMessage = [
+          "I'm generating your image. This usually takes about 4 minutes. I'll keep you updated on the progress...",
+          "\n\nAnalyzing your description and planning the image...",
+          "\nCreating initial composition...",
+          "\nAdding details and refining the image...",
+          "\nApplying final touches and optimizing quality..."
+        ].join('');
+
         setMessages((prev) => [...prev, {
           id: Math.random().toString(36).substring(7),
-          text: "I'm generating your image. This usually takes about 4 minutes. I'll keep you updated on the progress...",
+          text: initialMessage,
           isBot: true,
           isTyped: true,
           isDeepThinkEnabled: false
         }]);
-
-        // Progress updates
-        const progressUpdates = [
-          "Analyzing your description and planning the image...",
-          "Creating initial composition...",
-          "Adding details and refining the image...",
-          "Applying final touches and optimizing quality..."
-        ];
 
         // Start image generation request
         const imageResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/image_generation', {
@@ -112,18 +112,6 @@ function App() {
 
         if (!imageResponse.ok) {
           throw new Error(`HTTP error! Status: ${imageResponse.status}`);
-        }
-
-        // Show progress updates while waiting for the response
-        for (const update of progressUpdates) {
-          await new Promise(resolve => setTimeout(resolve, 45000)); // 45 seconds between updates
-          setMessages((prev) => [...prev, {
-            id: Math.random().toString(36).substring(7),
-            text: update,
-            isBot: true,
-            isTyped: true,
-            isDeepThinkEnabled: false
-          }]);
         }
 
         const imageData = await imageResponse.json();
