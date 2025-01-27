@@ -3,7 +3,7 @@ import { ChatMessage } from './ChatMessage';
 import ChatInput from './ChatInput';
 import TagInput from './TagInput';
 import ImageCarousel from './Slideshow';
-import { Brain } from 'lucide-react';
+import { Brain, ImageIcon } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -27,6 +27,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
   const [inputValue, setInputValue] = useState('');
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const [isDeepThinkEnabled, setIsDeepThinkEnabled] = useState(false);
+  const [mode, setMode] = useState<'text' | 'image'>('text');
 
   const scrollToBottom = useCallback((smooth = true) => {
     if (messagesEndRef.current) {
@@ -153,7 +154,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
                   <div className="animate-spin">
                     <Brain className="w-5 h-5" />
                   </div>
-                  <span>Thinking...</span>
+                  <span>{mode === 'image' ? 'Generating...' : 'Thinking...'}</span>
                 </div>
               )}
               <div ref={messagesEndRef} />
