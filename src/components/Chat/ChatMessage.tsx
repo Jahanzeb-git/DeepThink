@@ -260,12 +260,12 @@ export function ChatMessage({
 
   return (
     <div
-      className={`flex gap-4 p-4 relative group ${!isBot && 'bg-gray-700/50 dark:bg-gray-200/50 rounded-lg'}`}
+      className={`flex gap-4 p-4 relative group ${!isBot && 'bg-black dark:bg-gray-200/50 rounded-lg'}`}
       ref={messageRef}
     >
       {!isBot && (
         <div className="flex-shrink-0">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-500/20 text-blue-500 dark:bg-blue-500/30 dark:text-blue-400">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-500/20 text-blue-500 dark:bg-gray-500/30 dark:text-blue-400">
             <User size={20} />
           </div>
         </div>
