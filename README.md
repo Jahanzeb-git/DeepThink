@@ -1,7 +1,8 @@
 # Deepthink - Advanced Reasoning and Code Generation Assistant
 
-Demo: Deepthinks.netlify.app
+## Live Demo
 
+Visit the live website here: [Deepthink](https://jahanzebahmed.netlify.app)
 ## 🚀 About the Project
 
 Welcome to the **Deepthink**, a state-of-the-art assistant designed to provide unparalleled support for reasoning, code generation, and debugging. Built on advanced AI models like **Deepseek R1** and **Qwen 2.5 (Default)**, this chatbot is your go-to companion for tackling complex challenges in programming and beyond.
