@@ -136,6 +136,7 @@ const HistorySidebar = () => {
 
             localStorage.setItem('chatHistory', JSON.stringify(truncatedHistory));
             setHistory(truncatedHistory);
+            window.location.reload();
         } catch (error) {
             console.error('Error handling new chat:', error);
             setLoading(false);
