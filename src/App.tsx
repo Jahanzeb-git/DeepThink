@@ -17,6 +17,13 @@ interface Message {
   imageBase64?: string;
 }
 
+interface HistoryItem {
+  id: number;
+  prompt: string | null;
+  response: string | null;
+  timestamp: string;
+}
+
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -168,6 +175,67 @@ function App() {
     }
   }, [promptCount]);
 
+  const handleLoadHistory = useCallback(async (sessionNumber: number) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(`https://jahanzebahmed25.pythonanywhere.com/history/${sessionNumber}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const historyData: HistoryItem[] = await response.json();
+      
+      // Convert history items to messages format
+      const newMessages: Message[] = [];
+      
+      // Skip first item if it has null prompt and response
+      const startIndex = historyData[0]?.prompt === null && historyData[0]?.response === null ? 1 : 0;
+      
+      for (let i = startIndex; i < historyData.length; i++) {
+        const item = historyData[i];
+        if (item.prompt) {
+          newMessages.push({
+            id: `history-${item.id}-prompt`,
+            text: item.prompt,
+            isBot: false,
+            isTyped: true,
+            isDeepThinkEnabled: false
+          });
+        }
+        if (item.response) {
+          newMessages.push({
+            id: `history-${item.id}-response`,
+            text: item.response,
+            isBot: true,
+            isTyped: true,
+            isDeepThinkEnabled: false
+          });
+        }
+      }
+
+      setMessages(newMessages);
+    } catch (error) {
+      console.error('Error loading history:', error);
+      setMessages([{
+        id: 'error',
+        text: 'Failed to load chat history.',
+        isBot: true,
+        isTyped: true,
+        isDeepThinkEnabled: false
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const handleNewChat = useCallback(() => {
     setMessages([]);
     setIsSidebarOpen(false);
@@ -199,7 +267,7 @@ function App() {
           ${isSidebarOpen ? 'translate-x-0 shadow-lg' : '-translate-x-full md:translate-x-0'}
           md:w-64 md:transition-none`}
       >
-        <HistorySidebar onNewChat={handleNewChat} />
+        <HistorySidebar onNewChat={handleNewChat} onLoadHistory={handleLoadHistory} />
       </div>
 
       {/* Main Content */}
@@ -211,7 +279,7 @@ function App() {
         />
       </div>
     </div>
-  ), [isSidebarOpen, messages, isLoading, handleSendMessage, handleNewChat]);
+  ), [isSidebarOpen, messages, isLoading, handleSendMessage, handleNewChat, handleLoadHistory]);
 
   return (
     <Router>
