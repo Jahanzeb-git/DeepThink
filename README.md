@@ -1,10 +1,10 @@
-# Chatbot Project - Advanced Reasoning and Code Generation Assistant
+# Deepthink - Advanced Reasoning and Code Generation Assistant
 
-![Chatbot UI](https://via.placeholder.com/1200x400.png?text=Chatbot+UI+Preview)
+![Chatbot UI](https://https://i.imgur.com/6o1BP0b.png)
 
 ## 🚀 About the Project
 
-Welcome to the **Chatbot Project**, a state-of-the-art assistant designed to provide unparalleled support for reasoning, code generation, and debugging. Built on advanced AI models like **Deepseek R1** and **Qwen 2.5 (Default)**, this chatbot is your go-to companion for tackling complex challenges in programming and beyond.
+Welcome to the **Deepthink**, a state-of-the-art assistant designed to provide unparalleled support for reasoning, code generation, and debugging. Built on advanced AI models like **Deepseek R1** and **Qwen 2.5 (Default)**, this chatbot is your go-to companion for tackling complex challenges in programming and beyond.
 
 ## 🌟 Key Features
 
