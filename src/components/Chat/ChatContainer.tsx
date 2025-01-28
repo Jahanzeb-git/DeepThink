@@ -71,7 +71,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
             </div>
 
             {/* Input Area - Fixed at bottom */}
-            <div className="w-full max-w-3xl mx-auto">
+            <div className="w-full max-w-3xl mx-auto">x
               <ChatInput
                 onSendMessage={handleSendMessage}
                 value={inputValue}
@@ -145,4 +145,5 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
     </div>
   );
 }
+
 
