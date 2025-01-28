@@ -148,7 +148,7 @@ export default function ChatInput({
             isRecording
               ? 'Listening...'
               : mode === 'text'
-              ? `Message DeepSeek${isDeepThinkEnabled ? ' with advanced reasoning...' : '...'}`
+              ? `Message DeepThink${isDeepThinkEnabled ? ' with advanced reasoning...' : '...'}`
               : "Describe the image you want to generate..."
           }
           disabled={isBotTyping}
