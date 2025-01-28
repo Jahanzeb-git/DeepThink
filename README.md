@@ -1,6 +1,6 @@
 # Deepthink - Advanced Reasoning and Code Generation Assistant
 
-![Chatbot UI](https://https://i.imgur.com/6o1BP0b.png)
+Demo: Deepthinks.netlify.app
 
 ## 🚀 About the Project
 
