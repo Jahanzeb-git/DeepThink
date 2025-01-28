@@ -154,7 +154,7 @@ const HistorySidebar = () => {
     }, {});
 
     return (
-        <div className="p-4 bg-gray-1000 dark:bg-gray-300 h-full text-gray-100 dark:text-gray-900 flex flex-col relative">
+        <div className="p-4 bg-gray-800 dark:bg-gray-300 h-full text-gray-100 dark:text-gray-900 flex flex-col relative">
             <div className="mb-6">
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent">
                     Deepthink
