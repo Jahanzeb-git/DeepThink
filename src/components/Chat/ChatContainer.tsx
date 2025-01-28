@@ -57,7 +57,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
               {mode === 'text' ? (
                 <>
                   <h1 className="text-2xl md:text-3xl font-bold text-white dark:text-gray-900 mb-4 md:mb-8 text-center transition-all duration-500 ease-in-out">
-                    Hi, I'm DeepSeek
+                    Hi, I'm DeepThink
                   </h1>
                   <p className="text-gray-400 dark:text-gray-800 text-center transition-all duration-500 ease-in-out">
                     How can I help you today?
