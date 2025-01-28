@@ -208,10 +208,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                                 <h3 className="text-lg font-medium text-white dark:text-gray-900">Help & Support</h3>
                                 
                                 <button className="w-full flex items-center justify-between px-4 py-3 rounded-xl 
-                                               bg-gray-800/50 dark:bg-gray-200/50 hover:bg-gray-700/50 dark:hover:bg-gray-300/50 transition-colors">
-                                    onClick={() => window.location.href='/terms'}
-                                <
-                                 
+                                               bg-gray-800/50 dark:bg-gray-200/50 hover:bg-gray-700/50 dark:hover:bg-gray-300/50 transition-colors" onClick={() => window.location.href='/terms'}>
                                     <span className="text-white dark:text-gray-900 text-sm">Terms of Use</span>
                                     <Shield className="w-5 h-5 text-gray-400 dark:text-gray-600" />
                                 </button>
