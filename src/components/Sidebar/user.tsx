@@ -21,8 +21,8 @@ const Tab: React.FC<TabProps> = ({ isActive, onClick, children }) => (
         onClick={onClick}
         className={`px-6 py-3 font-medium rounded-xl transition-all duration-300 text-sm flex items-center
                    ${isActive 
-                     ? 'bg-blue-600/20 text-blue-400 shadow-lg shadow-blue-500/10' 
-                     : 'hover:bg-gray-800/80 text-gray-400 hover:text-gray-300'}`}
+                     ? 'bg-blue-600/20 text-blue-400 dark:text-blue-300 shadow-lg shadow-blue-500/10' 
+                     : 'hover:bg-gray-800/80 dark:hover:bg-gray-100/10 text-gray-400 hover:text-gray-300 dark:hover:text-gray-200'}`}
     >
         {children}
     </button>
@@ -51,7 +51,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
     }, []);
 
     const handleLogout = () => {
-        setIsModal2Open(true) // open the modal
+        setIsModal2Open(true);
     };
 
     const handleModal2Close = () => {
@@ -59,22 +59,18 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
         navigate('/login');
     };
 
-
     const handleDeleteAccount = () => {
-        setIsModalOpen(true); // Open the modal
+        setIsModalOpen(true);
     };
 
     const handleModalClose = async () => {
         try {
-            // Retrieve token from local storage
             const token = localStorage.getItem('token');
-
             if (!token) {
                 console.error('Token not found in local storage.');
                 return;
             }
 
-            // Send DELETE request to the endpoint
             const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/delete_user', {
                 method: 'DELETE',
                 headers: {
@@ -83,14 +79,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                 },
             });
 
-            // Check if the response is successful
             if (response.status === 200) {
                 console.log('User data successfully deleted from the database.');
-
-                // Clear local storage
                 localStorage.clear();
-
-                // Navigate to the signup page
                 navigate('/signup');
             } else {
                 console.error(`Failed to delete user data. Status code: ${response.status}`);
@@ -101,24 +92,24 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
     };
 
     const modalContent = (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-lg flex items-center justify-center z-[9999]
+        <div className="fixed inset-0 bg-black/80 dark:bg-white/20 backdrop-blur-lg flex items-center justify-center z-[9999]
                         transition-opacity duration-300 ease-in-out"
              style={{ opacity: isVisible ? 1 : 0 }}>
-            <div className={`bg-gray-900/95 backdrop-blur-xl w-full max-w-4xl md:max-w-4xl h-screen md:h-[85vh] rounded-2xl shadow-2xl relative
+            <div className={`bg-gray-900/95 dark:bg-gray-100/95 backdrop-blur-xl w-full max-w-4xl md:max-w-4xl h-screen md:h-[85vh] rounded-2xl shadow-2xl relative
                            transition-all duration-500 ease-out transform overflow-hidden
                            ${isVisible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-8 opacity-0 scale-95'}`}>
                 
                 {/* Header */}
-                <div className="absolute top-0 inset-x-0 bg-gradient-to-b from-gray-800/50 to-transparent p-8">
+                <div className="absolute top-0 inset-x-0 bg-gradient-to-b from-gray-800/50 dark:from-gray-200/50 to-transparent p-8">
                     <button
                         onClick={() => setShowProfile(false)}
-                        className="absolute right-6 top-6 text-gray-400 hover:text-white 
-                                 transition-colors duration-300 rounded-full hover:bg-gray-800/50 p-2"
+                        className="absolute right-6 top-6 text-gray-400 dark:text-gray-600 hover:text-white dark:hover:text-gray-900 
+                                 transition-colors duration-300 rounded-full hover:bg-gray-800/50 dark:hover:bg-gray-200/50 p-2"
                     >
                         <X className="w-6 h-6" />
                     </button>
-                    <h2 className="text-3xl font-bold text-white tracking-tight">Settings</h2>
-                    <p className="text-gray-400 mt-2">Manage your preferences and account settings</p>
+                    <h2 className="text-3xl font-bold text-white dark:text-gray-900 tracking-tight">Settings</h2>
+                    <p className="text-gray-400 dark:text-gray-600 mt-2">Manage your preferences and account settings</p>
                 </div>
 
                 {/* Tabs */}
@@ -146,19 +137,19 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                     {activeTab === 'general' ? (
                         <div className="space-y-6">
                             <div className="flex flex-col space-y-4">
-                                <h3 className="text-lg font-medium text-white">Preferences</h3>
+                                <h3 className="text-lg font-medium text-white dark:text-gray-900">Preferences</h3>
                                 
                                 {/* Language Selector */}
-                                <div className="flex items-center justify-between p-4 rounded-xl bg-gray-800/50">
+                                <div className="flex items-center justify-between p-4 rounded-xl bg-gray-800/50 dark:bg-gray-200/50">
                                     <div className="flex items-center space-x-3">
-                                        <Globe className="w-5 h-5 text-gray-400" />
+                                        <Globe className="w-5 h-5 text-gray-400 dark:text-gray-600" />
                                         <div>
-                                            <span className="text-white text-sm">Language</span>
-                                            <p className="text-gray-400 text-xs mt-0.5">Select your preferred language</p>
+                                            <span className="text-white dark:text-gray-900 text-sm">Language</span>
+                                            <p className="text-gray-400 dark:text-gray-600 text-xs mt-0.5">Select your preferred language</p>
                                         </div>
                                     </div>
-                                    <select className="bg-gray-700/50 text-white rounded-lg px-4 py-2 outline-none text-sm
-                                                   border border-gray-600/50 focus:border-blue-500/50 transition-colors">
+                                    <select className="bg-gray-700/50 dark:bg-gray-300/50 text-white dark:text-gray-900 rounded-lg px-4 py-2 outline-none text-sm
+                                                   border border-gray-600/50 dark:border-gray-400/50 focus:border-blue-500/50 transition-colors">
                                         <option value="en">English</option>
                                         <option value="es">Español</option>
                                         <option value="fr">Français</option>
@@ -166,15 +157,15 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                                 </div>
 
                                 {/* Theme Toggle */}
-                                <div className="flex items-center justify-between p-4 rounded-xl bg-gray-800/50">
+                                <div className="flex items-center justify-between p-4 rounded-xl bg-gray-800/50 dark:bg-gray-200/50">
                                     <div className="flex items-center space-x-3">
                                         {isDark ? 
-                                            <Moon className="w-5 h-5 text-gray-400" /> : 
-                                            <Sun className="w-5 h-5 text-gray-400" />
+                                            <Moon className="w-5 h-5 text-gray-400 dark:text-gray-600" /> : 
+                                            <Sun className="w-5 h-5 text-gray-400 dark:text-gray-600" />
                                         }
                                         <div>
-                                            <span className="text-white text-sm">Theme</span>
-                                            <p className="text-gray-400 text-xs mt-0.5">Toggle between light and dark mode</p>
+                                            <span className="text-white dark:text-gray-900 text-sm">Theme</span>
+                                            <p className="text-gray-400 dark:text-gray-600 text-xs mt-0.5">Toggle between light and dark mode</p>
                                         </div>
                                     </div>
                                     <ThemeToggle isDark={isDark} toggleTheme={toggleTheme} />
@@ -185,28 +176,28 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                         <div className="space-y-6">
                             {/* Profile Info */}
                             <div className="space-y-4">
-                                <h3 className="text-lg font-medium text-white">Account Information</h3>
+                                <h3 className="text-lg font-medium text-white dark:text-gray-900">Account Information</h3>
                                 
                                 <div className="space-y-4">
                                     <div className="space-y-2">
-                                        <label className="text-sm text-gray-400">Username</label>
+                                        <label className="text-sm text-gray-400 dark:text-gray-600">Username</label>
                                         <input
                                             type="text"
                                             value={localStorage.getItem('username') || ''}
                                             readOnly
-                                            className="w-full bg-gray-800/50 text-white px-4 py-3 rounded-xl
-                                                     border border-gray-700/50 focus:border-blue-500/50 transition-colors"
+                                            className="w-full bg-gray-800/50 dark:bg-gray-200/50 text-white dark:text-gray-900 px-4 py-3 rounded-xl
+                                                     border border-gray-700/50 dark:border-gray-300/50 focus:border-blue-500/50 transition-colors"
                                         />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-sm text-gray-400">Email</label>
+                                        <label className="text-sm text-gray-400 dark:text-gray-600">Email</label>
                                         <input
                                             type="email"
                                             value={localStorage.getItem('userEmail') || ''}
                                             readOnly
-                                            className="w-full bg-gray-800/50 text-white px-4 py-3 rounded-xl
-                                                     border border-gray-700/50 focus:border-blue-500/50 transition-colors"
+                                            className="w-full bg-gray-800/50 dark:bg-gray-200/50 text-white dark:text-gray-900 px-4 py-3 rounded-xl
+                                                     border border-gray-700/50 dark:border-gray-300/50 focus:border-blue-500/50 transition-colors"
                                         />
                                     </div>
                                 </div>
@@ -214,30 +205,30 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
 
                             {/* Links */}
                             <div className="space-y-4">
-                                <h3 className="text-lg font-medium text-white">Help & Support</h3>
+                                <h3 className="text-lg font-medium text-white dark:text-gray-900">Help & Support</h3>
                                 
                                 <button className="w-full flex items-center justify-between px-4 py-3 rounded-xl 
-                                               bg-gray-800/50 hover:bg-gray-700/50 transition-colors">
-                                    <span className="text-white text-sm">Terms of Use</span>
-                                    <Shield className="w-5 h-5 text-gray-400" />
+                                               bg-gray-800/50 dark:bg-gray-200/50 hover:bg-gray-700/50 dark:hover:bg-gray-300/50 transition-colors">
+                                    <span className="text-white dark:text-gray-900 text-sm">Terms of Use</span>
+                                    <Shield className="w-5 h-5 text-gray-400 dark:text-gray-600" />
                                 </button>
 
                                 <button className="w-full flex items-center justify-between px-4 py-3 rounded-xl 
-                                               bg-gray-800/50 hover:bg-gray-700/50 transition-colors">
-                                    <span className="text-white text-sm">Help Center</span>
-                                    <HelpCircle className="w-5 h-5 text-gray-400" />
+                                               bg-gray-800/50 dark:bg-gray-200/50 hover:bg-gray-700/50 dark:hover:bg-gray-300/50 transition-colors">
+                                    <span className="text-white dark:text-gray-900 text-sm">Help Center</span>
+                                    <HelpCircle className="w-5 h-5 text-gray-400 dark:text-gray-600" />
                                 </button>
                             </div>
 
                             {/* Account Actions */}
                             <div className="space-y-4 pt-4">
-                                <h3 className="text-lg font-medium text-white">Account Actions</h3>
+                                <h3 className="text-lg font-medium text-white dark:text-gray-900">Account Actions</h3>
                                 
                                 <button
                                     onClick={handleLogout}
                                     className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl 
-                                             bg-gray-800/50 hover:bg-gray-700/50 text-white transition-colors
-                                             border border-gray-600/50 hover:border-gray-500/50"
+                                             bg-gray-800/50 dark:bg-gray-200/50 hover:bg-gray-700/50 dark:hover:bg-gray-300/50 text-white dark:text-gray-900 transition-colors
+                                             border border-gray-600/50 dark:border-gray-400/50 hover:border-gray-500/50 dark:hover:border-gray-500/50"
                                 >
                                     <LogOut className="w-5 h-5" />
                                     <span className="text-sm">Log Out</span>
@@ -247,7 +238,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                                 <button
                                     onClick={handleDeleteAccount}
                                     className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl 
-                                             bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors
+                                             bg-red-500/10 hover:bg-red-500/20 text-red-400 dark:text-red-500 transition-colors
                                              border border-red-500/20 hover:border-red-500/30"
                                 >
                                     <Trash2 className="w-5 h-5" />
@@ -326,22 +317,24 @@ const User: React.FC = () => {
                 return (
                     <button
                         onClick={handleSignup}
-                        className="group relative w-full px-6 py-3 rounded-lg text-white font-medium
+                        className="group relative w-full px-6 py-3 rounded-lg text-white dark:text-gray-900 font-medium
                                  overflow-hidden transition-all duration-300
                                  bg-gradient-to-br from-blue-600/20 to-cyan-600/20
+                                 dark:from-blue-400/30 dark:to-cyan-400/30
                                  hover:from-blue-600/30 hover:to-cyan-600/30
-                                 border border-blue-500/50 hover:border-cyan-400"
+                                 dark:hover:from-blue-400/40 dark:hover:to-cyan-400/40
+                                 border border-blue-500/50 dark:border-blue-400/50 hover:border-cyan-400 dark:hover:border-cyan-500"
                     >
                         <div className="absolute inset-0 flex items-center justify-center opacity-0 
                                     group-hover:opacity-100 transition-opacity duration-300">
                             <div className="w-full h-full absolute bg-gradient-to-r from-blue-600/10 to-cyan-600/10 
-                                        backdrop-blur-sm" />
+                                        dark:from-blue-400/20 dark:to-cyan-400/20 backdrop-blur-sm" />
                         </div>
                         <span className="relative flex items-center justify-center gap-2">
                             <UserPlus className="w-5 h-5" />
                             Sign Up
                         </span>
-                        <div className="absolute inset-0 border border-cyan-400/50 rounded-lg opacity-0 
+                        <div className="absolute inset-0 border border-cyan-400/50 dark:border-cyan-500/50 rounded-lg opacity-0 
                                     group-hover:opacity-100 transition-opacity duration-300 scale-105" />
                     </button>
                 );
@@ -349,22 +342,24 @@ const User: React.FC = () => {
                 return (
                     <button
                         onClick={handleLogin}
-                        className="group relative w-full px-6 py-3 rounded-lg text-white font-medium
+                        className="group relative w-full px-6 py-3 rounded-lg text-white dark:text-gray-900 font-medium
                                  overflow-hidden transition-all duration-300
                                  bg-gradient-to-br from-indigo-600/20 to-purple-600/20
+                                 dark:from-indigo-400/30 dark:to-purple-400/30
                                  hover:from-indigo-600/30 hover:to-purple-600/30
-                                 border border-indigo-500/50 hover:border-purple-400"
+                                 dark:hover:from-indigo-400/40 dark:hover:to-purple-400/40
+                                 border border-indigo-500/50 dark:border-indigo-400/50 hover:border-purple-400 dark:hover:border-purple-500"
                     >
                         <div className="absolute inset-0 flex items-center justify-center opacity-0 
                                     group-hover:opacity-100 transition-opacity duration-300">
                             <div className="w-full h-full absolute bg-gradient-to-r from-indigo-600/10 to-purple-600/10 
-                                        backdrop-blur-sm" />
+                                        dark:from-indigo-400/20 dark:to-purple-400/20 backdrop-blur-sm" />
                         </div>
                         <span className="relative flex items-center justify-center gap-2">
                             <LogIn className="w-5 h-5" />
                             Login
                         </span>
-                        <div className="absolute inset-0 border border-purple-400/50 rounded-lg opacity-0 
+                        <div className="absolute inset-0 border border-purple-400/50 dark:border-purple-500/50 rounded-lg opacity-0 
                                     group-hover:opacity-100 transition-opacity duration-300 scale-105" />
                     </button>
                 );
@@ -372,22 +367,24 @@ const User: React.FC = () => {
                 return (
                     <button
                         onClick={handleProfile}
-                        className="group relative w-full px-6 py-3 rounded-lg text-white font-medium
+                        className="group relative w-full px-6 py-3 rounded-lg text-white dark:text-gray-900 font-medium
                                  overflow-hidden transition-all duration-300
                                  bg-gradient-to-br from-emerald-600/20 to-teal-600/20
+                                 dark:from-emerald-400/30 dark:to-teal-400/30
                                  hover:from-emerald-600/30 hover:to-teal-600/30
-                                 border border-emerald-500/50 hover:border-teal-400"
+                                 dark:hover:from-emerald-400/40 dark:hover:to-teal-400/40
+                                 border border-emerald-500/50 dark:border-emerald-400/50 hover:border-teal-400 dark:hover:border-teal-500"
                     >
                         <div className="absolute inset-0 flex items-center justify-center opacity-0 
                                     group-hover:opacity-100 transition-opacity duration-300">
                             <div className="w-full h-full absolute bg-gradient-to-r from-emerald-600/10 to-teal-600/10 
-                                        backdrop-blur-sm" />
+                                        dark:from-emerald-400/20 dark:to-teal-400/20 backdrop-blur-sm" />
                         </div>
                         <span className="relative flex items-center justify-center gap-2">
                             <UserCircle className="w-5 h-5" />
                             My Profile
                         </span>
-                        <div className="absolute inset-0 border border-teal-400/50 rounded-lg opacity-0 
+                        <div className="absolute inset-0 border border-teal-400/50 dark:border-teal-500/50 rounded-lg opacity-0 
                                     group-hover:opacity-100 transition-opacity duration-300 scale-105" />
                     </button>
                 );
