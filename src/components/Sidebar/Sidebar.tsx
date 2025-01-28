@@ -2,7 +2,12 @@ import React, { useEffect, useState, useRef } from 'react';
 import { MoreHorizontal, Loader2 } from 'lucide-react';
 import User from './user'
 
-const HistorySidebar = () => {
+interface HistorySidebarProps {
+    onNewChat: () => void;
+    onLoadHistory: (sessionNumber: number) => Promise<void>;
+}
+
+const HistorySidebar: React.FC<HistorySidebarProps> = ({ onNewChat, onLoadHistory }) => {
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState(null);
@@ -136,7 +141,7 @@ const HistorySidebar = () => {
 
             localStorage.setItem('chatHistory', JSON.stringify(truncatedHistory));
             setHistory(truncatedHistory);
-            window.location.reload();
+            onNewChat();
         } catch (error) {
             console.error('Error handling new chat:', error);
             setLoading(false);
@@ -185,7 +190,7 @@ const HistorySidebar = () => {
                         {items.map((item, index) => (
                             <div
                                 key={index}
-                                className={`group relative p-2.5 rounded-md hover:bg-gray-700 dark:hover:bg-gray-200 transition-all duration-200 
+                                className={`group relative p-2.5 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-all duration-200 
                                          ${mounted ? 'translate-x-0 opacity-100' : '-translate-x-4 opacity-0'}`}
                                 style={{ transitionDelay: `${index * 100}ms` }}
                             >
@@ -200,14 +205,14 @@ const HistorySidebar = () => {
                                                 handleRename(index);
                                             }
                                         }}
-                                        className="w-full bg-gray-700 dark:bg-gray-100 text-gray-100 dark:text-gray-900 px-3 py-1.5 rounded-md outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-base"
+                                        className="w-full bg-gray-800 dark:bg-gray-100 text-gray-100 dark:text-gray-900 px-3 py-1.5 rounded-md outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-base"
                                         autoFocus
                                     />
                                 ) : (
                                     <div className="flex flex-col">
                                         <button
                                             className="text-left flex-1 text-gray-100 dark:text-gray-900 font-medium text-base w-full pr-8 mb-1"
-                                            onClick={() => console.log(`Clicked session ${item.session_number}`)}
+                                            onClick={() => onLoadHistory(item.session_number)}
                                         >
                                             {item.prompt}
                                         </button>
@@ -217,7 +222,7 @@ const HistorySidebar = () => {
                                 <div className="absolute right-2 top-1/2 -translate-y-1/2">
                                     <button
                                         onClick={(e) => handleOpenDropdown(index, e)}
-                                        className="p-1.5 rounded-md hover:bg-gray-600 dark:hover:bg-gray-300 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                                        className="p-1.5 rounded-md hover:bg-gray-700 dark:hover:bg-gray-300 transition-all duration-200 opacity-0 group-hover:opacity-100"
                                     >
                                         <MoreHorizontal className="w-4 h-4 text-gray-300 dark:text-gray-600" />
                                     </button>
@@ -229,7 +234,7 @@ const HistorySidebar = () => {
                 )}
             </div>
             
-            <div className="mt-4 border-t border-gray-700 dark:border-gray-200 pt-4">
+            <div className="mt-4 border-t border-gray-700 dark:border-gray-800 pt-4">
                 <User />
             </div>
 
