@@ -260,7 +260,7 @@ export function ChatMessage({
 
   return (
     <div
-      className={`flex gap-4 p-4 relative group ${!isBot && 'bg-gray-700/50 dark:bg-black/50 rounded-lg'}`}
+      className={`flex gap-4 p-4 relative group ${!isBot && 'bg-gray-700/50 dark:bg-gray-200/50 rounded-lg'}`}
       ref={messageRef}
     >
       {!isBot && (
@@ -271,7 +271,7 @@ export function ChatMessage({
         </div>
       )}
       <div className="flex-1 overflow-hidden">
-        <div className="font-medium text-sm text-gray-400 dark:text-gray-500 mb-1 flex items-center">
+        <div className="font-medium text-sm text-gray-400 dark:text-gray-600 mb-1 flex items-center">
           {isBot ? 'DeepThink' : 'You'}
           {isDeepThinkEnabled && isBot && (
             <button
@@ -294,7 +294,7 @@ export function ChatMessage({
         </div>
 
         <div className="prose dark:prose-invert max-w-none">
-          <div className="text-gray-200 dark:text-gray-300 leading-relaxed">
+          <div className="text-gray-200 dark:text-gray-800 leading-relaxed">
             {isBot && !isTyped ? (
               <>
                 {displayedText.split('```code```').map((text, index, array) => (
@@ -348,7 +348,7 @@ export function ChatMessage({
           <div className="flex justify-end mt-2 items-center space-x-2">
             <button
               onClick={() => setShowModelInfo(prev => !prev)}
-              className="p-1.5 rounded-md transition-colors duration-200 text-gray-400 hover:text-gray-300 dark:text-gray-500 dark:hover:text-gray-400"
+              className="p-1.5 rounded-md transition-colors duration-200 text-gray-400 hover:text-gray-300 dark:text-gray-500 dark:hover:text-gray-600"
               aria-label="Model Information"
             >
               <Info size={16} />
@@ -363,7 +363,7 @@ export function ChatMessage({
                   link.click();
                   document.body.removeChild(link);
                 }}
-                className="p-1.5 rounded-md transition-colors duration-200 text-gray-400 hover:text-gray-300 dark:text-gray-500 dark:hover:text-gray-400"
+                className="p-1.5 rounded-md transition-colors duration-200 text-gray-400 hover:text-gray-300 dark:text-gray-500 dark:hover:text-gray-600"
                 aria-label="Download image"
               >
                 <Download size={16} />
@@ -374,7 +374,7 @@ export function ChatMessage({
               className={`p-1.5 rounded-md transition-colors duration-200 
                 ${isCopied 
                   ? 'text-green-500 dark:text-green-400' 
-                  : 'text-gray-400 hover:text-gray-300 dark:text-gray-500 dark:hover:text-gray-400'}`}
+                  : 'text-gray-400 hover:text-gray-300 dark:text-gray-500 dark:hover:text-gray-600'}`}
               aria-label={isCopied ? 'Copied!' : 'Copy to clipboard'}
             >
               {isCopied ? <Check size={16} /> : <Copy size={16} />}
@@ -383,7 +383,7 @@ export function ChatMessage({
         )}
 
         {showModelInfo && (
-          <div className="absolute bottom-full right-0 mb-2 p-3 bg-gray-700 dark:bg-black rounded-lg shadow-lg text-sm text-gray-200 dark:text-gray-300 whitespace-nowrap">
+          <div className="absolute bottom-full right-0 mb-2 p-3 bg-gray-700 dark:bg-white rounded-lg shadow-lg text-sm text-gray-200 dark:text-gray-800 whitespace-nowrap">
             <p className="font-medium">Model: Qwen 2.5</p>
           </div>
         )}
