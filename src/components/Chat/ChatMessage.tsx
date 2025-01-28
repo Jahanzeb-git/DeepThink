@@ -260,7 +260,7 @@ export function ChatMessage({
 
   return (
     <div
-      className={`flex gap-4 p-4 relative group ${!isBot && 'bg-black dark:bg-gray-200/50 rounded-lg'}`}
+      className={`flex gap-4 p-4 relative group ${!isBot && 'bg-gray-800 dark:bg-gray-200/50 rounded-lg'}`}
       ref={messageRef}
     >
       {!isBot && (
