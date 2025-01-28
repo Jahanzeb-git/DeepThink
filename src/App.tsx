@@ -144,7 +144,7 @@ function App() {
         });
 
         if (!response.ok) {
-          throw new Error(`It's looks like you are not Authorized! You need to login again.);
+          throw new Error(`It's looks like you are not Authorized! Please Login again: ${response.status}`);
         }
 
         const data = await response.json();
