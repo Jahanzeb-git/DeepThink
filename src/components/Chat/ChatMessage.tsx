@@ -121,86 +121,68 @@ export function ChatMessage({
 
   // Typing animation with think and code block detection
    const animateTyping = useCallback(() => {
-      const messageText = Array.isArray(message) ? message.join('\n') : message;
+  const messageText = Array.isArray(message) ? message.join('\n') : message;
+  
+  // *** FIX: Always update the code blocks ***
+  setCodeBlocks(extractCodeBlocks(messageText));
 
-  // Always update code blocks state
-      setCodeBlocks(extractCodeBlocks(messageText));
+  if (!isBot || isTyped) {
+    const thinkExtracted = extractThinkBlock(messageText);
+    if (thinkExtracted) {
+      setThinkBlock({ content: thinkExtracted.thinkContent, isTyped: true });
+      setDisplayedText(replaceCodeBlocks(thinkExtracted.remainingText));
+    } else {
+      setDisplayedText(replaceCodeBlocks(messageText));
+    }
+    return;
+  }
 
-  // If the message contains a code block, immediately display the final replaced text.
-  // This ensures that code is never gradually revealed.
-      if (/```(?:\w+)?\n[\s\S]*?```/.test(messageText)) {
-          const finalText = replaceCodeBlocks(messageText);
-          setDisplayedText(finalText);
-          onTypingComplete();
-          return;
-      }
-
-      // If not animating (or already fully typed), simply set the processed text.
-      if (!isBot || isTyped) {
-        const thinkExtracted = extractThinkBlock(messageText);
-        if (thinkExtracted) {
-          setThinkBlock({ content: thinkExtracted.thinkContent, isTyped: true });
-          setDisplayedText(replaceCodeBlocks(thinkExtracted.remainingText));
-        } else {
-          setDisplayedText(replaceCodeBlocks(messageText));
-        }
-        return;
-      }
-
-      // Proceed with animation for messages without code blocks
-      setIsTyping(true);
-      const thinkExtracted = extractThinkBlock(messageText);
-      if (thinkExtracted) {
-        setThinkBlock({ content: '', isTyped: false });
-        let thinkIndex = 0;
-        const typeThink = () => {
-          if (thinkIndex < thinkExtracted.thinkContent.length) {
-            setThinkBlock(prev => ({
-              content: thinkExtracted.thinkContent.slice(0, thinkIndex + 1),
-              isTyped: false
-            }));
-            thinkIndex++;
-            typingRef.current = setTimeout(typeThink, Math.random() * 20 + 10);
-          } else {
-            setThinkBlock(prev => ({ ...prev!, isTyped: true }));
-            startMainText();
-          }
-        };
-        typeThink();
+  setIsTyping(true);
+  const thinkExtracted = extractThinkBlock(messageText);
+  if (thinkExtracted) {
+    setThinkBlock({ content: '', isTyped: false });
+    let thinkIndex = 0;
+    const typeThink = () => {
+      if (thinkIndex < thinkExtracted.thinkContent.length) {
+        setThinkBlock(prev => ({
+          content: thinkExtracted.thinkContent.slice(0, thinkIndex + 1),
+          isTyped: false
+        }));
+        thinkIndex++;
+        typingRef.current = setTimeout(typeThink, Math.random() * 20 + 10);
       } else {
+        setThinkBlock(prev => ({ ...prev!, isTyped: true }));
         startMainText();
       }
+    };
+    typeThink();
+  } else {
+    startMainText();
+  }
 
-      function startMainText() {
-        let currentIndex = 0;
-        const textToType = thinkExtracted ? thinkExtracted.remainingText : messageText;
-        // Check if the remaining text contains code blocks
-        if (/```(?:\w+)?\n[\s\S]*?```/.test(textToType)) {
-          const finalText = replaceCodeBlocks(textToType);
-          setDisplayedText(finalText);
-          setIsTyping(false);
-          onTypingComplete();
-          return;
-        }
-        const typeNextChar = () => {
-          if (currentIndex < textToType.length) {
-            setDisplayedText(replaceCodeBlocks(textToType.slice(0, currentIndex + 1)));
-            currentIndex++;
-            typingRef.current = setTimeout(typeNextChar, Math.random() * 20 + 10);
-          } else {
-            setIsTyping(false);
-            onTypingComplete();
-          }
-        };
-        typeNextChar();
+  function startMainText() {
+    let currentIndex = 0;
+    const textToType = thinkExtracted ? thinkExtracted.remainingText : messageText;
+    const typeNextChar = () => {
+      if (currentIndex < textToType.length) {
+        setDisplayedText(replaceCodeBlocks(textToType.slice(0, currentIndex + 1)));
+        currentIndex++;
+        typingRef.current = setTimeout(typeNextChar, Math.random() * 20 + 10);
+      } else {
+        setIsTyping(false);
+        onTypingComplete();
       }
+    };
+    typeNextChar();
+  }
 
-      return () => {
-        if (typingRef.current) {
-          clearTimeout(typingRef.current);
-        }
-      };
-    }, [message, isBot, isTyped, onTypingComplete]);
+  return () => {
+    if (typingRef.current) {
+      clearTimeout(typingRef.current);
+    }
+  };
+}, [message, isBot, isTyped, onTypingComplete]);
+
 
 
   useEffect(() => {
