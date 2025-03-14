@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Brain, ArrowUp, Mic, ImageIcon, Upload, Square } from 'lucide-react';
 
 interface ChatInputProps {
-  onSendMessage: (message: string, isDeepThinkEnabled: boolean, isImageMode: boolean) => Promise<void>;
+  onSendMessage: (message: string, isDeepThinkEnabled: boolean, isImageMode: boolean, model?: string) => Promise<void>;
   value: string;
   onChange: (value: string) => void;
   className?: string;
@@ -10,7 +10,7 @@ interface ChatInputProps {
   onToggleDeepThink: () => void;
   onModeChange: (mode: 'text' | 'image') => void;
   mode: 'text' | 'image';
-  isBotTyping?: boolean; // New prop to track bot typing status
+  isBotTyping?: boolean;
 }
 
 export default function ChatInput({
@@ -41,7 +41,6 @@ export default function ChatInput({
   }, [value]);
 
   useEffect(() => {
-    // Initialize Speech Recognition
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -50,7 +49,6 @@ export default function ChatInput({
       recognitionInstance.interimResults = true;
       recognitionInstance.lang = 'en-US';
 
-      // Handle interim results
       recognitionInstance.onresult = (event: SpeechRecognitionEvent) => {
         let finalTranscript = '';
         let currentInterim = '';
@@ -108,7 +106,8 @@ export default function ChatInput({
         setIsRecording(false);
         setInterimTranscript('');
       }
-      await onSendMessage(value, isDeepThinkEnabled, mode === 'image');
+      const model = isDeepThinkEnabled ? 'deepseek-r1-distill-qwen-32b' : undefined;
+      await onSendMessage(value, isDeepThinkEnabled, mode === 'image', model);
       onChange('');
     }
   };
