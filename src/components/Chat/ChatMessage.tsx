@@ -120,68 +120,67 @@ export function ChatMessage({
   };
 
   // Typing animation with think and code block detection
-  const animateTyping = useCallback(() => {
-    if (!isBot || isTyped) {
+   const animateTyping = useCallback(() => {
       const messageText = Array.isArray(message) ? message.join('\n') : message;
-      const thinkExtracted = extractThinkBlock(messageText);
-      
-      if (thinkExtracted) {
-        setThinkBlock({ content: thinkExtracted.thinkContent, isTyped: true });
-        setDisplayedText(replaceCodeBlocks(thinkExtracted.remainingText));
-      } else {
-        setDisplayedText(replaceCodeBlocks(messageText));
-      }
-      
+  
+      // *** FIX: Always update the code blocks ***
       setCodeBlocks(extractCodeBlocks(messageText));
-      return;
-    }
 
-    setIsTyping(true);
-    const messageText = Array.isArray(message) ? message.join('\n') : message;
-    const thinkExtracted = extractThinkBlock(messageText);
-    
-    if (thinkExtracted) {
-      setThinkBlock({ content: '', isTyped: false });
-      let thinkIndex = 0;
-      const typeThink = () => {
-        if (thinkIndex < thinkExtracted.thinkContent.length) {
-          setThinkBlock(prev => ({
-            content: thinkExtracted.thinkContent.slice(0, thinkIndex + 1),
-            isTyped: false
-          }));
-          thinkIndex++;
-          typingRef.current = setTimeout(typeThink, Math.random() * 20 + 10);
+      if (!isBot || isTyped) {
+        const thinkExtracted = extractThinkBlock(messageText);
+        if (thinkExtracted) {
+            setThinkBlock({ content: thinkExtracted.thinkContent, isTyped: true });
+            setDisplayedText(replaceCodeBlocks(thinkExtracted.remainingText));
         } else {
-          setThinkBlock(prev => ({ ...prev!, isTyped: true }));
-          startMainText();
+            setDisplayedText(replaceCodeBlocks(messageText));
         }
-      };
-      typeThink();
-    } else {
-      startMainText();
-    }
-
-    function startMainText() {
-      let currentIndex = 0;
-      const textToType = thinkExtracted ? thinkExtracted.remainingText : messageText;
-      const typeNextChar = () => {
-        if (currentIndex < textToType.length) {
-          setDisplayedText(replaceCodeBlocks(textToType.slice(0, currentIndex + 1)));
-          currentIndex++;
-          typingRef.current = setTimeout(typeNextChar, Math.random() * 20 + 10);
-        } else {
-          setIsTyping(false);
-          onTypingComplete();
-        }
-      };
-      typeNextChar();
-    }
-
-    return () => {
-      if (typingRef.current) {
-        clearTimeout(typingRef.current);
+        return;
       }
-    };
+
+      setIsTyping(true);
+      const thinkExtracted = extractThinkBlock(messageText);
+      if (thinkExtracted) {
+        setThinkBlock({ content: '', isTyped: false });
+        let thinkIndex = 0;
+        const typeThink = () => {
+          if (thinkIndex < thinkExtracted.thinkContent.length) {
+            setThinkBlock(prev => ({
+              content: thinkExtracted.thinkContent.slice(0, thinkIndex + 1),
+              isTyped: false
+            }));
+            thinkIndex++;
+            typingRef.current = setTimeout(typeThink, Math.random() * 20 + 10);
+          } else {
+            setThinkBlock(prev => ({ ...prev!, isTyped: true }));
+            startMainText();
+          }
+        };
+        typeThink();
+      } else {
+        startMainText();
+      }
+
+      function startMainText() {
+        let currentIndex = 0;
+        const textToType = thinkExtracted ? thinkExtracted.remainingText : messageText;
+        const typeNextChar = () => {
+          if (currentIndex < textToType.length) {
+            setDisplayedText(replaceCodeBlocks(textToType.slice(0, currentIndex + 1)));
+            currentIndex++;
+            typingRef.current = setTimeout(typeNextChar, Math.random() * 20 + 10);
+          } else {
+            setIsTyping(false);
+            onTypingComplete();
+          }
+        };
+        typeNextChar();
+      }
+
+      return () => {
+        if (typingRef.current) {
+          clearTimeout(typingRef.current);
+        }
+      };
   }, [message, isBot, isTyped, onTypingComplete]);
 
   useEffect(() => {
