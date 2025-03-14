@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Bot, User, Copy, Check, Info, Code, Brain, ImageIcon, Download } from 'lucide-react';
+import { Bot, User, Copy, Check, Info, Code, Brain, ImageIcon, Download, Lightbulb } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CodePreview } from './CodePreview';
@@ -21,6 +21,11 @@ interface CodeBlock {
   language: string;
 }
 
+interface ThinkBlock {
+  content: string;
+  isTyped: boolean;
+}
+
 export function ChatMessage({ 
   message, 
   isBot, 
@@ -40,30 +45,37 @@ export function ChatMessage({
   const [currentLanguage, setCurrentLanguage] = useState('typescript');
   const [isTypingCode, setIsTypingCode] = useState(false);
   const [codeBlocks, setCodeBlocks] = useState<CodeBlock[]>([]);
+  const [thinkBlock, setThinkBlock] = useState<ThinkBlock | null>(null);
   const [currentProgressIndex, setCurrentProgressIndex] = useState(0);
   const progressUpdateRef = useRef<NodeJS.Timeout | null>(null);
   const typingRef = useRef<NodeJS.Timeout | null>(null);
   const messageRef = useRef<HTMLDivElement>(null);
   const r1ButtonRef = useRef<HTMLButtonElement>(null);
 
+  // Extract think blocks from message
+  const extractThinkBlock = (text: string): { thinkContent: string, remainingText: string } | null => {
+    const thinkMatch = text.match(/<think>([\s\S]*?)<\/think>/);
+    if (thinkMatch) {
+      const thinkContent = thinkMatch[1].trim();
+      const remainingText = text.replace(/<think>[\s\S]*?<\/think>/, '').trim();
+      return { thinkContent, remainingText };
+    }
+    return null;
+  };
+
   // Progress update messages
-  const progressUpdates = [
-    "...","..."
-  ];
+  const progressUpdates = ["...", "..."];
 
   // Handle progress updates for image generation
   useEffect(() => {
     if (isBot && Array.isArray(message) && message[0]?.includes("I'm generating your image")) {
-      // Set initial message
       const initialMessage = message[0];
       setDisplayedText(initialMessage);
 
-      // Clear any existing interval
       if (progressUpdateRef.current) {
         clearInterval(progressUpdateRef.current);
       }
 
-      // Start progress updates after 500ms
       const timeoutId = setTimeout(() => {
         let currentIndex = 0;
         
@@ -107,81 +119,63 @@ export function ChatMessage({
     return text.replace(/```(?:\w+)?\n[\s\S]*?```/g, '```code```');
   };
 
-  // Handle click outside for R1 tooltip
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (r1ButtonRef.current && !r1ButtonRef.current.contains(event.target as Node)) {
-        setShowR1Info(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  // Typing animation with code block detection
+  // Typing animation with think and code block detection
   const animateTyping = useCallback(() => {
     if (!isBot || isTyped) {
       const messageText = Array.isArray(message) ? message.join('\n') : message;
-      setDisplayedText(replaceCodeBlocks(messageText));
+      const thinkExtracted = extractThinkBlock(messageText);
+      
+      if (thinkExtracted) {
+        setThinkBlock({ content: thinkExtracted.thinkContent, isTyped: true });
+        setDisplayedText(replaceCodeBlocks(thinkExtracted.remainingText));
+      } else {
+        setDisplayedText(replaceCodeBlocks(messageText));
+      }
+      
       setCodeBlocks(extractCodeBlocks(messageText));
       return;
     }
 
     setIsTyping(true);
     const messageText = Array.isArray(message) ? message.join('\n') : message;
-    let currentIndex = 0;
-    const textLength = messageText.length;
-    let inCodeBlock = false;
-    let codeBlockStart = -1;
-    let tempCodeBlocks: CodeBlock[] = [];
-
-    const typeNextChar = () => {
-      if (currentIndex < textLength) {
-        // Check for code block markers
-        if (messageText.slice(currentIndex).startsWith('```')) {
-          if (!inCodeBlock) {
-            // Starting a code block
-            inCodeBlock = true;
-            codeBlockStart = currentIndex;
-            setIsTypingCode(true);
-          } else {
-            // Ending a code block
-            inCodeBlock = false;
-            setIsTypingCode(false);
-            
-            // Extract and add the code block
-            const codeBlockText = messageText.slice(codeBlockStart, currentIndex + 3);
-            const blocks = extractCodeBlocks(codeBlockText);
-            if (blocks.length > 0) {
-              tempCodeBlocks = [...tempCodeBlocks, blocks[0]];
-              setCodeBlocks(tempCodeBlocks);
-            }
-          }
-          currentIndex += 3; // Skip the ```
-          
-          // Update displayed text with placeholder
-          setDisplayedText(replaceCodeBlocks(messageText.slice(0, currentIndex)));
+    const thinkExtracted = extractThinkBlock(messageText);
+    
+    if (thinkExtracted) {
+      setThinkBlock({ content: '', isTyped: false });
+      let thinkIndex = 0;
+      const typeThink = () => {
+        if (thinkIndex < thinkExtracted.thinkContent.length) {
+          setThinkBlock(prev => ({
+            content: thinkExtracted.thinkContent.slice(0, thinkIndex + 1),
+            isTyped: false
+          }));
+          thinkIndex++;
+          typingRef.current = setTimeout(typeThink, Math.random() * 20 + 10);
         } else {
-          currentIndex++;
-          if (!inCodeBlock) {
-            setDisplayedText(replaceCodeBlocks(messageText.slice(0, currentIndex)));
-          }
+          setThinkBlock(prev => ({ ...prev!, isTyped: true }));
+          startMainText();
         }
-        
-        // Natural typing speed variation
-        const delay = inCodeBlock ? 5 : Math.random() * 20 + 10; // Faster typing for code
-        typingRef.current = setTimeout(typeNextChar, delay);
-      } else {
-        setIsTyping(false);
-        setIsTypingCode(false);
-        onTypingComplete();
-      }
-    };
+      };
+      typeThink();
+    } else {
+      startMainText();
+    }
 
-    typeNextChar();
+    function startMainText() {
+      let currentIndex = 0;
+      const textToType = thinkExtracted ? thinkExtracted.remainingText : messageText;
+      const typeNextChar = () => {
+        if (currentIndex < textToType.length) {
+          setDisplayedText(replaceCodeBlocks(textToType.slice(0, currentIndex + 1)));
+          currentIndex++;
+          typingRef.current = setTimeout(typeNextChar, Math.random() * 20 + 10);
+        } else {
+          setIsTyping(false);
+          onTypingComplete();
+        }
+      };
+      typeNextChar();
+    }
 
     return () => {
       if (typingRef.current) {
@@ -199,7 +193,7 @@ export function ChatMessage({
     };
   }, [animateTyping]);
 
-  // Copy message to clipboard with feedback
+  // Copy message to clipboard
   const copyToClipboard = async () => {
     try {
       const textToCopy = Array.isArray(message) ? message.join('\n') : message;
@@ -242,21 +236,29 @@ export function ChatMessage({
     );
   };
 
-  // Special case for image generation welcome message
-  if (message === "Hi, I'm DeepSeek, How can I help you today?" && isBot) {
+  // Render think block
+  const ThinkBlockComponent = ({ content, isTyped }: ThinkBlock) => {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-white dark:text-gray-900 mb-4 md:mb-8 text-center">
-          {message}
-        </h1>
-        <div className="w-full h-64 md:h-96">
-          <ImageCarousel />
+      <div className="my-4 p-4 bg-indigo-500/10 dark:bg-indigo-200/20 rounded-lg border border-indigo-500/20 dark:border-indigo-300/30">
+        <div className="flex items-center space-x-2 mb-2">
+          <Lightbulb size={20} className="text-indigo-500 dark:text-indigo-400" />
+          <span className="text-sm font-medium text-indigo-500 dark:text-indigo-400">
+            Thinking Process
+          </span>
+        </div>
+        <div className="text-gray-200 dark:text-gray-800 prose dark:prose-invert">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {content}
+          </ReactMarkdown>
+          {!isTyped && (
+            <span className="inline-flex ml-1">
+              <span className="w-1 h-4 bg-indigo-500 dark:bg-indigo-400 animate-pulse" />
+            </span>
+          )}
         </div>
       </div>
     );
-  }
-
-  const messageText = Array.isArray(message) ? message.join('\n') : message;
+  };
 
   return (
     <div
@@ -295,6 +297,8 @@ export function ChatMessage({
 
         <div className="prose dark:prose-invert max-w-none">
           <div className="text-gray-200 dark:text-gray-800 leading-relaxed">
+            {thinkBlock && <ThinkBlockComponent {...thinkBlock} />}
+            
             {isBot && !isTyped ? (
               <>
                 {displayedText.split('```code```').map((text, index, array) => (
@@ -305,7 +309,7 @@ export function ChatMessage({
                     {index < array.length - 1 && <CodeBlockPlaceholder index={index} />}
                   </React.Fragment>
                 ))}
-                {isTyping && (
+                {isTyping && !thinkBlock?.isTyped && (
                   <span className="inline-flex ml-1">
                     <span className="w-1 h-4 bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                   </span>
@@ -313,7 +317,7 @@ export function ChatMessage({
               </>
             ) : (
               <>
-                {messageText.split(/```(?:\w+)?\n[\s\S]*?```/).map((text, index, array) => (
+                {displayedText.split(/```(?:\w+)?\n[\s\S]*?```/).map((text, index, array) => (
                   <React.Fragment key={index}>
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {text}
@@ -324,7 +328,6 @@ export function ChatMessage({
               </>
             )}
             
-            {/* Display generated image if available */}
             {imageBase64 && (
               <div className="mt-4 relative">
                 <div className="relative">
@@ -384,7 +387,9 @@ export function ChatMessage({
 
         {showModelInfo && (
           <div className="absolute bottom-full right-0 mb-2 p-3 bg-gray-700 dark:bg-white rounded-lg shadow-lg text-sm text-gray-200 dark:text-gray-800 whitespace-nowrap">
-            <p className="font-medium">Model: Qwen 2.5</p>
+            <p className="font-medium">
+              Model: {isDeepThinkEnabled ? 'DeepSeek R1 Distill Qwen-32B' : 'Qwen Coder'}
+            </p>
           </div>
         )}
       </div>
