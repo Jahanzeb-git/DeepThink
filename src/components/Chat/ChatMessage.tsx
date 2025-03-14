@@ -122,21 +122,32 @@ export function ChatMessage({
   // Typing animation with think and code block detection
    const animateTyping = useCallback(() => {
       const messageText = Array.isArray(message) ? message.join('\n') : message;
-  
-      // *** FIX: Always update the code blocks ***
+
+  // Always update code blocks state
       setCodeBlocks(extractCodeBlocks(messageText));
 
+  // If the message contains a code block, immediately display the final replaced text.
+  // This ensures that code is never gradually revealed.
+      if (/```(?:\w+)?\n[\s\S]*?```/.test(messageText)) {
+          const finalText = replaceCodeBlocks(messageText);
+          setDisplayedText(finalText);
+          onTypingComplete();
+          return;
+      }
+
+      // If not animating (or already fully typed), simply set the processed text.
       if (!isBot || isTyped) {
         const thinkExtracted = extractThinkBlock(messageText);
         if (thinkExtracted) {
-            setThinkBlock({ content: thinkExtracted.thinkContent, isTyped: true });
-            setDisplayedText(replaceCodeBlocks(thinkExtracted.remainingText));
+          setThinkBlock({ content: thinkExtracted.thinkContent, isTyped: true });
+          setDisplayedText(replaceCodeBlocks(thinkExtracted.remainingText));
         } else {
-            setDisplayedText(replaceCodeBlocks(messageText));
+          setDisplayedText(replaceCodeBlocks(messageText));
         }
         return;
       }
 
+      // Proceed with animation for messages without code blocks
       setIsTyping(true);
       const thinkExtracted = extractThinkBlock(messageText);
       if (thinkExtracted) {
@@ -163,6 +174,14 @@ export function ChatMessage({
       function startMainText() {
         let currentIndex = 0;
         const textToType = thinkExtracted ? thinkExtracted.remainingText : messageText;
+        // Check if the remaining text contains code blocks
+        if (/```(?:\w+)?\n[\s\S]*?```/.test(textToType)) {
+          const finalText = replaceCodeBlocks(textToType);
+          setDisplayedText(finalText);
+          setIsTyping(false);
+          onTypingComplete();
+          return;
+        }
         const typeNextChar = () => {
           if (currentIndex < textToType.length) {
             setDisplayedText(replaceCodeBlocks(textToType.slice(0, currentIndex + 1)));
@@ -181,7 +200,8 @@ export function ChatMessage({
           clearTimeout(typingRef.current);
         }
       };
-  }, [message, isBot, isTyped, onTypingComplete]);
+    }, [message, isBot, isTyped, onTypingComplete]);
+
 
   useEffect(() => {
     animateTyping();
