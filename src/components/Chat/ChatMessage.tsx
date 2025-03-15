@@ -45,6 +45,8 @@ export function ChatMessage({
   const [thinkBlock, setThinkBlock] = useState<ThinkBlock | null>(null);
   const messageRef = useRef<HTMLDivElement>(null);
   const r1ButtonRef = useRef<HTMLButtonElement>(null);
+  const lastScrollHeightRef = useRef<number>(0);
+  const lastMessageLengthRef = useRef<number>(0);
 
   // Extract think blocks from message
   const extractThinkBlock = (text: string): { thinkContent: string, remainingText: string } | null => {
@@ -79,6 +81,32 @@ export function ChatMessage({
     return text.replace(/```(?:\w+)?\n[\s\S]*?```/g, '```code```');
   };
 
+  // Handle smooth scroll when content changes
+  useEffect(() => {
+    if (!containerRef.current || !messageRef.current) return;
+
+    const container = containerRef.current;
+    const message = messageRef.current;
+    const currentScrollHeight = container.scrollHeight;
+    const messageText = Array.isArray(message) ? message.join('\n') : message;
+    
+    // Only scroll if content has actually increased
+    if (currentScrollHeight > lastScrollHeightRef.current && 
+        messageText.length > lastMessageLengthRef.current) {
+      const shouldAutoScroll = container.scrollTop + container.clientHeight + 100 >= lastScrollHeightRef.current;
+      
+      if (shouldAutoScroll) {
+        container.scrollTo({
+          top: currentScrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }
+
+    lastScrollHeightRef.current = currentScrollHeight;
+    lastMessageLengthRef.current = messageText.length;
+  }, [displayedText, containerRef]);
+
   // Process incoming message
   useEffect(() => {
     const messageText = Array.isArray(message) ? message.join('\n') : message;
@@ -97,7 +125,10 @@ export function ChatMessage({
     } else {
       setDisplayedText(replaceCodeBlocks(messageText));
     }
-  }, [message]);
+
+    // Call onTypingComplete when message is fully displayed
+    onTypingComplete();
+  }, [message, onTypingComplete]);
 
   // Copy message to clipboard
   const copyToClipboard = async () => {
@@ -200,14 +231,16 @@ export function ChatMessage({
           <div className="text-gray-200 dark:text-gray-800 leading-relaxed">
             {thinkBlock && <ThinkBlockComponent {...thinkBlock} />}
             
-            {displayedText.split('```code```').map((text, index, array) => (
-              <React.Fragment key={index}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {text}
-                </ReactMarkdown>
-                {index < array.length - 1 && <CodeBlockPlaceholder index={index} />}
-              </React.Fragment>
-            ))}
+            <div className="animate-reveal">
+              {displayedText.split('```code```').map((text, index, array) => (
+                <React.Fragment key={index}>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {text}
+                  </ReactMarkdown>
+                  {index < array.length - 1 && <CodeBlockPlaceholder index={index} />}
+                </React.Fragment>
+              ))}
+            </div>
             
             {imageBase64 && (
               <div className="mt-4 relative">
