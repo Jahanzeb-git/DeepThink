@@ -3,18 +3,40 @@
 @tailwind utilities;
 
 @keyframes reveal {
-  from {
+  0% {
     opacity: 0;
     transform: translateY(10px);
   }
-  to {
+  100% {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
+@keyframes typing {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
 .animate-reveal {
-  animation: reveal 0.10s ease-out forwards;
+  animation: reveal 0.8s ease-out forwards;
+}
+
+.animate-typing {
+  display: inline-block;
+  overflow: hidden;
+  white-space: pre-wrap;
+  animation: typing 1.5s ease-out;
+}
+
+.message-chunk {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: reveal 0.8s ease-out forwards;
 }
 
 :root {
