@@ -29,8 +29,14 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
 
   // Scroll to bottom whenever messages change
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current && messagesEndRef.current) {
+      const container = messagesContainerRef.current;
+      const isNearBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+    
+      if (isNearBottom) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   }, [messages, isLoading]);
 
