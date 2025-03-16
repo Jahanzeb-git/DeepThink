@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { 
     UserCircle, LogIn, UserPlus, Settings, Globe, 
     Moon, Sun, User as UserIcon, Shield, Trash2, X,
-    HelpCircle, LogOut
+    HelpCircle, LogOut, Key, Copy, Terminal, CheckCircle2, Loader2
 } from 'lucide-react';
+import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { ThemeToggle } from '../ThemeToggle';
 import LoadingModal from './loading';
-import LoadingModal2 from './loading2'
+import LoadingModal2 from './loading2';
 
 interface TabProps {
     isActive: boolean;
@@ -28,6 +29,74 @@ const Tab: React.FC<TabProps> = ({ isActive, onClick, children }) => (
     </button>
 );
 
+interface EndpointCardProps {
+    title: string;
+    method: 'GET' | 'POST';
+    url: string;
+    headers?: { [key: string]: string };
+    body?: any;
+    description?: string;
+}
+
+const EndpointCard: React.FC<EndpointCardProps> = ({ title, method, url, headers, body, description }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    return (
+        <div className="bg-gray-800/50 dark:bg-gray-200/50 rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                    <span className={`px-2 py-1 rounded text-xs font-medium
+                        ${method === 'GET' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                        {method}
+                    </span>
+                    <h3 className="text-white dark:text-gray-900 font-medium">{title}</h3>
+                </div>
+                <button 
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="text-gray-400 hover:text-white dark:hover:text-gray-900 transition-colors"
+                >
+                    {isExpanded ? 'Hide Details' : 'Show Details'}
+                </button>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+                <code className="text-sm bg-gray-900/50 dark:bg-gray-100/50 px-3 py-1 rounded-lg text-gray-300 dark:text-gray-700 flex-1">
+                    {url}
+                </code>
+                <CopyToClipboard text={url}>
+                    <button className="p-2 hover:bg-gray-700/50 dark:hover:bg-gray-300/50 rounded-lg transition-colors">
+                        <Copy className="w-4 h-4 text-gray-400" />
+                    </button>
+                </CopyToClipboard>
+            </div>
+
+            {isExpanded && (
+                <div className="space-y-3 pt-2">
+                    {description && (
+                        <p className="text-sm text-gray-400 dark:text-gray-600">{description}</p>
+                    )}
+                    {headers && (
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-400 dark:text-gray-600 mb-2">Headers:</h4>
+                            <pre className="bg-gray-900/50 dark:bg-gray-100/50 p-3 rounded-lg text-sm text-gray-300 dark:text-gray-700">
+                                {JSON.stringify(headers, null, 2)}
+                            </pre>
+                        </div>
+                    )}
+                    {body && (
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-400 dark:text-gray-600 mb-2">Body:</h4>
+                            <pre className="bg-gray-900/50 dark:bg-gray-100/50 p-3 rounded-lg text-sm text-gray-300 dark:text-gray-700">
+                                {JSON.stringify(body, null, 2)}
+                            </pre>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
+
 interface ProfileModalProps {
     setShowProfile: (show: boolean) => void;
     isDark: boolean;
@@ -36,9 +105,13 @@ interface ProfileModalProps {
 
 const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, toggleTheme }) => {
     const [isVisible, setIsVisible] = useState(false);
-    const [activeTab, setActiveTab] = useState<'general' | 'profile'>('general');
+    const [activeTab, setActiveTab] = useState<'general' | 'profile' | 'api'>('general');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isModal2Open, setIsModal2Open] = useState(false);
+    const [apiKey, setApiKey] = useState<string | null>(null);
+    const [timeLeft, setTimeLeft] = useState<number>(60);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [copied, setCopied] = useState(false);
     const navigate = useNavigate();
     
     useEffect(() => {
@@ -49,6 +122,51 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
             document.body.style.overflow = 'unset';
         };
     }, []);
+
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (apiKey && timeLeft > 0) {
+            timer = setInterval(() => {
+                setTimeLeft(prev => prev - 1);
+            }, 1000);
+        } else if (timeLeft === 0) {
+            setApiKey(null);
+        }
+        return () => clearInterval(timer);
+    }, [apiKey, timeLeft]);
+
+    const handleGenerateApiKey = async () => {
+        setIsGenerating(true);
+        const userEmail = localStorage.getItem('userEmail');
+        
+        // Simulate initial loading
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        try {
+            const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/generate_key', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: userEmail
+                })
+            });
+
+            const data = await response.json();
+            setApiKey(data.api_key);
+            setTimeLeft(60);
+        } catch (error) {
+            console.error('Error generating API key:', error);
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const handleCopy = () => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
 
     const handleLogout = () => {
         setIsModal2Open(true);
@@ -129,6 +247,13 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                             <UserIcon className="w-4 h-4 mr-2" />
                             Profile
                         </Tab>
+                        <Tab 
+                            isActive={activeTab === 'api'}
+                            onClick={() => setActiveTab('api')}
+                        >
+                            <Terminal className="w-4 h-4 mr-2" />
+                            Service API
+                        </Tab>
                     </div>
                 </div>
 
@@ -172,7 +297,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                                 </div>
                             </div>
                         </div>
-                    ) : (
+                    ) : activeTab === 'profile' ? (
                         <div className="space-y-6">
                             {/* Profile Info */}
                             <div className="space-y-4">
@@ -208,7 +333,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                                 <h3 className="text-lg font-medium text-white dark:text-gray-900">Help & Support</h3>
                                 
                                 <button className="w-full flex items-center justify-between px-4 py-3 rounded-xl 
-                                               bg-gray-800/50 dark:bg-gray-200/50 hover:bg-gray-700/50 dark:hover:bg-gray-300/50 transition-colors" onClick={() => window.location.href='/terms'}>
+                                               bg-gray-800/50 dark:bg-gray-200/50 hover:bg-gray-700/50 dark:hover:bg-gray-300/50 transition-colors">
                                     <span className="text-white dark:text-gray-900 text-sm">Terms of Use</span>
                                     <Shield className="w-5 h-5 text-gray-400 dark:text-gray-600" />
                                 </button>
@@ -245,6 +370,99 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                                     <span className="text-sm">Delete Account</span>
                                 </button>
                                 <LoadingModal isOpen={isModalOpen} onClose={handleModalClose} />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-6">
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-medium text-white dark:text-gray-900">API Access</h3>
+                                <p className="text-gray-400 dark:text-gray-600">Generate an API key to access our services programmatically</p>
+
+                                <div className="bg-gray-800/50 dark:bg-gray-200/50 p-6 rounded-xl space-y-4">
+                                    {apiKey ? (
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm text-gray-400 dark:text-gray-600">Your API Key (visible for {timeLeft} seconds)</span>
+                                                <CopyToClipboard text={apiKey} onCopy={handleCopy}>
+                                                    <button className="p-2 hover:bg-gray-700/50 dark:hover:bg-gray-300/50 rounded-lg transition-colors">
+                                                        {copied ? 
+                                                            <CheckCircle2 className="w-5 h-5 text-green-400" /> :
+                                                            <Copy className="w-5 h-5 text-gray-400" />
+                                                        }
+                                                    </button>
+                                                </CopyToClipboard>
+                                            </div>
+                                            <code className="block w-full bg-gray-900/50 dark:bg-gray-100/50 px-4 py-3 rounded-lg 
+                                                         text-blue-400 dark:text-blue-600 font-mono text-sm">
+                                                {apiKey}
+                                            </code>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={handleGenerateApiKey}
+                                            disabled={isGenerating}
+                                            className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl 
+                                                     bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 transition-colors
+                                                     border border-blue-500/20 hover:border-blue-500/30"
+                                        >
+                                            {isGenerating ? (
+                                                <>
+                                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                                    <span>Generating...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Key className="w-5 h-5" />
+                                                    <span>Generate API Key</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-medium text-white dark:text-gray-900">API Documentation</h3>
+                                <p className="text-gray-400 dark:text-gray-600">Available endpoints and their usage</p>
+
+                                <div className="space-y-4">
+                                    <EndpointCard
+                                        title="Chat Completions"
+                                        method="POST"
+                                        url="https://jahanzebahmed25.pythonanywhere.com/v1/chat/completions"
+                                        headers={{
+                                            "Content-Type": "application/json",
+                                            "x-api-key": "<YOUR_API_KEY>"
+                                        }}
+                                        body={{
+                                            "prompt": "Explain how the solar system works.",
+                                            "reason": true,
+                                            "temperature": 0.7,
+                                            "max_completion_tokens": 1500,
+                                            "top_p": 0.9,
+                                            "stream": true,
+                                            "stop": null
+                                        }}
+                                        description="Main endpoint for chat functionality. Supports streaming responses and reasoning capabilities."
+                                    />
+
+                                    <EndpointCard
+                                        title="Health Check"
+                                        method="GET"
+                                        url="https://jahanzebahmed25.pythonanywhere.com/v1/health"
+                                        description="Check if the API is operational."
+                                    />
+
+                                    <EndpointCard
+                                        title="Usage Logs"
+                                        method="GET"
+                                        url="https://jahanzebahmed25.pythonanywhere.com/v1/logs"
+                                        headers={{
+                                            "x-api-key": "<YOUR_API_KEY>"
+                                        }}
+                                        description="Retrieve API usage logs for your account."
+                                    />
+                                </div>
                             </div>
                         </div>
                     )}
