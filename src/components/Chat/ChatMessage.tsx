@@ -1,5 +1,3 @@
-ChatMessage.tsx after think UI : 
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Bot, User, Copy, Check, Info, Code, Brain, ImageIcon, Download, Lightbulb } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
