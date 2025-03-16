@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { Bot, User, Copy, Check, Info, Code, Brain, ImageIcon, Download, Lightbulb } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -25,7 +25,8 @@ interface ThinkBlock {
   isTyped: boolean;
 }
 
-export function ChatMessage({ 
+// Memoize the entire ChatMessage component
+export const ChatMessage = memo(function ChatMessage({ 
   message, 
   isBot, 
   isTyped,
@@ -47,6 +48,7 @@ export function ChatMessage({
   const r1ButtonRef = useRef<HTMLButtonElement>(null);
   const lastScrollHeightRef = useRef<number>(0);
   const lastMessageLengthRef = useRef<number>(0);
+  const processingRef = useRef(false);
 
   // Extract think blocks from message
   const extractThinkBlock = (text: string): { thinkContent: string, remainingText: string } | null => {
@@ -107,26 +109,34 @@ export function ChatMessage({
     lastMessageLengthRef.current = messageText.length;
   }, [displayedText, containerRef]);
 
-  // Process incoming message
+  // Batch updates for streaming text
   useEffect(() => {
+    if (processingRef.current) return;
+    processingRef.current = true;
+
     const messageText = Array.isArray(message) ? message.join('\n') : message;
-    
-    // Extract and set code blocks
-    setCodeBlocks(extractCodeBlocks(messageText));
-    
-    // Process think blocks for DeepThink mode
     const thinkExtracted = extractThinkBlock(messageText);
+    
     if (thinkExtracted) {
       setThinkBlock({ 
         content: thinkExtracted.thinkContent, 
         isTyped: true 
       });
-      setDisplayedText(replaceCodeBlocks(thinkExtracted.remainingText));
+      
+      // Use requestAnimationFrame for smooth updates
+      requestAnimationFrame(() => {
+        setDisplayedText(replaceCodeBlocks(thinkExtracted.remainingText));
+        setCodeBlocks(extractCodeBlocks(messageText));
+        processingRef.current = false;
+      });
     } else {
-      setDisplayedText(replaceCodeBlocks(messageText));
+      requestAnimationFrame(() => {
+        setDisplayedText(replaceCodeBlocks(messageText));
+        setCodeBlocks(extractCodeBlocks(messageText));
+        processingRef.current = false;
+      });
     }
 
-    // Call onTypingComplete when message is fully displayed
     onTypingComplete();
   }, [message, onTypingComplete]);
 
@@ -316,4 +326,13 @@ export function ChatMessage({
       />
     </div>
   );
-}
+}, (prevProps, nextProps) => {
+  // Custom memoization logic
+  return (
+    prevProps.message === nextProps.message &&
+    prevProps.isBot === nextProps.isBot &&
+    prevProps.isTyped === nextProps.isTyped &&
+    prevProps.isDeepThinkEnabled === nextProps.isDeepThinkEnabled &&
+    prevProps.imageBase64 === nextProps.imageBase64
+  );
+});
