@@ -14,7 +14,7 @@
 }
 
 .animate-reveal {
-  animation: reveal 0.3s ease-out forwards;
+  animation: reveal 0.10s ease-out forwards;
 }
 
 :root {
