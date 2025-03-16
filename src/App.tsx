@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import HistorySidebar from './components/Sidebar/Sidebar';
 import { ChatContainer } from './components/Chat/ChatContainer';
@@ -22,7 +22,17 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [promptCount, setPromptCount] = useState(0);
+  const streamControllerRef = useRef<AbortController | null>(null);
   const MAX_PROMPTS = 5;
+
+  // Optimized message update function
+  const updateStreamingMessage = useCallback((messageId: string, newText: string) => {
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId 
+        ? { ...msg, text: newText }
+        : msg
+    ));
+  }, []);
 
   const handleNewChat = useCallback(() => {
     setMessages([]);
@@ -92,7 +102,16 @@ function App() {
   }, []);
 
   const handleSendMessage = useCallback(async (message: string, isDeepThinkEnabled: boolean, isImageMode: boolean, model?: string) => {
-    setMessages((prev) => [...prev, {
+    // Abort previous stream if exists
+    if (streamControllerRef.current) {
+      streamControllerRef.current.abort();
+    }
+
+    // Create new stream controller
+    streamControllerRef.current = new AbortController();
+    const { signal } = streamControllerRef.current;
+
+    setMessages(prev => [...prev, {
       id: Math.random().toString(36).substring(7),
       text: message,
       isBot: false,
@@ -105,7 +124,7 @@ function App() {
     const token = localStorage.getItem('token');
     if (!token) {
       if (promptCount >= MAX_PROMPTS) {
-        setMessages((prev) => [...prev, {
+        setMessages(prev => [...prev, {
           id: Math.random().toString(36).substring(7),
           text: 'To continue, please login.',
           isBot: true,
@@ -115,17 +134,16 @@ function App() {
         setIsLoading(false);
         return;
       }
-      setPromptCount((prev) => prev + 1);
+      setPromptCount(prev => prev + 1);
     }
 
     try {
       if (isImageMode) {
-        // Image generation logic remains unchanged
         const initialMessage = [
-          "I'm generating your image. This usually takes about 4 minutes. I'll keep you updated on the progress...","..."
+          "I'm generating your image. This usually takes about 4 minutes. I'll keep you updated on the progress...", "..."
         ];
 
-        setMessages((prev) => [...prev, {
+        setMessages(prev => [...prev, {
           id: Math.random().toString(36).substring(7),
           text: initialMessage,
           isBot: true,
@@ -152,7 +170,7 @@ function App() {
           throw new Error(imageData.error);
         }
 
-        setMessages((prev) => [...prev, {
+        setMessages(prev => [...prev, {
           id: Math.random().toString(36).substring(7),
           text: 'Here is your generated image:',
           isBot: true,
@@ -161,9 +179,8 @@ function App() {
           imageBase64: imageData.output
         }]);
       } else {
-        // Handle streaming chat response
         const messageId = Math.random().toString(36).substring(7);
-        setMessages((prev) => [...prev, {
+        setMessages(prev => [...prev, {
           id: messageId,
           text: '',
           isBot: true,
@@ -179,50 +196,45 @@ function App() {
             ...(model && { model: model })
           },
           body: JSON.stringify({ prompt: message }),
+          signal,
         });
 
         if (!response.ok) {
-          throw new Error(`It's looks like you are not Authorized! Please Login again: ${response.status}`);
+          throw new Error(`It looks like you are not Authorized! Please Login again: ${response.status}`);
         }
 
         const reader = response.body?.getReader();
         if (!reader) throw new Error('No response stream available');
 
         let accumulatedText = '';
-        let updateTimer = null;
+        let lastUpdateTime = 0;
+        const UPDATE_INTERVAL = 50; // 50ms between updates
         
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
           
-          // Convert the chunk to text
           const chunk = new TextDecoder().decode(value);
           accumulatedText += chunk;
 
-          if (!updateTimer) {
-            updateTimer = setTimeout(() => {
-              setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.id === messageId ? { ...msg, text: accumulatedText } : msg
-                )
-              );
-              updateTimer = null;
-            }, 200);
+          const now = Date.now();
+          if (now - lastUpdateTime >= UPDATE_INTERVAL) {
+            updateStreamingMessage(messageId, accumulatedText);
+            lastUpdateTime = now;
           }
         }
-        // Make sure final update is applied
-        if (updateTimer) {
-          clearTimeout(updateTimer);
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === messageId ? { ...msg, text: accumulatedText } : msg
-            )
-          );
-        }
+
+        // Final update
+        updateStreamingMessage(messageId, accumulatedText);
       }
     } catch (error) {
+      if (error.name === 'AbortError') {
+        console.log('Stream aborted');
+        return;
+      }
+
       console.error('Error:', error);
-      setMessages((prev) => [...prev, {
+      setMessages(prev => [...prev, {
         id: Math.random().toString(36).substring(7),
         text: `Sorry, an error occurred: ${error.message}`,
         isBot: true,
@@ -231,8 +243,9 @@ function App() {
       }]);
     } finally {
       setIsLoading(false);
+      streamControllerRef.current = null;
     }
-  }, [promptCount]);
+  }, [promptCount, updateStreamingMessage]);
 
   const MainLayout = useMemo(() => () => (
     <div className="flex h-screen bg-gray-900 overflow-hidden">
@@ -261,7 +274,7 @@ function App() {
         />
       </div>
     </div>
-  ), [isSidebarOpen, messages, isLoading, handleSendMessage, handleNewChat, handleLoadHistory]);
+  ), [isSidebarOpen, messages, isLoading, handleSendMessage, handleNewChat, handleLoadHistory, toggleSidebar]);
 
   return (
     <Router>
