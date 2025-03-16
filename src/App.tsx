@@ -60,7 +60,7 @@ function App() {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  const handleSendMessage = useCallback(async (message: string, isDeepThinkEnabled: boolean, isImageMode: boolean) => {
+  const handleSendMessage = useCallback(async (message: string, isDeepThinkEnabled: boolean, isImageMode: boolean, model?: string) => {
     // Add user message
     setMessages((prev) => [...prev, {
       id: Math.random().toString(36).substring(7),
@@ -139,6 +139,7 @@ function App() {
           headers: {
             'Content-Type': 'application/json',
             ...(token && { Authorization: `Bearer ${token}` }),
+            ...(model && { Model: model }) // Changed from 'model' to 'Model'
           },
           body: JSON.stringify({ prompt: message }),
         });
