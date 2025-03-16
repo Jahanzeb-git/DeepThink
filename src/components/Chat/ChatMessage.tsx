@@ -44,6 +44,7 @@ export const ChatMessage = memo(function ChatMessage({
   const [currentLanguage, setCurrentLanguage] = useState('typescript');
   const [codeBlocks, setCodeBlocks] = useState<CodeBlock[]>([]);
   const [thinkBlock, setThinkBlock] = useState<ThinkBlock | null>(null);
+  const [messageChunks, setMessageChunks] = useState<string[]>([]);
   const messageRef = useRef<HTMLDivElement>(null);
   const r1ButtonRef = useRef<HTMLButtonElement>(null);
   const lastScrollHeightRef = useRef<number>(0);
@@ -83,6 +84,25 @@ export const ChatMessage = memo(function ChatMessage({
     return text.replace(/```(?:\w+)?\n[\s\S]*?```/g, '```code```');
   };
 
+  // Split text into chunks for animation
+  const splitIntoChunks = (text: string): string[] => {
+    const sentences = text.split(/([.!?]+\s+)/);
+    const chunks: string[] = [];
+    let currentChunk = '';
+
+    sentences.forEach((sentence) => {
+      if (currentChunk.length + sentence.length > 100) {
+        if (currentChunk) chunks.push(currentChunk.trim());
+        currentChunk = sentence;
+      } else {
+        currentChunk += sentence;
+      }
+    });
+
+    if (currentChunk) chunks.push(currentChunk.trim());
+    return chunks;
+  };
+
   // Handle smooth scroll when content changes
   useEffect(() => {
     if (!containerRef.current || !messageRef.current) return;
@@ -92,7 +112,6 @@ export const ChatMessage = memo(function ChatMessage({
     const currentScrollHeight = container.scrollHeight;
     const messageText = Array.isArray(message) ? message.join('\n') : message;
     
-    // Only scroll if content has actually increased
     if (currentScrollHeight > lastScrollHeightRef.current && 
         messageText.length > lastMessageLengthRef.current) {
       const shouldAutoScroll = container.scrollTop + container.clientHeight + 100 >= lastScrollHeightRef.current;
@@ -109,7 +128,7 @@ export const ChatMessage = memo(function ChatMessage({
     lastMessageLengthRef.current = messageText.length;
   }, [displayedText, containerRef]);
 
-  // Batch updates for streaming text
+  // Process incoming message with animation
   useEffect(() => {
     if (processingRef.current) return;
     processingRef.current = true;
@@ -117,22 +136,27 @@ export const ChatMessage = memo(function ChatMessage({
     const messageText = Array.isArray(message) ? message.join('\n') : message;
     const thinkExtracted = extractThinkBlock(messageText);
     
+    const processText = (text: string) => {
+      const processedText = replaceCodeBlocks(text);
+      const chunks = splitIntoChunks(processedText);
+      setMessageChunks(chunks);
+      setDisplayedText(processedText);
+      setCodeBlocks(extractCodeBlocks(messageText));
+    };
+
     if (thinkExtracted) {
       setThinkBlock({ 
         content: thinkExtracted.thinkContent, 
         isTyped: true 
       });
       
-      // Use requestAnimationFrame for smooth updates
       requestAnimationFrame(() => {
-        setDisplayedText(replaceCodeBlocks(thinkExtracted.remainingText));
-        setCodeBlocks(extractCodeBlocks(messageText));
+        processText(thinkExtracted.remainingText);
         processingRef.current = false;
       });
     } else {
       requestAnimationFrame(() => {
-        setDisplayedText(replaceCodeBlocks(messageText));
-        setCodeBlocks(extractCodeBlocks(messageText));
+        processText(messageText);
         processingRef.current = false;
       });
     }
@@ -164,7 +188,7 @@ export const ChatMessage = memo(function ChatMessage({
     if (!codeBlock) return null;
 
     return (
-      <div className="my-4 p-4 bg-gray-800/50 dark:bg-gray-200/50 rounded-lg border border-gray-700 dark:border-gray-300">
+      <div className="my-4 p-4 bg-gray-800/50 dark:bg-gray-200/50 rounded-lg border border-gray-700 dark:border-gray-300 message-chunk">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Code size={20} className="text-gray-400" />
@@ -186,7 +210,7 @@ export const ChatMessage = memo(function ChatMessage({
   // Render think block
   const ThinkBlockComponent = ({ content, isTyped }: ThinkBlock) => {
     return (
-      <div className="my-4 p-4 bg-indigo-500/10 dark:bg-indigo-200/20 rounded-lg border border-indigo-500/20 dark:border-indigo-300/30">
+      <div className="my-4 p-4 bg-indigo-500/10 dark:bg-indigo-200/20 rounded-lg border border-indigo-500/20 dark:border-indigo-300/30 message-chunk">
         <div className="flex items-center space-x-2 mb-2">
           <Lightbulb size={20} className="text-indigo-500 dark:text-indigo-400" />
           <span className="text-sm font-medium text-indigo-500 dark:text-indigo-400">
@@ -241,19 +265,19 @@ export const ChatMessage = memo(function ChatMessage({
           <div className="text-gray-200 dark:text-gray-800 leading-relaxed">
             {thinkBlock && <ThinkBlockComponent {...thinkBlock} />}
             
-            <div className="animate-reveal">
-              {displayedText.split('```code```').map((text, index, array) => (
-                <React.Fragment key={index}>
+            <div className="space-y-4">
+              {messageChunks.map((chunk, index) => (
+                <div key={index} className="message-chunk">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {text}
+                    {chunk}
                   </ReactMarkdown>
-                  {index < array.length - 1 && <CodeBlockPlaceholder index={index} />}
-                </React.Fragment>
+                  {index < codeBlocks.length && <CodeBlockPlaceholder index={index} />}
+                </div>
               ))}
             </div>
             
             {imageBase64 && (
-              <div className="mt-4 relative">
+              <div className="mt-4 relative message-chunk">
                 <div className="relative">
                   <img
                     src={`data:image/jpeg;base64,${imageBase64}`}
@@ -327,7 +351,6 @@ export const ChatMessage = memo(function ChatMessage({
     </div>
   );
 }, (prevProps, nextProps) => {
-  // Custom memoization logic
   return (
     prevProps.message === nextProps.message &&
     prevProps.isBot === nextProps.isBot &&
