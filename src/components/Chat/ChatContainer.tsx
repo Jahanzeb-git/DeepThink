@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { ChatMessage } from './ChatMessage';
 import ChatInput from './ChatInput';
 import TagInput from './TagInput';
@@ -17,25 +17,77 @@ interface Message {
 interface ChatContainerProps {
   messages: Message[];
   isLoading: boolean;
-  onSendMessage: (message: string, isDeepThinkEnabled: boolean, isImageMode: boolean) => Promise<void>;
+  onSendMessage: (message: string, isDeepThinkEnabled: boolean, isImageMode: boolean, model?: string) => Promise<void>;
 }
 
-export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContainerProps) {
+// Memoize the ChatContainer component
+export const ChatContainer = memo(function ChatContainer({ 
+  messages, 
+  isLoading, 
+  onSendMessage 
+}: ChatContainerProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState('');
   const [isDeepThinkEnabled, setIsDeepThinkEnabled] = useState(false);
   const [mode, setMode] = useState<'text' | 'image'>('text');
+  const lastScrollPositionRef = useRef(0);
+  const isNearBottomRef = useRef(true);
 
-  // Scroll to bottom whenever messages change
+  // Optimized scroll handling
+  const handleScroll = useCallback(() => {
+    if (!messagesContainerRef.current) return;
+    
+    const container = messagesContainerRef.current;
+    const scrollPosition = container.scrollTop;
+    const maxScroll = container.scrollHeight - container.clientHeight;
+    
+    isNearBottomRef.current = maxScroll - scrollPosition < 100;
+    lastScrollPositionRef.current = scrollPosition;
+  }, []);
+
+  // Optimized scroll to bottom
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, isLoading]);
+    if (!messagesContainerRef.current || !messagesEndRef.current) return;
 
-  const handleSendMessage = async (message: string, isDeepThinkEnabled: boolean, isImageMode: boolean) => {
-    await onSendMessage(message, isDeepThinkEnabled, isImageMode);
+    const container = messagesContainerRef.current;
+    
+    if (isNearBottomRef.current) {
+      requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+  }, [messages]);
+
+  // Add scroll event listener
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
+  // Memoized message rendering
+  const renderMessages = useCallback(() => {
+    return messages.map((msg) => (
+      <ChatMessage
+        key={msg.id}
+        isBot={msg.isBot}
+        message={msg.text}
+        isTyped={msg.isTyped}
+        onTypingComplete={() => {
+          msg.isTyped = true;
+        }}
+        containerRef={messagesContainerRef}
+        isDeepThinkEnabled={msg.isDeepThinkEnabled}
+        imageBase64={msg.imageBase64}
+      />
+    ));
+  }, [messages]);
+
+  const handleSendMessage = async (message: string, isDeepThinkEnabled: boolean, isImageMode: boolean,  model?: string) => {
+    await onSendMessage(message, isDeepThinkEnabled, isImageMode, model);
     setInputValue('');
   };
 
@@ -100,20 +152,7 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
               ref={messagesContainerRef}
               className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 pb-4 scrollbar-thin scrollbar-thumb-gray-600 dark:scrollbar-thumb-gray-400"
             >
-              {messages.map((msg) => (
-                <ChatMessage
-                  key={msg.id}
-                  isBot={msg.isBot}
-                  message={msg.text}
-                  isTyped={msg.isTyped}
-                  onTypingComplete={() => {
-                    msg.isTyped = true;
-                  }}
-                  containerRef={messagesContainerRef}
-                  isDeepThinkEnabled={msg.isDeepThinkEnabled}
-                  imageBase64={msg.imageBase64}
-                />
-              ))}
+              {renderMessages()}
               {isLoading && (
                 <div className="flex items-center space-x-2 text-gray-400">
                   <div className="animate-spin">
@@ -144,6 +183,19 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
       </div>
     </div>
   );
-}
+}, (prevProps, nextProps) => {
+  // Custom memoization logic
+  if (prevProps.isLoading !== nextProps.isLoading) return false;
+  if (prevProps.messages.length !== nextProps.messages.length) return false;
+  
+  // Only check the last message for changes if lengths are equal
+  if (prevProps.messages.length > 0) {
+    const prevLastMsg = prevProps.messages[prevProps.messages.length - 1];
+    const nextLastMsg = nextProps.messages[nextProps.messages.length - 1];
+    if (prevLastMsg.text !== nextLastMsg.text) return false;
+  }
+  
+  return true;
+});
 
 
