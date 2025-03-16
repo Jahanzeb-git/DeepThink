@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useRef, memo } from 'react';
+ChatMessage.tsx after think UI : 
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Bot, User, Copy, Check, Info, Code, Brain, ImageIcon, Download, Lightbulb } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CodePreview } from './CodePreview';
+import ImageCarousel from './Slideshow';
 
 interface ChatMessageProps {
   message: string | string[];
@@ -25,30 +28,31 @@ interface ThinkBlock {
   isTyped: boolean;
 }
 
-// Memoize the entire ChatMessage component
-export const ChatMessage = memo(function ChatMessage({ 
+export function ChatMessage({ 
   message, 
   isBot, 
-  isTyped,
-  onTypingComplete,
+  isTyped, 
+  onTypingComplete, 
   containerRef,
   isDeepThinkEnabled,
   imageBase64 
 }: ChatMessageProps) {
   const [displayedText, setDisplayedText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [showModelInfo, setShowModelInfo] = useState(false);
   const [showR1Info, setShowR1Info] = useState(false);
   const [isCodePreviewOpen, setIsCodePreviewOpen] = useState(false);
   const [currentCode, setCurrentCode] = useState('');
   const [currentLanguage, setCurrentLanguage] = useState('typescript');
+  const [isTypingCode, setIsTypingCode] = useState(false);
   const [codeBlocks, setCodeBlocks] = useState<CodeBlock[]>([]);
   const [thinkBlock, setThinkBlock] = useState<ThinkBlock | null>(null);
+  const [currentProgressIndex, setCurrentProgressIndex] = useState(0);
+  const progressUpdateRef = useRef<NodeJS.Timeout | null>(null);
+  const typingRef = useRef<NodeJS.Timeout | null>(null);
   const messageRef = useRef<HTMLDivElement>(null);
   const r1ButtonRef = useRef<HTMLButtonElement>(null);
-  const lastScrollHeightRef = useRef<number>(0);
-  const lastMessageLengthRef = useRef<number>(0);
-  const processingRef = useRef(false);
 
   // Extract think blocks from message
   const extractThinkBlock = (text: string): { thinkContent: string, remainingText: string } | null => {
@@ -60,6 +64,40 @@ export const ChatMessage = memo(function ChatMessage({
     }
     return null;
   };
+
+  // Progress update messages
+  const progressUpdates = ["...", "..."];
+
+  // Handle progress updates for image generation
+  useEffect(() => {
+    if (isBot && Array.isArray(message) && message[0]?.includes("I'm generating your image")) {
+      const initialMessage = message[0];
+      setDisplayedText(initialMessage);
+
+      if (progressUpdateRef.current) {
+        clearInterval(progressUpdateRef.current);
+      }
+
+      const timeoutId = setTimeout(() => {
+        let currentIndex = 0;
+        
+        progressUpdateRef.current = setInterval(() => {
+          setDisplayedText(prev => {
+            const newMessage = `${initialMessage}\n\n${progressUpdates[currentIndex]}`;
+            currentIndex = (currentIndex + 1) % progressUpdates.length;
+            return newMessage;
+          });
+        }, 500);
+      }, 500);
+
+      return () => {
+        clearTimeout(timeoutId);
+        if (progressUpdateRef.current) {
+          clearInterval(progressUpdateRef.current);
+        }
+      };
+    }
+  }, [isBot, message]);
 
   // Extract code blocks from message
   const extractCodeBlocks = (text: string): CodeBlock[] => {
@@ -83,62 +121,79 @@ export const ChatMessage = memo(function ChatMessage({
     return text.replace(/```(?:\w+)?\n[\s\S]*?```/g, '```code```');
   };
 
-  // Handle smooth scroll when content changes
-  useEffect(() => {
-    if (!containerRef.current || !messageRef.current) return;
-
-    const container = containerRef.current;
-    const message = messageRef.current;
-    const currentScrollHeight = container.scrollHeight;
-    const messageText = Array.isArray(message) ? message.join('\n') : message;
-    
-    // Only scroll if content has actually increased
-    if (currentScrollHeight > lastScrollHeightRef.current && 
-        messageText.length > lastMessageLengthRef.current) {
-      const shouldAutoScroll = container.scrollTop + container.clientHeight + 100 >= lastScrollHeightRef.current;
+  // Typing animation with think and code block detection
+  const animateTyping = useCallback(() => {
+    if (!isBot || isTyped) {
+      const messageText = Array.isArray(message) ? message.join('\n') : message;
+      const thinkExtracted = extractThinkBlock(messageText);
       
-      if (shouldAutoScroll) {
-        container.scrollTo({
-          top: currentScrollHeight,
-          behavior: 'smooth'
-        });
+      if (thinkExtracted) {
+        setThinkBlock({ content: thinkExtracted.thinkContent, isTyped: true });
+        setDisplayedText(replaceCodeBlocks(thinkExtracted.remainingText));
+      } else {
+        setDisplayedText(replaceCodeBlocks(messageText));
       }
+      
+      setCodeBlocks(extractCodeBlocks(messageText));
+      return;
     }
 
-    lastScrollHeightRef.current = currentScrollHeight;
-    lastMessageLengthRef.current = messageText.length;
-  }, [displayedText, containerRef]);
-
-  // Batch updates for streaming text
-  useEffect(() => {
-    if (processingRef.current) return;
-    processingRef.current = true;
-
+    setIsTyping(true);
     const messageText = Array.isArray(message) ? message.join('\n') : message;
     const thinkExtracted = extractThinkBlock(messageText);
     
     if (thinkExtracted) {
-      setThinkBlock({ 
-        content: thinkExtracted.thinkContent, 
-        isTyped: true 
-      });
-      
-      // Use requestAnimationFrame for smooth updates
-      requestAnimationFrame(() => {
-        setDisplayedText(replaceCodeBlocks(thinkExtracted.remainingText));
-        setCodeBlocks(extractCodeBlocks(messageText));
-        processingRef.current = false;
-      });
+      setThinkBlock({ content: '', isTyped: false });
+      let thinkIndex = 0;
+      const typeThink = () => {
+        if (thinkIndex < thinkExtracted.thinkContent.length) {
+          setThinkBlock(prev => ({
+            content: thinkExtracted.thinkContent.slice(0, thinkIndex + 1),
+            isTyped: false
+          }));
+          thinkIndex++;
+          typingRef.current = setTimeout(typeThink, Math.random() * 20 + 10);
+        } else {
+          setThinkBlock(prev => ({ ...prev!, isTyped: true }));
+          startMainText();
+        }
+      };
+      typeThink();
     } else {
-      requestAnimationFrame(() => {
-        setDisplayedText(replaceCodeBlocks(messageText));
-        setCodeBlocks(extractCodeBlocks(messageText));
-        processingRef.current = false;
-      });
+      startMainText();
     }
 
-    onTypingComplete();
-  }, [message, onTypingComplete]);
+    function startMainText() {
+      let currentIndex = 0;
+      const textToType = thinkExtracted ? thinkExtracted.remainingText : messageText;
+      const typeNextChar = () => {
+        if (currentIndex < textToType.length) {
+          setDisplayedText(replaceCodeBlocks(textToType.slice(0, currentIndex + 1)));
+          currentIndex++;
+          typingRef.current = setTimeout(typeNextChar, Math.random() * 20 + 10);
+        } else {
+          setIsTyping(false);
+          onTypingComplete();
+        }
+      };
+      typeNextChar();
+    }
+
+    return () => {
+      if (typingRef.current) {
+        clearTimeout(typingRef.current);
+      }
+    };
+  }, [message, isBot, isTyped, onTypingComplete]);
+
+  useEffect(() => {
+    animateTyping();
+    return () => {
+      if (typingRef.current) {
+        clearTimeout(typingRef.current);
+      }
+    };
+  }, [animateTyping]);
 
   // Copy message to clipboard
   const copyToClipboard = async () => {
@@ -167,9 +222,9 @@ export const ChatMessage = memo(function ChatMessage({
       <div className="my-4 p-4 bg-gray-800/50 dark:bg-gray-200/50 rounded-lg border border-gray-700 dark:border-gray-300">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Code size={20} className="text-gray-400" />
+            <Code size={20} className={isTypingCode ? "animate-pulse text-emerald-500" : "text-gray-400"} />
             <span className="text-sm text-gray-400">
-              {`${codeBlock.language} code`}
+              {isTypingCode && index === codeBlocks.length - 1 ? "Generating code..." : `${codeBlock.language} code`}
             </span>
           </div>
           <button
@@ -197,6 +252,11 @@ export const ChatMessage = memo(function ChatMessage({
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {content}
           </ReactMarkdown>
+          {!isTyped && (
+            <span className="inline-flex ml-1">
+              <span className="w-1 h-4 bg-indigo-500 dark:bg-indigo-400 animate-pulse" />
+            </span>
+          )}
         </div>
       </div>
     );
@@ -241,16 +301,34 @@ export const ChatMessage = memo(function ChatMessage({
           <div className="text-gray-200 dark:text-gray-800 leading-relaxed">
             {thinkBlock && <ThinkBlockComponent {...thinkBlock} />}
             
-            <div className="animate-reveal">
-              {displayedText.split('```code```').map((text, index, array) => (
-                <React.Fragment key={index}>
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {text}
-                  </ReactMarkdown>
-                  {index < array.length - 1 && <CodeBlockPlaceholder index={index} />}
-                </React.Fragment>
-              ))}
-            </div>
+            {isBot && !isTyped ? (
+              <>
+                {displayedText.split('```code```').map((text, index, array) => (
+                  <React.Fragment key={index}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {text}
+                    </ReactMarkdown>
+                    {index < array.length - 1 && <CodeBlockPlaceholder index={index} />}
+                  </React.Fragment>
+                ))}
+                {isTyping && !thinkBlock?.isTyped && (
+                  <span className="inline-flex ml-1">
+                    <span className="w-1 h-4 bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
+                  </span>
+                )}
+              </>
+            ) : (
+              <>
+                {displayedText.split(/```(?:\w+)?\n[\s\S]*?```/).map((text, index, array) => (
+                  <React.Fragment key={index}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {text}
+                    </ReactMarkdown>
+                    {index < array.length - 1 && <CodeBlockPlaceholder index={index} />}
+                  </React.Fragment>
+                ))}
+              </>
+            )}
             
             {imageBase64 && (
               <div className="mt-4 relative">
@@ -326,13 +404,4 @@ export const ChatMessage = memo(function ChatMessage({
       />
     </div>
   );
-}, (prevProps, nextProps) => {
-  // Custom memoization logic
-  return (
-    prevProps.message === nextProps.message &&
-    prevProps.isBot === nextProps.isBot &&
-    prevProps.isTyped === nextProps.isTyped &&
-    prevProps.isDeepThinkEnabled === nextProps.isDeepThinkEnabled &&
-    prevProps.imageBase64 === nextProps.imageBase64
-  );
-});
+}
