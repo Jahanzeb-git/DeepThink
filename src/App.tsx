@@ -189,6 +189,7 @@ function App() {
         if (!reader) throw new Error('No response stream available');
 
         let accumulatedText = '';
+        let updateTimer = null;
         
         while (true) {
           const { done, value } = await reader.read();
@@ -198,12 +199,25 @@ function App() {
           const chunk = new TextDecoder().decode(value);
           accumulatedText += chunk;
 
-          // Update the message with accumulated text
-          setMessages((prev) => prev.map((msg) => 
-            msg.id === messageId 
-              ? { ...msg, text: accumulatedText }
-              : msg
-          ));
+          if (!updateTimer) {
+            updateTimer = setTimeout(() => {
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === messageId ? { ...msg, text: accumulatedText } : msg
+                )
+              );
+              updateTimer = null;
+            }, 200);
+          }
+        }
+        // Make sure final update is applied
+        if (updateTimer) {
+          clearTimeout(updateTimer);
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === messageId ? { ...msg, text: accumulatedText } : msg
+            )
+          );
         }
       }
     } catch (error) {
