@@ -280,7 +280,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<LoadingPage />} />
-        <Route path="/main" element={<MainLayout />} />
+        <Route path="/chat" element={<MainLayout />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/terms" element={<Terms />} />
