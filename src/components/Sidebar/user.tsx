@@ -22,7 +22,7 @@ interface TabProps {
 const Tab: React.FC<TabProps> = ({ isActive, onClick, children }) => (
     <button
         onClick={onClick}
-        className={`px-6 py-3 font-medium rounded-xl transition-all duration-300 text-sm flex items-center
+        className={`px-4 py-3 font-medium rounded-xl transition-all duration-300 text-sm flex items-center flex-1 justify-center
                    ${isActive 
                      ? 'bg-blue-600/20 text-blue-400 dark:text-blue-300 shadow-lg shadow-blue-500/10' 
                      : 'hover:bg-gray-800/80 dark:hover:bg-gray-100/10 text-gray-400 hover:text-gray-300 dark:hover:text-gray-200'}`}
@@ -109,54 +109,102 @@ const LogsSection: React.FC = () => {
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showLogs, setShowLogs] = useState(false);
+    const [isDeletingLogs, setIsDeletingLogs] = useState(false);
 
-    useEffect(() => {
-        const fetchLogs = async () => {
-            setIsLoading(true);
-            setError(null);
-            try {
-                const userEmail = localStorage.getItem('userEmail');
-                if (!userEmail) {
-                    throw new Error('User email not found');
-                }
-
-                // First, get the API key
-                const keyResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/user_key', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email: userEmail }),
-                });
-
-                if (!keyResponse.ok) {
-                    throw new Error('Failed to retrieve API key');
-                }
-
-                const { api_key } = await keyResponse.json();
-
-                // Then, fetch the logs
-                const logsResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/v1/logs', {
-                    headers: {
-                        'x-api-key': api_key,
-                    },
-                });
-
-                if (!logsResponse.ok) {
-                    throw new Error('Failed to fetch logs');
-                }
-
-                const { logs } = await logsResponse.json();
-                setLogs(logs);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to fetch logs');
-            } finally {
-                setIsLoading(false);
+    const fetchLogs = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const userEmail = localStorage.getItem('userEmail');
+            if (!userEmail) {
+                throw new Error('User email not found');
             }
-        };
 
-        fetchLogs();
-    }, []);
+            // First, get the API key
+            const keyResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/user_key', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: userEmail }),
+            });
+
+            if (!keyResponse.ok) {
+                throw new Error('Failed to retrieve API key');
+            }
+
+            const { api_key } = await keyResponse.json();
+            
+            if (!api_key) {
+                setError('No API key Generated yet!');
+                return;
+            }
+
+            // Then, fetch the logs
+            const logsResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/v1/logs', {
+                headers: {
+                    'x-api-key': api_key,
+                },
+            });
+
+            if (!logsResponse.ok) {
+                throw new Error('Failed to fetch logs');
+            }
+
+            const { logs } = await logsResponse.json();
+            setLogs(logs);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to fetch logs');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleDeleteLogs = async () => {
+        setIsDeletingLogs(true);
+        try {
+            const userEmail = localStorage.getItem('userEmail');
+            if (!userEmail) {
+                throw new Error('User email not found');
+            }
+
+            const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/delete_logs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: userEmail }),
+            });
+
+            const data = await response.json();
+            setError(data.message);
+            if (response.ok) {
+                setLogs([]);
+            }
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to delete logs');
+        } finally {
+            setIsDeletingLogs(false);
+        }
+    };
+
+    if (!showLogs) {
+        return (
+            <button
+                onClick={() => {
+                    setShowLogs(true);
+                    fetchLogs();
+                }}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl 
+                         bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 transition-colors
+                         border border-blue-500/20 hover:border-blue-500/30"
+            >
+                <Activity className="w-5 h-5" />
+                <span>Display API Access Logs</span>
+            </button>
+        );
+    }
 
     if (isLoading) {
         return (
@@ -178,12 +226,25 @@ const LogsSection: React.FC = () => {
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium text-white dark:text-gray-900">API Usage Logs</h3>
-                <span className="text-sm text-gray-400 dark:text-gray-600">
-                    {logs.length} requests
-                </span>
+                <div className="flex items-center gap-4">
+                    <span className="text-sm text-gray-400 dark:text-gray-600">
+                        {logs.length} requests
+                    </span>
+                    <button
+                        onClick={handleDeleteLogs}
+                        disabled={isDeletingLogs}
+                        className="p-2 hover:bg-red-500/20 rounded-lg transition-colors text-red-400"
+                    >
+                        {isDeletingLogs ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                            <Trash2 className="w-5 h-5" />
+                        )}
+                    </button>
+                </div>
             </div>
 
-            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
                 {logs.map((log, index) => (
                     <div
                         key={index}
@@ -254,9 +315,6 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
     const handleGenerateApiKey = async () => {
         setIsGenerating(true);
         const userEmail = localStorage.getItem('userEmail');
-        
-        // Simulate initial loading
-        await new Promise(resolve => setTimeout(resolve, 3000));
         
         try {
             const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/generate_key', {
@@ -348,33 +406,33 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
 
                 {/* Tabs */}
                 <div className="absolute top-32 inset-x-0 px-4 md:px-8">
-                    <div className="flex space-x-2 md:space-x-4 overflow-x-auto pb-2 scrollbar-hide">
+                    <div className="flex space-x-2 md:space-x-4">
                         <Tab 
                             isActive={activeTab === 'general'}
                             onClick={() => setActiveTab('general')}
                         >
                             <Settings className="w-4 h-4 mr-2" />
-                            <span className="whitespace-nowrap">General</span>
+                            <span>General</span>
                         </Tab>
                         <Tab 
                             isActive={activeTab === 'profile'}
                             onClick={() => setActiveTab('profile')}
                         >
                             <UserIcon className="w-4 h-4 mr-2" />
-                            <span className="whitespace-nowrap">Profile</span>
+                            <span>Profile</span>
                         </Tab>
                         <Tab 
                             isActive={activeTab === 'api'}
                             onClick={() => setActiveTab('api')}
                         >
                             <Terminal className="w-4 h-4 mr-2" />
-                            <span className="whitespace-nowrap">Service API</span>
+                            <span>Service API</span>
                         </Tab>
                     </div>
                 </div>
 
                 {/* Content */}
-                <div className="absolute top-48 bottom-0 inset-x-0 overflow-y-auto px-4 md:px-8 pb-8">
+                <div className="absolute top-48 bottom-0 inset-x-0 overflow-y-auto px-4 md:px-8 pb-8 scrollbar-hide">
                     {activeTab === 'general' ? (
                         <div className="space-y-6">
                             <div className="flex flex-col space-y-4">
