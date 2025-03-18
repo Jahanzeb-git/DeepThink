@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
 import { 
     UserCircle, LogIn, UserPlus, Settings, Globe, 
     Moon, Sun, User as UserIcon, Shield, Trash2, X,
-    HelpCircle, LogOut, Key, Copy, Terminal, CheckCircle2, Loader2
+    HelpCircle, LogOut, Key, Copy, Terminal, CheckCircle2, Loader2,
+    Clock, Activity
 } from 'lucide-react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { ThemeToggle } from '../ThemeToggle';
@@ -93,6 +95,120 @@ const EndpointCard: React.FC<EndpointCardProps> = ({ title, method, url, headers
                     )}
                 </div>
             )}
+        </div>
+    );
+};
+
+interface LogEntry {
+    endpoint: string;
+    model: string;
+    timestamp: number;
+}
+
+const LogsSection: React.FC = () => {
+    const [logs, setLogs] = useState<LogEntry[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchLogs = async () => {
+            setIsLoading(true);
+            setError(null);
+            try {
+                const userEmail = localStorage.getItem('userEmail');
+                if (!userEmail) {
+                    throw new Error('User email not found');
+                }
+
+                // First, get the API key
+                const keyResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/user_key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: userEmail }),
+                });
+
+                if (!keyResponse.ok) {
+                    throw new Error('Failed to retrieve API key');
+                }
+
+                const { api_key } = await keyResponse.json();
+
+                // Then, fetch the logs
+                const logsResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/v1/logs', {
+                    headers: {
+                        'x-api-key': api_key,
+                    },
+                });
+
+                if (!logsResponse.ok) {
+                    throw new Error('Failed to fetch logs');
+                }
+
+                const { logs } = await logsResponse.json();
+                setLogs(logs);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to fetch logs');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchLogs();
+    }, []);
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center p-8">
+                <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="bg-red-500/10 text-red-400 p-4 rounded-xl text-sm">
+                {error}
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium text-white dark:text-gray-900">API Usage Logs</h3>
+                <span className="text-sm text-gray-400 dark:text-gray-600">
+                    {logs.length} requests
+                </span>
+            </div>
+
+            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                {logs.map((log, index) => (
+                    <div
+                        key={index}
+                        className="bg-gray-800/50 dark:bg-gray-200/50 rounded-xl p-4 space-y-2"
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                                <Activity className="w-4 h-4 text-blue-400" />
+                                <span className="text-white dark:text-gray-900 text-sm font-medium">
+                                    {log.endpoint}
+                                </span>
+                            </div>
+                            <span className="text-xs text-gray-400 dark:text-gray-600 flex items-center space-x-1">
+                                <Clock className="w-3 h-3" />
+                                <span>{format(log.timestamp * 1000, 'MMM d, yyyy HH:mm:ss')}</span>
+                            </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-400">
+                                {log.model}
+                            </span>
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 };
@@ -211,7 +327,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
 
     const modalContent = (
         <div className="fixed inset-0 bg-black/80 dark:bg-white/20 backdrop-blur-lg flex items-center justify-center z-[9999]
-                        transition-opacity duration-300 ease-in-out"
+                        transition-opacity duration-300 ease-in-out overflow-hidden"
              style={{ opacity: isVisible ? 1 : 0 }}>
             <div className={`bg-gray-900/95 dark:bg-gray-100/95 backdrop-blur-xl w-full max-w-4xl md:max-w-4xl h-screen md:h-[85vh] rounded-2xl shadow-2xl relative
                            transition-all duration-500 ease-out transform overflow-hidden
@@ -231,34 +347,34 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                 </div>
 
                 {/* Tabs */}
-                <div className="absolute top-32 inset-x-0 px-8">
-                    <div className="flex space-x-4">
+                <div className="absolute top-32 inset-x-0 px-4 md:px-8">
+                    <div className="flex space-x-2 md:space-x-4 overflow-x-auto pb-2 scrollbar-hide">
                         <Tab 
                             isActive={activeTab === 'general'}
                             onClick={() => setActiveTab('general')}
                         >
                             <Settings className="w-4 h-4 mr-2" />
-                            General
+                            <span className="whitespace-nowrap">General</span>
                         </Tab>
                         <Tab 
                             isActive={activeTab === 'profile'}
                             onClick={() => setActiveTab('profile')}
                         >
                             <UserIcon className="w-4 h-4 mr-2" />
-                            Profile
+                            <span className="whitespace-nowrap">Profile</span>
                         </Tab>
                         <Tab 
                             isActive={activeTab === 'api'}
                             onClick={() => setActiveTab('api')}
                         >
                             <Terminal className="w-4 h-4 mr-2" />
-                            Service API
+                            <span className="whitespace-nowrap">Service API</span>
                         </Tab>
                     </div>
                 </div>
 
                 {/* Content */}
-                <div className="absolute top-48 bottom-0 inset-x-0 overflow-y-auto px-8 pb-8">
+                <div className="absolute top-48 bottom-0 inset-x-0 overflow-y-auto px-4 md:px-8 pb-8">
                     {activeTab === 'general' ? (
                         <div className="space-y-6">
                             <div className="flex flex-col space-y-4">
@@ -378,7 +494,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                                 <h3 className="text-lg font-medium text-white dark:text-gray-900">API Access</h3>
                                 <p className="text-gray-400 dark:text-gray-600">Generate an API key to access our services programmatically</p>
 
-                                <div className="bg-gray-800/50 dark:bg-gray-200/50 p-6 rounded-xl space-y-4">
+                                <div className="bg-gray-800/50 dark:bg-gray-200/50 p-4 md:p-6 rounded-xl space-y-4">
                                     {apiKey ? (
                                         <div className="space-y-4">
                                             <div className="flex items-center justify-between">
@@ -425,7 +541,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                                 <h3 className="text-lg font-medium text-white dark:text-gray-900">API Documentation</h3>
                                 <p className="text-gray-400 dark:text-gray-600">Available endpoints and their usage</p>
 
-                                <div className="space-y-4">
+                                <div className="space-y-4 overflow-x-auto">
                                     <EndpointCard
                                         title="Chat Completions"
                                         method="POST"
@@ -463,6 +579,10 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                                         description="Retrieve API usage logs for your account."
                                     />
                                 </div>
+                            </div>
+
+                            <div className="space-y-4 mt-8">
+                                <LogsSection />
                             </div>
                         </div>
                     )}
@@ -625,4 +745,3 @@ const User: React.FC = () => {
 };
 
 export default User;
-
