@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import Settings from './settings';
 import { format } from 'date-fns';
 import { 
     UserCircle, LogIn, UserPlus, Settings, Globe, 
@@ -470,6 +471,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                                     <ThemeToggle isDark={isDark} toggleTheme={toggleTheme} />
                                 </div>
                             </div>
+                            <Settings/>
                         </div>
                     ) : activeTab === 'profile' ? (
                         <div className="space-y-6">
