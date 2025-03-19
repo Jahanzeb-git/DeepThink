@@ -82,42 +82,40 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-medium text-white dark:text-gray-900">Behavioral Control</h3>
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <label className="text-sm text-gray-400 dark:text-gray-600">What should we call you?</label>
+    <div className="flex items-center justify-between w-full">
+      <div className="flex items-center space-x-3">
+        <div>
+          <span className="text-white dark:text-gray-900 text-sm">Behavioral Control</span>
+          <p className="text-gray-400 dark:text-gray-600 text-xs mt-0.5">Customize AI behavior</p>
+        </div>
+      </div>
+      
+      <div className="flex items-center space-x-4">
+        <div className="w-48">
           <input
             type="text"
             value={settings.what_we_call_you}
             onChange={(e) => setSettings({ ...settings, what_we_call_you: e.target.value })}
-            className="w-full bg-gray-800/50 dark:bg-gray-200/50 text-white dark:text-gray-900 px-4 py-3 rounded-xl
-                     border border-gray-700/50 dark:border-gray-300/50 focus:border-blue-500/50 transition-colors"
-            placeholder="Enter your preferred name"
+            className="w-full bg-gray-700/50 dark:bg-gray-300/50 text-white dark:text-gray-900 px-3 py-1.5 rounded-lg text-sm
+                     border border-gray-600/50 dark:border-gray-400/50 focus:border-blue-500/50 transition-colors"
+            placeholder="What should we call you?"
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm text-gray-400 dark:text-gray-600">System Prompt</label>
-          <textarea
+        <div className="w-48">
+          <input
+            type="text"
             value={settings.system_prompt}
             onChange={(e) => setSettings({ ...settings, system_prompt: e.target.value })}
             maxLength={100}
-            rows={3}
-            className="w-full bg-gray-800/50 dark:bg-gray-200/50 text-white dark:text-gray-900 px-4 py-3 rounded-xl
-                     border border-gray-700/50 dark:border-gray-300/50 focus:border-blue-500/50 transition-colors
-                     resize-none"
-            placeholder="Enter system prompt (max 100 words)"
+            className="w-full bg-gray-700/50 dark:bg-gray-300/50 text-white dark:text-gray-900 px-3 py-1.5 rounded-lg text-sm
+                     border border-gray-600/50 dark:border-gray-400/50 focus:border-blue-500/50 transition-colors"
+            placeholder="System prompt"
           />
-          <span className="text-xs text-gray-400 dark:text-gray-600">
-            {settings.system_prompt.length}/100 characters
-          </span>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm text-gray-400 dark:text-gray-600">
-            Temperature: {settings.temperature.toFixed(1)}
-          </label>
+        <div className="flex items-center space-x-2 w-32">
+          <span className="text-xs text-gray-400 dark:text-gray-600">Temp: {settings.temperature.toFixed(1)}</span>
           <input
             type="range"
             min="0"
@@ -125,17 +123,15 @@ const Settings: React.FC = () => {
             step="0.1"
             value={settings.temperature}
             onChange={(e) => setSettings({ ...settings, temperature: parseFloat(e.target.value) })}
-            className="w-full h-2 bg-gray-700/50 dark:bg-gray-300/50 rounded-lg appearance-none cursor-pointer
-                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
+            className="w-full h-1.5 bg-gray-700/50 dark:bg-gray-300/50 rounded-lg appearance-none cursor-pointer
+                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3
                      [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500
                      [&::-webkit-slider-thumb]:cursor-pointer"
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm text-gray-400 dark:text-gray-600">
-            Top P: {settings.top_p.toFixed(1)}
-          </label>
+        <div className="flex items-center space-x-2 w-32">
+          <span className="text-xs text-gray-400 dark:text-gray-600">Top P: {settings.top_p.toFixed(1)}</span>
           <input
             type="range"
             min="0"
@@ -143,40 +139,39 @@ const Settings: React.FC = () => {
             step="0.1"
             value={settings.top_p}
             onChange={(e) => setSettings({ ...settings, top_p: parseFloat(e.target.value) })}
-            className="w-full h-2 bg-gray-700/50 dark:bg-gray-300/50 rounded-lg appearance-none cursor-pointer
-                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
+            className="w-full h-1.5 bg-gray-700/50 dark:bg-gray-300/50 rounded-lg appearance-none cursor-pointer
+                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3
                      [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500
                      [&::-webkit-slider-thumb]:cursor-pointer"
           />
         </div>
 
-        <div className="relative">
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl 
-                     bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 transition-colors
-                     border border-blue-500/20 hover:border-blue-500/30"
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Saving...</span>
-              </>
-            ) : (
-              <>
-                <Save className="w-5 h-5" />
-                <span>Save Settings</span>
-              </>
-            )}
-          </button>
-          {saveMessage && (
-            <div className="absolute -bottom-8 left-0 right-0 text-center text-sm text-green-400">
-              {saveMessage}
-            </div>
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="flex items-center justify-center space-x-1 px-3 py-1.5 rounded-lg text-sm
+                   bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 transition-colors
+                   border border-blue-500/20 hover:border-blue-500/30"
+        >
+          {isSaving ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Saving...</span>
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4" />
+              <span>Save</span>
+            </>
           )}
-        </div>
+        </button>
       </div>
+
+      {saveMessage && (
+        <div className="absolute -bottom-6 right-0 text-sm text-green-400">
+          {saveMessage}
+        </div>
+      )}
     </div>
   );
 };
