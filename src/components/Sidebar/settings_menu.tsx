@@ -101,10 +101,10 @@ const Settings_menu: React.FC = () => {
             rows={3}
             className="w-full bg-gray-700/50 dark:bg-gray-300/50 text-white dark:text-gray-900 px-3 py-2 rounded-lg text-sm
                      border border-gray-600/50 dark:border-gray-400/50 focus:border-blue-500/50 transition-colors resize-none"
-            placeholder="Enter system prompt (max 100 words)"
+            placeholder="Enter system prompt (max 200 words)"
           />
           <div className="text-xs text-gray-400 dark:text-gray-600 text-right">
-            {settings.system_prompt.length}/100 characters
+            {settings.system_prompt.length}/200 characters
           </div>
         </div>
 
