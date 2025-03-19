@@ -7,12 +7,79 @@ import {
     UserCircle, LogIn, UserPlus, Settings, Globe, 
     Moon, Sun, User as UserIcon, Shield, Trash2, X,
     HelpCircle, LogOut, Key, Copy, Terminal, CheckCircle2, Loader2,
-    Clock, Activity
+    Clock, Activity, AlertTriangle
 } from 'lucide-react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { ThemeToggle } from '../ThemeToggle';
-import LoadingModal from './loading';
 import LoadingModal2 from './loading2';
+
+interface DeleteConfirmDialogProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onConfirm: () => void;
+}
+
+const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({ isOpen, onClose, onConfirm }) => {
+    const [isVisible, setIsVisible] = useState(false);
+
+    useEffect(() => {
+        if (isOpen) {
+            setIsVisible(true);
+            document.body.style.overflow = 'hidden';
+        }
+        return () => {
+            setIsVisible(false);
+            document.body.style.overflow = 'unset';
+        };
+    }, [isOpen]);
+
+    if (!isOpen) return null;
+
+    return createPortal(
+        <div className="fixed inset-0 bg-black/80 dark:bg-white/20 backdrop-blur-lg flex items-center justify-center z-[9999]
+                        transition-opacity duration-300 ease-in-out"
+             style={{ opacity: isVisible ? 1 : 0 }}>
+            <div className={`bg-gray-900/95 dark:bg-gray-100/95 backdrop-blur-xl w-full max-w-md rounded-2xl shadow-2xl p-6
+                           transition-all duration-500 ease-out transform
+                           ${isVisible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-8 opacity-0 scale-95'}`}>
+                <div className="flex flex-col items-center text-center space-y-4">
+                    <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                        <AlertTriangle className="w-6 h-6 text-red-400" />
+                    </div>
+                    
+                    <div className="space-y-2">
+                        <h3 className="text-xl font-semibold text-white dark:text-gray-900">
+                            Are you sure to proceed delete account?
+                        </h3>
+                        <p className="text-gray-400 dark:text-gray-600">
+                            All account details will be deleted and never be restored.
+                        </p>
+                    </div>
+
+                    <div className="flex items-center space-x-3 w-full pt-4">
+                        <button
+                            onClick={onClose}
+                            className="flex-1 px-4 py-2 rounded-xl bg-gray-800/50 dark:bg-gray-200/50 
+                                     text-gray-300 dark:text-gray-600 hover:bg-gray-700/50 dark:hover:bg-gray-300/50
+                                     transition-colors duration-200"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={onConfirm}
+                            className="flex-1 px-4 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30
+                                     text-red-400 hover:text-red-300 transition-colors duration-200
+                                     border border-red-500/20 hover:border-red-500/30"
+                        >
+                            Delete Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>,
+        document.body
+    );
+};
 
 interface TabProps {
     isActive: boolean;
@@ -122,7 +189,6 @@ const LogsSection: React.FC = () => {
                 throw new Error('User email not found');
             }
 
-            // First, get the API key
             const keyResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/user_key', {
                 method: 'POST',
                 headers: {
@@ -142,7 +208,6 @@ const LogsSection: React.FC = () => {
                 return;
             }
 
-            // Then, fetch the logs
             const logsResponse = await fetch('https://jahanzebahmed25.pythonanywhere.com/v1/logs', {
                 headers: {
                     'x-api-key': api_key,
@@ -284,8 +349,8 @@ interface ProfileModalProps {
 const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, toggleTheme }) => {
     const [isVisible, setIsVisible] = useState(false);
     const [activeTab, setActiveTab] = useState<'general' | 'profile' | 'api'>('general');
-    const [isModalOpen, setIsModalOpen] = useState(false);
     const [isModal2Open, setIsModal2Open] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [apiKey, setApiKey] = useState<string | null>(null);
     const [timeLeft, setTimeLeft] = useState<number>(60);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -353,10 +418,10 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
     };
 
     const handleDeleteAccount = () => {
-        setIsModalOpen(true);
+        setShowDeleteConfirm(true);
     };
 
-    const handleModalClose = async () => {
+    const handleConfirmDelete = async () => {
         try {
             const token = localStorage.getItem('token');
             if (!token) {
@@ -381,6 +446,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
             }
         } catch (error) {
             console.error('An error occurred while deleting user data:', error);
+        } finally {
+            setShowDeleteConfirm(false);
         }
     };
 
@@ -508,17 +575,20 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                             <div className="space-y-4">
                                 <h3 className="text-lg font-medium text-white dark:text-gray-900">Help & Support</h3>
                                 
-                                <button className="w-full flex items-center justify-between px-4 py-3 rounded-xl 
+                                <button onClick={() => navigate('/terms')} className="w-full flex items-center justify-between px-4 py-3 rounded-xl 
                                                bg-gray-800/50 dark:bg-gray-200/50 hover:bg-gray-700/50 dark:hover:bg-gray-300/50 transition-colors">
                                     <span className="text-white dark:text-gray-900 text-sm">Terms of Use</span>
                                     <Shield className="w-5 h-5 text-gray-400 dark:text-gray-600" />
                                 </button>
 
-                                <button className="w-full flex items-center justify-between px-4 py-3 rounded-xl 
-                                               bg-gray-800/50 dark:bg-gray-200/50 hover:bg-gray-700/50 dark:hover:bg-gray-300/50 transition-colors">
-                                    <span className="text-white dark:text-gray-900 text-sm">Help Center</span>
+                                <a 
+                                    href="mailto:jahanzebahmed.mail@gmail.com" 
+                                    className="w-full flex items-center justify-between px-4 py-3 rounded-xl 
+                                       bg-gray-800/50 dark:bg-gray-200/50 hover:bg-gray-700/50 dark:hover:bg-gray-300/50 transition-colors"
+                                >
+                                    <span className="text-white dark:text-gray-900 text-sm">Help</span>
                                     <HelpCircle className="w-5 h-5 text-gray-400 dark:text-gray-600" />
-                                </button>
+                                </a>
                             </div>
 
                             {/* Account Actions */}
@@ -545,7 +615,11 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                                     <Trash2 className="w-5 h-5" />
                                     <span className="text-sm">Delete Account</span>
                                 </button>
-                                <LoadingModal isOpen={isModalOpen} onClose={handleModalClose} />
+                                <DeleteConfirmDialog 
+                                    isOpen={showDeleteConfirm}
+                                    onClose={() => setShowDeleteConfirm(false)}
+                                    onConfirm={handleConfirmDelete}
+                                />
                             </div>
                         </div>
                     ) : (
