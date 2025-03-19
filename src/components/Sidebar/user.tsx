@@ -12,6 +12,7 @@ import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { ThemeToggle } from '../ThemeToggle';
 import LoadingModal from './loading';
 import LoadingModal2 from './loading2';
+import Settings from './settings';
 
 interface TabProps {
     isActive: boolean;
@@ -468,6 +469,11 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ setShowProfile, isDark, tog
                                         </div>
                                     </div>
                                     <ThemeToggle isDark={isDark} toggleTheme={toggleTheme} />
+                                </div>
+
+                                {/* Behavioral Settings */}
+                                <div className="p-4 rounded-xl bg-gray-800/50 dark:bg-gray-200/50">
+                                    <Settings />
                                 </div>
                             </div>
                         </div>
