@@ -17,7 +17,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -25,7 +25,7 @@ const LoginPage = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.acceptTerms) {
       setError('Please accept the terms and conditions');
@@ -55,16 +55,22 @@ const LoginPage = () => {
       ]) as [LoginResponse, void];
 
       if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+        throw new Error((data as any).message || 'Login failed');
       }
 
-      // Store token in localStorage
+      // Store token and token type in localStorage
       localStorage.setItem('token', data.access_token);
       localStorage.setItem('token_type', data.token_type);
       
+      // Check if email is already stored or if it needs updating
+      const storedEmail = localStorage.getItem('userEmail');
+      if (!storedEmail || storedEmail !== formData.email) {
+        localStorage.setItem('userEmail', formData.email);
+      }
+      
       // Redirect to chat page
       navigate('/chat');
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message || 'Failed to login. Please try again.');
     } finally {
       setLoading(false);
@@ -177,3 +183,4 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+
