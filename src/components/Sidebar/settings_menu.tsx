@@ -19,10 +19,12 @@ const Settings_menu: React.FC = () => {
   const [saveMessage, setSaveMessage] = useState('');
 
   useEffect(() => {
+    // Load any previously saved settings from local storage
     const storedSettings = localStorage.getItem('behavioralSettings');
     if (storedSettings) {
       setSettings(JSON.parse(storedSettings));
     }
+    // Fetch settings from the backend
     fetchSettings();
   }, []);
 
@@ -31,12 +33,12 @@ const Settings_menu: React.FC = () => {
       const userEmail = localStorage.getItem('userEmail');
       if (!userEmail) return;
 
-      const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/user/settings', {
+      // Pass the email as a query parameter (note the use of encodeURIComponent)
+      const response = await fetch(`https://jahanzebahmed25.pythonanywhere.com/user/settings?email=${encodeURIComponent(userEmail)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email: userEmail })
+        }
       });
 
       const data = await response.json();
@@ -101,7 +103,7 @@ const Settings_menu: React.FC = () => {
             rows={3}
             className="w-full bg-gray-700/50 dark:bg-gray-300/50 text-white dark:text-gray-900 px-3 py-2 rounded-lg text-sm
                      border border-gray-600/50 dark:border-gray-400/50 focus:border-blue-500/50 transition-colors resize-none"
-            placeholder="Enter system prompt (max 200 words)"
+            placeholder="Enter system prompt (max 200 characters)"
           />
           <div className="text-xs text-gray-400 dark:text-gray-600 text-right">
             {settings.system_prompt.length}/200 characters
@@ -195,3 +197,4 @@ const Settings_menu: React.FC = () => {
 };
 
 export default Settings_menu;
+
