@@ -82,40 +82,38 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-between w-full">
-      <div className="flex items-center space-x-3">
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
         <div>
-          <span className="text-white dark:text-gray-900 text-sm">Behavioral Control</span>
+          <h3 className="text-white dark:text-gray-900 text-sm font-medium">Behavioral Control</h3>
           <p className="text-gray-400 dark:text-gray-600 text-xs mt-0.5">Customize AI behavior</p>
         </div>
       </div>
-      
-      <div className="flex items-center space-x-4">
-        <div className="w-48">
-          <input
-            type="text"
-            value={settings.what_we_call_you}
-            onChange={(e) => setSettings({ ...settings, what_we_call_you: e.target.value })}
-            className="w-full bg-gray-700/50 dark:bg-gray-300/50 text-white dark:text-gray-900 px-3 py-1.5 rounded-lg text-sm
-                     border border-gray-600/50 dark:border-gray-400/50 focus:border-blue-500/50 transition-colors"
-            placeholder="What should we call you?"
-          />
-        </div>
 
-        <div className="w-48">
-          <input
-            type="text"
+      <div className="space-y-4">
+        {/* System Prompt */}
+        <div className="space-y-2">
+          <label className="block text-sm text-gray-400 dark:text-gray-600">System Prompt</label>
+          <textarea
             value={settings.system_prompt}
             onChange={(e) => setSettings({ ...settings, system_prompt: e.target.value })}
             maxLength={100}
-            className="w-full bg-gray-700/50 dark:bg-gray-300/50 text-white dark:text-gray-900 px-3 py-1.5 rounded-lg text-sm
-                     border border-gray-600/50 dark:border-gray-400/50 focus:border-blue-500/50 transition-colors"
-            placeholder="System prompt"
+            rows={3}
+            className="w-full bg-gray-700/50 dark:bg-gray-300/50 text-white dark:text-gray-900 px-3 py-2 rounded-lg text-sm
+                     border border-gray-600/50 dark:border-gray-400/50 focus:border-blue-500/50 transition-colors resize-none"
+            placeholder="Enter system prompt (max 100 words)"
           />
+          <div className="text-xs text-gray-400 dark:text-gray-600 text-right">
+            {settings.system_prompt.length}/100 characters
+          </div>
         </div>
 
-        <div className="flex items-center space-x-2 w-32">
-          <span className="text-xs text-gray-400 dark:text-gray-600">Temp: {settings.temperature.toFixed(1)}</span>
+        {/* Temperature Slider */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-sm text-gray-400 dark:text-gray-600">Temperature</label>
+            <span className="text-sm text-white dark:text-gray-900">{settings.temperature.toFixed(1)}</span>
+          </div>
           <input
             type="range"
             min="0"
@@ -130,8 +128,12 @@ const Settings: React.FC = () => {
           />
         </div>
 
-        <div className="flex items-center space-x-2 w-32">
-          <span className="text-xs text-gray-400 dark:text-gray-600">Top P: {settings.top_p.toFixed(1)}</span>
+        {/* Top P Slider */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-sm text-gray-400 dark:text-gray-600">Top P</label>
+            <span className="text-sm text-white dark:text-gray-900">{settings.top_p.toFixed(1)}</span>
+          </div>
           <input
             type="range"
             min="0"
@@ -146,29 +148,45 @@ const Settings: React.FC = () => {
           />
         </div>
 
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="flex items-center justify-center space-x-1 px-3 py-1.5 rounded-lg text-sm
-                   bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 transition-colors
-                   border border-blue-500/20 hover:border-blue-500/30"
-        >
-          {isSaving ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Saving...</span>
-            </>
-          ) : (
-            <>
-              <Save className="w-4 h-4" />
-              <span>Save</span>
-            </>
-          )}
-        </button>
+        {/* What we call you */}
+        <div className="space-y-2">
+          <label className="block text-sm text-gray-400 dark:text-gray-600">What should we call you?</label>
+          <input
+            type="text"
+            value={settings.what_we_call_you}
+            onChange={(e) => setSettings({ ...settings, what_we_call_you: e.target.value })}
+            className="w-full bg-gray-700/50 dark:bg-gray-300/50 text-white dark:text-gray-900 px-3 py-2 rounded-lg text-sm
+                     border border-gray-600/50 dark:border-gray-400/50 focus:border-blue-500/50 transition-colors"
+            placeholder="Enter your preferred name"
+          />
+        </div>
+
+        {/* Save Button */}
+        <div className="flex justify-end">
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="flex items-center justify-center space-x-2 px-4 py-2 rounded-lg text-sm
+                     bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 transition-colors
+                     border border-blue-500/20 hover:border-blue-500/30"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Saving...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>Save Changes</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {saveMessage && (
-        <div className="absolute -bottom-6 right-0 text-sm text-green-400">
+        <div className="text-sm text-green-400 text-center mt-2">
           {saveMessage}
         </div>
       )}
