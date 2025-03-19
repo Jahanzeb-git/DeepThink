@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import Settings_menu from './Settings_menu';
+import Settings_menu from './settings_menu';
 import { format } from 'date-fns';
 import { 
     UserCircle, LogIn, UserPlus, Settings, Globe, 
