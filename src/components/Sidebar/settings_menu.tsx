@@ -97,7 +97,7 @@ const Settings_menu: React.FC = () => {
           <textarea
             value={settings.system_prompt}
             onChange={(e) => setSettings({ ...settings, system_prompt: e.target.value })}
-            maxLength={100}
+            maxLength={200}
             rows={3}
             className="w-full bg-gray-700/50 dark:bg-gray-300/50 text-white dark:text-gray-900 px-3 py-2 rounded-lg text-sm
                      border border-gray-600/50 dark:border-gray-400/50 focus:border-blue-500/50 transition-colors resize-none"
