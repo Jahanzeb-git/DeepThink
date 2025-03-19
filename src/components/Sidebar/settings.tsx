@@ -8,7 +8,7 @@ interface BehavioralSettings {
   what_we_call_you: string;
 }
 
-const Settings: React.FC = () => {
+const Settings_menu: React.FC = () => {
   const [settings, setSettings] = useState<BehavioralSettings>({
     system_prompt: '',
     temperature: 0.7,
@@ -194,4 +194,4 @@ const Settings: React.FC = () => {
   );
 };
 
-export default Settings;
+export default Settings_menu;
