@@ -162,7 +162,7 @@ const SignupPage = () => {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="w-full max-w-xs"
+            className="w-full"
           >
             <GoogleAuthButton onSuccess={handleGoogleResponse} />
           </motion.div>
