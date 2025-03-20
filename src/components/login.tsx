@@ -3,6 +3,7 @@ import { MessageCircle, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import GoogleAuthButton from './GoogleAuthButton';
+import ForgetEmailModal from './ForgetEmailModal'; // Import your modal component
 
 interface LoginResponse {
   access_token: string;
@@ -18,6 +19,8 @@ const LoginPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // State for controlling the Forgot Password modal
+  const [isForgetModalOpen, setIsForgetModalOpen] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -99,6 +102,24 @@ const LoginPage = () => {
       setError(err.message || 'Google login failed.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Function to handle the forgot password submission in the modal
+  const handleForgetPasswordSubmit = async (email: string) => {
+    try {
+      const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/forget-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to send reset link');
+      }
+      // On success, the modal component will handle auto-closing
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to send reset link');
     }
   };
 
@@ -289,7 +310,14 @@ const LoginPage = () => {
               transition={{ delay: 0.5 }}
               className="flex items-center justify-between text-sm"
             >
-              <a href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200">
+              <a 
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsForgetModalOpen(true);
+                }}
+                className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200"
+              >
                 Forgot password?
               </a>
               <a href="/contact" className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200">
@@ -311,9 +339,17 @@ const LoginPage = () => {
           </motion.p>
         </div>
       </motion.div>
+
+      {/* Forgot Password Modal */}
+      <ForgetEmailModal
+        isOpen={isForgetModalOpen}
+        onClose={() => setIsForgetModalOpen(false)}
+        onSubmit={handleForgetPasswordSubmit}
+      />
     </div>
   );
 };
 
 export default LoginPage;
+
 
