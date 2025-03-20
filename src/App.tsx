@@ -7,6 +7,7 @@ import Login from './components/login';
 import Signup from './components/signup';
 import Terms from './components/terms';
 import LoadingPage from './components/LoadingPage';
+import ResetPassword from './components/ResetPassword';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 
@@ -287,6 +288,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
