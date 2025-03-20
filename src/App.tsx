@@ -7,6 +7,8 @@ import Login from './components/login';
 import Signup from './components/signup';
 import Terms from './components/terms';
 import LoadingPage from './components/LoadingPage';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
 
 interface Message {
   id: string;
@@ -277,16 +279,18 @@ function App() {
   ), [isSidebarOpen, messages, isLoading, handleSendMessage, handleNewChat, handleLoadHistory, toggleSidebar]);
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LoadingPage />} />
-        <Route path="/main" element={<MainLayout />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+    <GoogleOAuthProvider clientId="1061742468081-1g389n9i177f9vk95eg88tsornpfsbm4.apps.googleusercontent.com">
+      <Router>
+        <Routes>
+          <Route path="/" element={<LoadingPage />} />
+          <Route path="/main" element={<MainLayout />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </GoogleOAuthProvider>
   );
 }
 
