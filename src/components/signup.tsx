@@ -100,6 +100,16 @@ const SignupPage = () => {
           </p>
         </div>
 
+        {/* Google OAuth Button goes here, above the form */}
+        <div className="flex items-center justify-center">
+          <GoogleAuthButton onSuccess={handleGoogleResponse} />
+        </div>
+
+        {/* Optional Divider */}
+        <div className="flex items-center justify-center my-4">
+          <span className="text-sm text-gray-600">or</span>
+        </div>
+
         {/* Traditional Signup Form */}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
@@ -169,16 +179,6 @@ const SignupPage = () => {
             Sign in
           </a>
         </p>
-
-        {/* Divider */}
-        <div className="flex items-center justify-center my-4">
-          <span className="text-sm text-gray-600">or</span>
-        </div>
-
-        {/* Google OAuth Button for Signup */}
-        <div className="flex items-center justify-center">
-          <GoogleAuthButton onSuccess={handleGoogleResponse} />
-        </div>
       </div>
     </div>
   );
