@@ -39,6 +39,7 @@ const SignupPage = () => {
       if (response.status === 201) {
         const data = await response.json();
         localStorage.setItem('token', data.access_token);
+        localStorage.setItem('Stoken', data.access_token)
         localStorage.setItem('username', formData.username);
         localStorage.setItem('userEmail', formData.email);
         navigate('/login');
@@ -70,6 +71,7 @@ const SignupPage = () => {
       }
 
       localStorage.setItem('token', data.access_token);
+      localStorage.setItem('Stoken', data.access_token)
       localStorage.setItem('username', data.user.username);
       localStorage.setItem('userEmail', data.user.email);
       navigate('/main');
