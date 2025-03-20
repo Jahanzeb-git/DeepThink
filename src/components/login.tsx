@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { MessageCircle, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import GoogleAuthButton from './GoogleAuthButton';
 
 interface LoginResponse {
   access_token: string;
@@ -34,7 +36,6 @@ const LoginPage = () => {
     setLoading(true);
     setError('');
     
-    // Simulate minimum loading time of 4 seconds
     const loadingPromise = new Promise(resolve => setTimeout(resolve, 4000));
 
     try {
@@ -51,24 +52,21 @@ const LoginPage = () => {
 
       const [data] = await Promise.all([
         response.json(),
-        loadingPromise // Ensure minimum 4 second loading time
+        loadingPromise
       ]) as [LoginResponse, void];
 
       if (!response.ok) {
         throw new Error((data as any).message || 'Login failed');
       }
 
-      // Store token and token type in localStorage
       localStorage.setItem('token', data.access_token);
       localStorage.setItem('token_type', data.token_type);
       
-      // Check if email is already stored or if it needs updating
       const storedEmail = localStorage.getItem('userEmail');
       if (!storedEmail || storedEmail !== formData.email) {
         localStorage.setItem('userEmail', formData.email);
       }
       
-      // Redirect to chat page
       navigate('/chat');
     } catch (err: any) {
       setError(err.message || 'Failed to login. Please try again.');
@@ -77,107 +75,242 @@ const LoginPage = () => {
     }
   };
 
+  const handleGoogleResponse = async (credentialResponse: any) => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const googleToken = credentialResponse.credential;
+      const res = await fetch('https://jahanzebahmed25.pythonanywhere.com/google-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: googleToken }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Google login failed');
+      }
+
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('username', data.user.username);
+      localStorage.setItem('userEmail', data.user.email);
+      navigate('/chat');
+    } catch (err: any) {
+      setError(err.message || 'Google login failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-8 bg-white rounded-xl shadow-2xl p-8">
-        <div className="text-center">
-          <div className="flex justify-center">
-            <MessageCircle className="h-12 w-12 text-blue-600 animate-pulse" />
-          </div>
-          <h2 className="mt-4 text-3xl font-bold text-gray-900">Deepthinks</h2>
-          <p className="mt-2 text-gray-600">Welcome back to intelligent conversations</p>
-        </div>
-
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email" className="text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                placeholder="john@example.com"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="flex items-center">
-              <input
-                id="acceptTerms"
-                name="acceptTerms"
-                type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
-                checked={formData.acceptTerms}
-                onChange={handleChange}
-              />
-              <label htmlFor="acceptTerms" className="ml-2 block text-sm text-gray-700">
-                I agree to the Terms of Service and Privacy Policy
-              </label>
-            </div>
-          </div>
-
-          {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed relative transition-all duration-300"
+    <div className="flex min-h-screen">
+      {/* Left Section - Animated Welcome */}
+      <motion.div 
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8 }}
+        className="hidden lg:flex lg:w-1/2 bg-black items-center justify-center relative overflow-hidden"
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-black to-black opacity-80"></div>
+        <div className="relative z-10 text-center px-8">
+          <motion.h1 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+            className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 mb-6"
           >
-            {loading ? (
-              <>
-                <span className="opacity-0">Login</span>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="flex items-center space-x-2">
-                    <Loader2 className="animate-spin h-5 w-5" />
-                    <span className="animate-pulse">Logging in</span>
-                  </div>
-                </div>
-              </>
-            ) : (
-              'Login'
-            )}
-          </button>
+            Welcome Back
+          </motion.h1>
+          <motion.p 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="text-gray-300 text-xl max-w-md mx-auto"
+          >
+            Continue your journey of meaningful conversations powered by AI
+          </motion.p>
+          
+          {/* Animated Circles Background */}
+          {[...Array(3)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute rounded-full mix-blend-overlay"
+              animate={{
+                scale: [1, 2, 1],
+                opacity: [0.3, 0.1, 0.3],
+                x: [0, 100, 0],
+                y: [0, -100, 0],
+              }}
+              transition={{
+                duration: 10 + i * 2,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+              style={{
+                width: `${200 + i * 100}px`,
+                height: `${200 + i * 100}px`,
+                background: `linear-gradient(45deg, ${['#4F46E5', '#7C3AED', '#EC4899'][i]}, transparent)`,
+                left: `${i * 20}%`,
+                top: `${30 + i * 20}%`,
+              }}
+            />
+          ))}
+        </div>
+      </motion.div>
 
-          <div className="flex items-center justify-between text-sm">
-            <a href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
-              Forgot password?
-            </a>
-            <a href="/contact" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
-              Contact us
-            </a>
+      {/* Right Section - Login Form */}
+      <motion.div 
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8 }}
+        className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white"
+      >
+        <div className="w-full max-w-md space-y-8">
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-center"
+          >
+            <div className="flex justify-center">
+              <MessageCircle className="h-12 w-12 text-blue-600" />
+            </div>
+            <h2 className="mt-4 text-3xl font-bold text-gray-900">Welcome Back</h2>
+            <p className="mt-2 text-gray-600">Continue your journey with Deepthinks</p>
+          </motion.div>
+
+          {/* Google OAuth Button */}
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="w-full"
+          >
+            <GoogleAuthButton onSuccess={handleGoogleResponse} />
+          </motion.div>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            </div>
           </div>
 
-          <p className="text-center text-sm text-gray-600">
+          <motion.form 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="mt-8 space-y-6" 
+            onSubmit={handleSubmit}
+          >
+            <div className="space-y-4">
+              <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                <label htmlFor="email" className="text-sm font-medium text-gray-700">
+                  Email address
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  placeholder="john@example.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+              </motion.div>
+
+              <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+              </motion.div>
+
+              <motion.div 
+                whileHover={{ scale: 1.01 }} 
+                className="flex items-center"
+              >
+                <input
+                  id="acceptTerms"
+                  name="acceptTerms"
+                  type="checkbox"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                  checked={formData.acceptTerms}
+                  onChange={handleChange}
+                />
+                <label htmlFor="acceptTerms" className="ml-2 block text-sm text-gray-700">
+                  I agree to the Terms of Service and Privacy Policy
+                </label>
+              </motion.div>
+            </div>
+
+            {error && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-red-500 text-sm text-center"
+              >
+                {error}
+              </motion.div>
+            )}
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit"
+              disabled={loading}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            >
+              {loading ? (
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="animate-spin h-5 w-5" />
+                  <span className="animate-pulse">Logging in</span>
+                </div>
+              ) : (
+                'Login'
+              )}
+            </motion.button>
+
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="flex items-center justify-between text-sm"
+            >
+              <a href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200">
+                Forgot password?
+              </a>
+              <a href="/contact" className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200">
+                Contact us
+              </a>
+            </motion.div>
+          </motion.form>
+
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-center text-sm text-gray-600"
+          >
             Don't have an account?{' '}
-            <a href="/signup" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
+            <a href="/signup" className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200">
               Sign up
             </a>
-          </p>
-        </form>
-      </div>
+          </motion.p>
+        </div>
+      </motion.div>
     </div>
   );
 };
