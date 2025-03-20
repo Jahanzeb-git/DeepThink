@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import GoogleAuthButton from './GoogleAuthButton';
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -26,26 +27,23 @@ const SignupPage = () => {
     setError('');
 
     try {
-      const response = await fetch(
-        'https://jahanzebahmed25.pythonanywhere.com/signup',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+      const response = await fetch('https://jahanzebahmed25.pythonanywhere.com/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
       if (response.status === 201) {
         const data = await response.json();
 
         // Store the access token, username, and userEmail in localStorage
-        localStorage.setItem('Stoken', data.access_token);
+        localStorage.setItem('token', data.access_token);
         localStorage.setItem('username', formData.username);
         localStorage.setItem('userEmail', formData.email);
 
-        // Redirect to login page
+        // Redirect to login page (or main app if auto-login is preferred)
         navigate('/login');
       } else {
         const data = await response.json();
@@ -53,6 +51,37 @@ const SignupPage = () => {
       }
     } catch (err: any) {
       setError(err.message || 'Failed to create account. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handler for Google OAuth response on the signup page
+  const handleGoogleResponse = async (credentialResponse: any) => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const googleToken = credentialResponse.credential;
+      const res = await fetch('https://jahanzebahmed25.pythonanywhere.com/google-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: googleToken }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Google signup failed');
+      }
+
+      // Save token, username, and email returned from backend
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('username', data.user.username);
+      localStorage.setItem('userEmail', data.user.email);
+
+      // Redirect directly to main app (or login if you want users to review info first)
+      navigate('/main');
+    } catch (err: any) {
+      setError(err.message || 'Google signup failed.');
     } finally {
       setLoading(false);
     }
@@ -71,6 +100,7 @@ const SignupPage = () => {
           </p>
         </div>
 
+        {/* Traditional Signup Form */}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
@@ -131,18 +161,29 @@ const SignupPage = () => {
           >
             {loading ? 'Creating account...' : 'Create account'}
           </button>
-
-          <p className="text-center text-sm text-gray-600">
-            Already have an account?{' '}
-            <a href="/login" className="font-medium text-blue-600 hover:text-blue-500">
-              Sign in
-            </a>
-          </p>
         </form>
+
+        <p className="text-center text-sm text-gray-600">
+          Already have an account?{' '}
+          <a href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+            Sign in
+          </a>
+        </p>
+
+        {/* Divider */}
+        <div className="flex items-center justify-center my-4">
+          <span className="text-sm text-gray-600">or</span>
+        </div>
+
+        {/* Google OAuth Button for Signup */}
+        <div className="flex items-center justify-center">
+          <GoogleAuthButton onSuccess={handleGoogleResponse} />
+        </div>
       </div>
     </div>
   );
 };
 
 export default SignupPage;
+
 
